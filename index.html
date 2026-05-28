@@ -5,69 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIXIFY TECH REPAIR v15.0</title>
     <style>
-        /* Base Setup matching your exact screenshot theme */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #cbd5e1; display: flex; height: 100vh; overflow: hidden; }
 
-        /* Left Side Navigation Panel */
-        .sidebar { width: 260px; background-color: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; gap: 20px; flex-shrink: 0; }
+        /* THE PREMIUM LOGIN SCREEN WINDOW BLOCKS */
+        .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0f19; display: flex; justify-content: center; align-items: center; z-index: 99999; }
+        .login-box { background: #111827; border: 2px solid #1f2937; padding: 35px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box h2 { color: #f97316; margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .login-box p { font-size: 13px; color: #6b7280; margin-bottom: 25px; }
+        .login-btn { background-color: #f97316; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 15px; }
+        .login-btn:hover { background-color: #ea580c; }
+
+        /* Sidebar Navigation Layout Panel */
+        .sidebar { width: 260px; background-color: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
         .brand-title { color: #f97316; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #1f2937; padding-bottom: 15px; }
         .nav-section-title { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
         
-        .nav-btn { width: 100%; padding: 12px 15px; background: transparent; border: none; border-radius: 6px; color: #9ca3af; text-align: left; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-btn { width: 100%; padding: 12px 15px; background: transparent; border: none; border-radius: 6px; color: #9ca3af; text-align: left; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; margin-top: 5px; }
         .nav-btn:hover { background-color: #1f2937; color: #f3f4f6; }
         .nav-btn.active { background-color: #f97316; color: white; }
 
-        /* Right Side Content Container Area */
         .main-content { flex: 1; display: flex; flex-direction: column; background-color: #0b0f19; overflow: hidden; }
         
-        /* Top Navigation Header bar */
-        .navbar { height: 70px; background-color: #111827; border-bottom: 1px solid #1f2937; display: flex; justify-content: flex-end; align-items: center; padding: 0 30px; flex-shrink: 0; }
-        .sales-badge { background-color: #0f172a; border: 1px solid #10b981; color: #10b981; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 15px; box-shadow: 0 0 10px rgba(16,185,129,0.1); }
+        .navbar { height: 70px; background-color: #111827; border-bottom: 1px solid #1f2937; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; flex-shrink: 0; }
+        .sales-badge { background-color: #0f172a; border: 1px solid #10b981; color: #10b981; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 15px; }
 
         .view-body { flex: 1; padding: 25px; overflow-y: auto; }
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
-        /* Top Analytical Counters Grid boxes */
         .counters-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
         .counter-card { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .counter-card.blue-card { border-left: 4px solid #3b82f6; }
         .counter-card.orange-card { border-left: 4px solid #f97316; }
         .counter-card.green-card { border-left: 4px solid #10b981; }
-        .counter-info h4 { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-        .counter-info p { font-size: 14px; font-weight: bold; color: #e5e7eb; }
+        .counter-info h4 { font-size: 11px; color: #6b7280; text-transform: uppercase; }
         .counter-val { font-size: 24px; font-weight: bold; }
         .blue-card .counter-val { color: #3b82f6; }
         .orange-card .counter-val { color: #f97316; }
         .green-card .counter-val { color: #10b981; }
 
-        /* Card Form/Table design block */
         .panel-card { background-color: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
-        .panel-card h3 { font-size: 16px; color: #f3f4f6; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; border-left: 3px solid #f97316; padding-left: 8px; }
+        .panel-card h3 { font-size: 16px; color: #f3f4f6; text-transform: uppercase; margin-bottom: 15px; border-left: 3px solid #f97316; padding-left: 8px; }
 
-        /* Grid inputs layout system */
         .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
         .form-input { width: 100%; padding: 10px; background-color: #0b0f19; border: 1px solid #1f2937; border-radius: 6px; color: white; font-size: 13px; }
-        .form-input:focus { border-color: #f97316; outline: none; }
         
-        .submit-btn { background-color: #f97316; color: white; font-weight: bold; border: none; padding: 12px 20px; border-radius: 6px; text-transform: uppercase; font-size: 13px; cursor: pointer; letter-spacing: 0.5px; width: 100%; }
+        .submit-btn { background-color: #f97316; color: white; font-weight: bold; border: none; padding: 12px 20px; border-radius: 6px; text-transform: uppercase; cursor: pointer; width: 100%; }
         .submit-btn:hover { background-color: #ea580c; }
 
-        /* Interactive Filter deck */
         .filter-deck { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; }
         .search-field { flex: 1; }
 
-        /* Live Table system specs */
         .table-container { overflow-x: auto; background-color: #111827; border-radius: 6px; border: 1px solid #1f2937; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
         th, td { padding: 12px 15px; border-bottom: 1px solid #1f2937; vertical-align: middle; }
         th { background-color: #1f2937; color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 11px; }
-        tr:hover { background-color: #162238; }
 
-        /* Dropdown custom dynamic matching colors */
         .status-dropdown { padding: 4px 8px; border-radius: 4px; background: #0b0f19; border: 1px solid #1f2937; font-size: 12px; font-weight: bold; cursor: pointer; }
         .status-Pending { color: #f43f5e; border-color: #f43f5e; }
         .status-Repairing { color: #fbbf24; border-color: #fbbf24; }
@@ -77,16 +73,15 @@
         .status-Not-Repair { color: #ef4444; border-color: #ef4444; }
         .status-Undelivered { color: #a855f7; border-color: #a855f7; }
 
-        /* Actions layout online matrix */
         .action-flex { display: flex; gap: 5px; align-items: center; }
         .tbl-btn-save { background-color: #10b981; border: none; color: white; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        .tbl-btn-save:hover { background-color: #059669; }
         .tbl-btn-print { background-color: #3b82f6; border: none; color: white; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        .tbl-btn-print:hover { background-color: #2563eb; }
+        .logout-btn { background-color: #374151; color: #d1d5db; font-size: 12px; font-weight: bold; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .logout-btn:hover { background-color: #ef4444; color: white; }
 
         #print-deck { display: none; }
 
-        /* ==================== A4 PORTRAIT PRINT SYSTEM CODE ==================== */
+        /* ==================== A4 PORTRAIT PRINT LAYOUT RULES ==================== */
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
             body * { display: none !important; }
@@ -99,14 +94,12 @@
             .print-sub-main { font-size: 11px !important; color: #333 !important; margin-top: 2px; line-height: 1.3; }
             
             .copy-tag-badge { background: #000 !important; color: #fff !important; padding: 4px 10px !important; font-weight: bold !important; font-size: 11px !important; border-radius: 4px; text-transform: uppercase; }
-            
             .print-info-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px 15px !important; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 8px; }
             
             .ptable { width: 100% !important; border-collapse: collapse !important; margin-top: 5px; margin-bottom: 10px; }
             .ptable th { background: #e6e6e6 !important; color: #000 !important; font-weight: bold !important; border: 1px solid #000 !important; padding: 6px !important; }
             .ptable td { border: 1px solid #000 !important; padding: 6px !important; }
             
-            /* The 3-Line Box Layout Format */
             .box-3line { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; border: 1px solid #000 !important; margin-top: 8px; background: #fff !important; text-align: center; }
             .cell-3line { border-right: 1px solid #000 !important; padding: 8px !important; }
             .cell-3line:last-child { border-right: none !important; }
@@ -118,30 +111,44 @@
             
             .matrix-9box { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; border: 1px solid #000 !important; padding: 5px !important; background: #fff !important; width: fit-content !important; }
             .box-unit { width: 11px; height: 11px; border: 1px solid #000 !important; }
-            
             .print-signatures { display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 25px; font-weight: bold; font-size: 11px; }
         }
     </style>
 </head>
 <body>
 
+    <div class="login-overlay" id="login-screen" style="display: {% if show_login %}flex{% else %}none{% endif %};">
+        <div class="login-box">
+            <h2>Fixify Cloud Lock</h2>
+            <p>Nagpur Pipla Road Central Core Portal Security</p>
+            <div style="margin-bottom: 12px; text-align: left;">
+                <input type="text" id="log-user" class="form-input" placeholder="Enter System User ID" style="background:#0b0f19;">
+            </div>
+            <div style="margin-bottom: 12px; text-align: left;">
+                <input type="password" id="log-pass" class="form-input" placeholder="Enter Cloud Security Key Password" style="background:#0b0f19;">
+            </div>
+            <button class="login-btn" onclick="submitLoginAuth()">🔐 Unlock Terminal</button>
+        </div>
+    </div>
+
     <div class="sidebar">
-        <div class="brand-title">Fixify Operations</div>
         <div>
+            <div class="brand-title">Fixify Cloud</div>
             <div class="nav-section-title">System Navigation</div>
             <button class="nav-btn active" onclick="switchView('counter-view', this)">📊 Dashboard Counter</button>
             <button class="nav-btn" onclick="switchView('form-view', this)">📝 Create Jobsheet</button>
             <button class="nav-btn" onclick="switchView('summary-view', this)">🛠️ Total Repairing Summary</button>
         </div>
+        <button class="logout-btn" onclick="triggerSystemLogout()">🚪 Lock Terminal</button>
     </div>
 
     <div class="main-content">
         <div class="navbar">
+            <h3 style="color:#f3f4f6;">DUKAN ACTIVE DESK CONTROL</h3>
             <div class="sales-badge">Total Sales: <span id="nav-sales-val">₹0</span></div>
         </div>
 
         <div class="view-body">
-
             <div id="counter-view" class="view-panel active">
                 <div class="counters-grid">
                     <div class="counter-card blue-card">
@@ -161,103 +168,50 @@
 
             <div id="form-view" class="view-panel">
                 <div class="panel-card">
-                    <h3>📝 New Device Repairing Entry (Mobile / Laptop)</h3>
+                    <h3>New Device Repairing Entry (Mobile / Laptop)</h3>
                     <form id="jobsheet-entry-form">
                         <div class="form-row-3">
-                            <div class="form-group">
-                                <label>Device Category *</label>
-                                <select class="form-input" id="ins-category">
-                                    <option value="Mobile">MOBILE</option>
-                                    <option value="Laptop">LAPTOP</option>
-                                </select>
+                            <div class="form-group"><label>Device Category *</label>
+                                <select class="form-input" id="ins-category"><option value="Mobile">MOBILE</option><option value="Laptop">LAPTOP</option></select>
                             </div>
-                            <div class="form-group">
-                                <label>Model Name & Brand *</label>
-                                <input type="text" class="form-input" id="ins-device" required placeholder="Model Name">
-                            </div>
-                            <div class="form-group">
-                                <label>IMEI / Serial No.</label>
-                                <input type="text" class="form-input" id="ins-imei" placeholder="Optional">
-                            </div>
+                            <div class="form-group"><label>Model Name & Brand *</label><input type="text" class="form-input" id="ins-device" required placeholder="Model Name"></div>
+                            <div class="form-group"><label>IMEI / Serial No.</label><input type="text" class="form-input" id="ins-imei" placeholder="Optional"></div>
                         </div>
-
                         <div class="form-row-3">
-                            <div class="form-group">
-                                <label>Customer Name *</label>
-                                <input type="text" class="form-input" id="ins-name" required placeholder="Name">
-                            </div>
-                            <div class="form-group">
-                                <label>Customer Contact No *</label>
-                                <input type="text" class="form-input" id="ins-phone" required placeholder="Mobile Number">
-                            </div>
-                            <div class="form-group">
-                                <label>Device Lock / Password *</label>
-                                <input type="text" class="form-input" id="ins-password" placeholder="Screen PIN/Pattern code">
-                            </div>
+                            <div class="form-group"><label>Customer Name *</label><input type="text" class="form-input" id="ins-name" required placeholder="Name"></div>
+                            <div class="form-group"><label>Customer Contact No *</label><input type="text" class="form-input" id="ins-phone" required placeholder="Mobile Number"></div>
+                            <div class="form-group"><label>Device Lock / Password *</label><input type="text" class="form-input" id="ins-password" placeholder="PIN/Pattern code"></div>
                         </div>
-
-                        <div style="margin-bottom: 15px;">
-                            <div class="form-group">
-                                <label>Problem Details *</label>
-                                <textarea class="form-input" id="ins-problem" rows="2" required placeholder="Fault description details.."></textarea>
-                            </div>
-                        </div>
-
+                        <div style="margin-bottom: 15px;"><div class="form-group"><label>Problem Details *</label><textarea class="form-input" id="ins-problem" rows="2" required></textarea></div></div>
                         <div class="form-row-3" style="margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label>Estimate Cost *</label>
-                                <input type="number" class="form-input" id="ins-estimate" value="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Advance Deposit *</label>
-                                <input type="number" class="form-input" id="ins-advance" value="0">
-                            </div>
+                            <div class="form-group"><label>Estimate Cost *</label><input type="number" class="form-input" id="ins-estimate" value="0"></div>
+                            <div class="form-group"><label>Advance Deposit *</label><input type="number" class="form-input" id="ins-advance" value="0"></div>
                         </div>
-
-                        <button type="submit" class="submit-btn">💾 Submit Database & Print Landscape Invoice</button>
+                        <button type="submit" class="submit-btn">💾 Submit Database & Print Portrait Invoice</button>
                     </form>
                 </div>
             </div>
 
             <div id="summary-view" class="view-panel">
                 <div class="panel-card">
-                    <h3>📋 Live Central Repairing Records Counter</h3>
-                    
+                    <h3>Live Central Repairing Records Counter</h3>
                     <div class="filter-deck">
-                        <input type="text" class="form-input search-field" id="search-box" placeholder="Search Tracker Info (ID, Name, Mobile, Model)...">
+                        <input type="text" class="form-input search-field" id="search-box" placeholder="Search Tracker Info...">
                         <select class="form-input" id="filter-status-box" style="width: 170px;">
                             <option value="ALL">All Active Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Repairing">Repairing</option>
-                            <option value="Testing">Testing</option>
-                            <option value="Ready">Ready</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Not Repair">Not Repair</option>
-                            <option value="Undelivered">Undelivered</option>
+                            <option value="Pending">Pending</option><option value="Repairing">Repairing</option><option value="Testing">Testing</option><option value="Ready">Ready</option><option value="Delivered">Delivered</option><option value="Not Repair">Not Repair</option><option value="Undelivered">Undelivered</option>
                         </select>
                     </div>
-
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>In Date</th>
-                                    <th>Customer</th>
-                                    <th>Category</th>
-                                    <th>Model Name</th>
-                                    <th>Problem Details</th>
-                                    <th>Pricing Panel (₹)</th>
-                                    <th>Change Status</th>
-                                    <th>Actions</th>
-                                </tr>
+                                <tr><th>Order ID</th><th>In Date</th><th>Customer</th><th>Category</th><th>Model Name</th><th>Problem Details</th><th>Pricing Panel (₹)</th><th>Change Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="live-table-rows"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -269,49 +223,66 @@
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
             document.getElementById(viewId).classList.add('active');
-            btnElement.classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
+        }
+
+        async function submitLoginAuth() {
+            const u = document.getElementById('log-user').value;
+            const p = document.getElementById('log-pass').value;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: u, password: p})
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('login-screen').style.display = 'none';
+                reloadSystemData();
+            } else { alert(data.message); }
+        }
+
+        async function triggerSystemLogout() {
+            await fetch('/api/logout', {method: 'POST'});
+            window.location.reload();
         }
 
         async function reloadSystemData() {
-            try {
-                const res = await fetch('/api/jobs');
-                globalDatabase = await res.json();
-                populateSummaryTable(globalDatabase);
-                computeStatsAndSales();
-            } catch (err) { console.error("Database connection lost:", err); }
+            const res = await fetch('/api/jobs');
+            if(res.status === 401) {
+                document.getElementById('login-screen').style.display = 'flex';
+                return;
+            }
+            globalDatabase = await res.json();
+            populateSummaryTable(globalDatabase);
+            computeStatsAndSales();
         }
 
         function populateSummaryTable(jobs) {
             const tbody = document.getElementById('live-table-rows');
             tbody.innerHTML = '';
-            
             const txt = document.getElementById('search-box').value.toLowerCase();
             const filter = document.getElementById('filter-status-box').value;
 
             jobs.forEach(job => {
-                const matchSearch = job.id.toLowerCase().includes(txt) || job.name.toLowerCase().includes(txt) || job.phone1.includes(txt) || job.device.toLowerCase().includes(txt);
+                const matchSearch = job.id.toLowerCase().includes(txt) || job.name.toLowerCase().includes(txt) || job.phone1.includes(txt);
                 const matchStatus = filter === 'ALL' || job.status === filter;
 
                 if (matchSearch && matchStatus) {
                     const tr = document.createElement('tr');
                     const cStyle = job.status.replace(" ", "-");
-                    const extraVal = job.extra_cost || 0;
-                    const discVal = job.discount || 0;
-
                     tr.innerHTML = `
                         <td style="font-weight:bold; color:#f97316;">${job.id}</td>
                         <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
                         <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
-                        <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; font-size:11px; font-weight:bold; color:#f97316;">${job.category}</span></td>
+                        <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
                         <td>${job.device}</td>
-                        <td style="max-width:150px; font-size:12px; color:#9ca3af;">${job.problem}</td>
+                        <td style="font-size:12px; color:#9ca3af;">${job.problem}</td>
                         <td>
                             <div style="font-size:12px; line-height:1.4; min-width:145px;">
                                 <span>Est: ₹${job.estimate}</span> | <span style="color:#3b82f6;">Adv: ₹${job.advance}</span><br>
-                                <label style="color:#fbbf24; font-size:10px;">Extra: </label><input type="number" style="width:45px; background:#0b0f19; border:1px solid #1f2937; color:white; font-size:11px;" value="${extraVal}" id="tx-ext-${job.id}">
-                                <label style="color:#f43f5e; font-size:10px; margin-left:2px;">Disc: </label><input type="number" style="width:45px; background:#0b0f19; border:1px solid #1f2937; color:white; font-size:11px;" value="${discVal}" id="tx-disc-${job.id}">
+                                <label style="color:#fbbf24; font-size:10px;">Extra: </label><input type="number" style="width:45px; background:#0b0f19; border:1px solid #1f2937; color:white;" value="${job.extra_cost || 0}" id="tx-ext-${job.id}">
+                                <label style="color:#f43f5e; font-size:10px; margin-left:2px;">Disc: </label><input type="number" style="width:45px; background:#0b0f19; border:1px solid #1f2937; color:white;" value="${job.discount || 0}" id="tx-disc-${job.id}">
                             </div>
                         </td>
                         <td>
@@ -338,76 +309,59 @@
         }
 
         function computeStatsAndSales() {
-            // Summary Analytics Card Engine counter formulas
             document.getElementById('cnt-m-ready').innerText = globalDatabase.filter(j => j.category === 'Mobile' && j.status === 'Ready').length;
             document.getElementById('cnt-l-pending').innerText = globalDatabase.filter(j => j.category === 'Laptop' && j.status === 'Pending').length;
             document.getElementById('cnt-total-delv').innerText = globalDatabase.filter(j => j.status === 'Delivered').length;
 
             let salesSum = 0;
             globalDatabase.forEach(j => {
-                if(j.status === 'Delivered') {
-                    salesSum += ((j.estimate + (j.extra_cost || 0)) - (j.discount || 0));
-                }
+                if(j.status === 'Delivered') { salesSum += ((j.estimate + (j.extra_cost || 0)) - (j.discount || 0)); }
             });
             document.getElementById('nav-sales-val').innerText = '₹' + salesSum;
         }
 
         async function modifyStatus(id, newStatus) {
-            try {
-                await fetch('/api/jobs/update_status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({id: id, status: newStatus})
-                });
-                reloadSystemData();
-            } catch(e) { console.error(e); }
+            await fetch('/api/jobs/update_status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id, status: newStatus})
+            });
+            reloadSystemData();
         }
 
         async function triggerPricingSave(id) {
             const extra = parseFloat(document.getElementById(`tx-ext-${id}`).value || 0);
             const discount = parseFloat(document.getElementById(`tx-disc-${id}`).value || 0);
-            try {
-                const res = await fetch('/api/jobs/update_pricing', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({id: id, extra_cost: extra, discount: discount})
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert(`Order ${id} ke charges safe ho gaye bhai!`);
-                    reloadSystemData();
-                }
-            } catch(e) { console.error(e); }
+            const res = await fetch('/api/jobs/update_pricing', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id, extra_cost: extra, discount: discount})
+            });
+            const data = await res.json();
+            if(data.success) { alert(`Order ${id} saved secure!`); reloadSystemData(); }
         }
 
         document.getElementById('jobsheet-entry-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
-                category: document.getElementById('ins-category').value,
-                device: document.getElementById('ins-device').value,
-                imei: document.getElementById('ins-imei').value,
-                name: document.getElementById('ins-name').value,
-                phone1: document.getElementById('ins-phone').value,
-                password: document.getElementById('ins-password').value,
-                problem: document.getElementById('ins-problem').value,
-                estimate: parseFloat(document.getElementById('ins-estimate').value || 0),
+                category: document.getElementById('ins-category').value, device: document.getElementById('ins-device').value,
+                imei: document.getElementById('ins-imei').value, name: document.getElementById('ins-name').value,
+                phone1: document.getElementById('ins-phone').value, password: document.getElementById('ins-password').value,
+                problem: document.getElementById('ins-problem').value, estimate: parseFloat(document.getElementById('ins-estimate').value || 0),
                 advance: parseFloat(document.getElementById('ins-advance').value || 0)
             };
-
-            try {
-                const res = await fetch('/api/jobs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const out = await res.json();
-                if(out.success) {
-                    await reloadSystemData();
-                    document.getElementById('jobsheet-entry-form').reset();
-                    switchView('summary-view', document.querySelectorAll('.nav-btn')[2]);
-                    setTimeout(() => { executePortraitPrint(out.id); }, 600);
-                }
-            } catch(err) { console.error(err); }
+            const res = await fetch('/api/jobs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const out = await res.json();
+            if(out.success) {
+                await reloadSystemData();
+                document.getElementById('jobsheet-entry-form').reset();
+                switchView('summary-view', document.querySelectorAll('.nav-btn')[2]);
+                setTimeout(() => { executePortraitPrint(out.id); }, 600);
+            }
         });
 
         function executePortraitPrint(id) {
@@ -416,12 +370,9 @@
 
             const printCanvas = document.getElementById('print-deck');
             printCanvas.innerHTML = '';
-
             const copies = ["Customer Copy", "Office Copy"];
-            const est = parseFloat(job.estimate || 0);
-            const adv = parseFloat(job.advance || 0);
-            const ext = parseFloat(job.extra_cost || 0);
-            const dsc = parseFloat(job.discount || 0);
+            const est = parseFloat(job.estimate || 0); const adv = parseFloat(job.advance || 0);
+            const ext = parseFloat(job.extra_cost || 0); const dsc = parseFloat(job.discount || 0);
             const balance = (est + ext) - adv - dsc;
 
             copies.forEach((copyName) => {
@@ -430,82 +381,45 @@
                         <div class="print-header-row">
                             <div>
                                 <div class="print-title-main">FIXIFY TECH REPAIR</div>
-                                <div class="print-sub-main">Premium Smartphone & Laptop Hub<br>Pipla Road, Nagpur | Contact: +91 9890XXXXXX</div>
+                                <div class="print-sub-main">Premium Smartphone & Laptop Hub<br>Nagpur | Contact: +91 9890XXXXXX</div>
                             </div>
                             <div class="copy-tag-badge">${copyName}</div>
                         </div>
-                        
                         <div class="print-info-grid">
-                            <div><strong>Order ID:</strong> ${job.id}</div>
-                            <div><strong>Date:</strong> ${job.date || 'Live Entry'}</div>
-                            <div><strong>Customer Name:</strong> ${job.name}</div>
-                            <div><strong>Contact Number:</strong> ${job.phone1}</div>
-                            <div><strong>Device Model:</strong> [${job.category}] ${job.device}</div>
-                            <div><strong>Lock Code/PIN:</strong> ${job.password || 'None'}</div>
+                            <div><strong>Order ID:</strong> ${job.id}</div><div><strong>Date:</strong> ${job.date}</div>
+                            <div><strong>Customer:</strong> ${job.name}</div><div><strong>Contact:</strong> ${job.phone1}</div>
+                            <div><strong>Model:</strong> [${job.category}] ${job.device}</div><div><strong>Lock/Pass:</strong> ${job.password || 'None'}</div>
                         </div>
-
                         <table class="ptable">
-                            <thead>
-                                <tr>
-                                    <th>Job Work / Fault Issue Details</th>
-                                    <th style="width: 140px; text-align: right;">Estimated Cost</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Job Work Details</th><th style="width: 140px; text-align: right;">Estimated</th></tr></thead>
                             <tbody>
-                                <tr>
-                                    <td style="font-weight: bold; font-size:12px;">${job.problem}</td>
-                                    <td style="text-align: right; font-weight: bold;">₹${est}</td>
-                                </tr>
-                                ${ext > 0 ? `<tr><td style="text-align: right; font-size:11px;">Extra Work Added:</td><td style="text-align: right; font-weight:bold;">+ ₹${ext}</td></tr>` : ''}
-                                ${dsc > 0 ? `<tr><td style="text-align: right; font-size:11px; color:red;">Discount Applied:</td><td style="text-align: right; font-weight:bold; color:red;">- ₹${dsc}</td></tr>` : ''}
+                                <tr><td>${job.problem}</td><td style="text-align: right;">₹${est}</td></tr>
+                                ${ext > 0 ? `<tr><td style="text-align: right;">Extra:</td><td style="text-align: right;">+ ₹${ext}</td></tr>` : ''}
+                                ${dsc > 0 ? `<tr><td style="text-align: right; color:red;">Discount:</td><td style="text-align: right; color:red;">- ₹${dsc}</td></tr>` : ''}
                             </tbody>
                         </table>
-
                         <div class="box-3line">
-                            <div class="cell-3line">
-                                <div>Total Amount</div>
-                                <div>₹${est + ext}</div>
-                            </div>
-                            <div class="cell-3line">
-                                <div>Advance Paid</div>
-                                <div style="color: green;">₹${adv}</div>
-                            </div>
-                            <div class="cell-3line">
-                                <div>Net Balance Cash Due</div>
-                                <div style="font-size: 15px;">₹${balance}</div>
-                            </div>
+                            <div class="cell-3line"><div>Total Amount</div><div>₹${est + ext}</div></div>
+                            <div class="cell-3line"><div>Advance Paid</div><div style="color: green;">₹${adv}</div></div>
+                            <div class="cell-3line"><div>Net Balance Due</div><div>₹${balance}</div></div>
                         </div>
-
                         <div class="print-footer-terms">
-                            <div class="terms-p">
-                                <strong>Terms & Conditions:</strong><br>
-                                1. Replaced parts carry no warranty unless specified by vendor.<br>
-                                2. Devices not claimed within 30 days or marked as <strong>Not Repair/Undelivered</strong> will be disposed of.<br>
-                                3. We are not responsible for data loss during software or hardware flashing operations.
-                            </div>
-                            <div class="matrix-9box">
-                                <div class="box-unit"></div> <div class="box-unit"></div> <div class="box-unit"></div>
-                                <div class="box-unit"></div> <div class="box-unit"></div> <div class="box-unit"></div>
-                                <div class="box-unit"></div> <div class="box-unit"></div> <div class="box-unit"></div>
-                            </div>
+                            <div class="terms-p"><strong>Terms:</strong> 1. No warranty on parts. 2. Items left 30 days will be disposed of.</div>
+                            <div class="matrix-9box"><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div></div>
                         </div>
-
-                        <div class="print-signatures">
-                            <div>Customer Signature: ________________</div>
-                            <div>Authorized Signatory: ________________</div>
-                        </div>
-                    </div>
-                `;
+                        <div class="print-signatures"><div>Customer Sign</div><div>Authorized Sign</div></div>
+                    </div>`;
             });
-
             window.print();
         }
 
-        // Search engine filter listeners
         document.getElementById('search-box').addEventListener('input', () => populateSummaryTable(globalDatabase));
         document.getElementById('filter-status-box').addEventListener('change', () => populateSummaryTable(globalDatabase));
-
+        
+        // Initial setup boot
+        {% if not show_login %}
         window.onload = reloadSystemData;
+        {% endif %}
     </script>
 </body>
 </html>
