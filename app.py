@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 DB_PATH = "fixify_shop.db"
 
 def init_db():
