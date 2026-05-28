@@ -5,90 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixify Tech Repair Dashboard</title>
     <style>
-        /* Global & Theme Styles */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { background-color: #0d1117; color: #c9d1d9; padding: 20px; }
-        h1, h2, h3 { color: #f0f6fc; }
+        .container { max-width: 1300px; margin: 0 auto; }
         
-        .container { max-width: 1200px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #21262d; padding-bottom: 15px; }
         .logo-section { display: flex; align-items: center; gap: 15px; }
-        .logo-circle { width: 50px; height: 50px; border-radius: 50%; background-color: #f77f00; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 20px; border: 2px solid #fff; }
+        .logo-circle { width: 55px; height: 55px; border-radius: 50%; background-color: #f77f00; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 24px; border: 2px solid #fff; box-shadow: 0 0 10px rgba(247,127,0,0.5); }
         
-        /* Stats Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #161b22; padding: 15px; border-radius: 8px; border: 1px solid #30363d; text-align: center; }
-        .stat-card h3 { font-size: 14px; color: #8b949e; margin-bottom: 5px; }
-        .stat-card p { font-size: 22px; font-weight: bold; color: #f77f00; }
+        /* Stats System */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; text-align: center; border-bottom: 4px solid #f77f00; }
+        .stat-card h3 { font-size: 13px; color: #8b949e; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .stat-card p { font-size: 26px; font-weight: bold; color: #f77f00; }
 
-        /* Forms & Interactive Controls */
+        /* Main Workspace split */
         .main-grid { display: grid; grid-template-columns: 1fr; gap: 25px; }
-        @media(min-width: 768px) { .main-grid { grid-template-columns: 350px 1fr; } }
+        @media(min-width: 992px) { .main-grid { grid-template-columns: 380px 1fr; } }
         
-        .card { background: #161b22; pading: 20px; padding: 20px; border-radius: 8px; border: 1px solid #30363d; height: fit-content; }
-        .card h2 { font-size: 18px; margin-bottom: 15px; border-left: 4px solid #f77f00; padding-left: 10px; }
+        .card { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 25px; }
+        .card h2 { font-size: 18px; margin-bottom: 15px; border-left: 4px solid #f77f00; padding-left: 10px; color: #f0f6fc; }
         
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 5px; }
-        .form-control { width: 100%; padding: 8px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: white; font-size: 14px; }
-        .form-control:focus { border-color: #f77f00; outline: none; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 5px; font-weight: 600; }
+        .form-control { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: white; font-size: 14px; }
+        .form-control:focus { border-color: #f77f00; outline: none; box-shadow: 0 0 5px rgba(247,127,0,0.3); }
         
-        .btn { width: 100%; padding: 10px; background: #f77f00; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; margin-top: 10px; text-transform: uppercase; }
+        .btn { width: 100%; padding: 12px; background: #f77f00; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; }
         .btn:hover { background: #fcbf49; color: #0d1117; }
 
-        /* Filter & Table Styles */
+        /* Filter Controls */
         .table-filters { display: flex; gap: 10px; margin-bottom: 15px; }
         .search-bar { flex: 1; }
         
+        /* Table Design */
         .table-wrapper { overflow-x: auto; background: #161b22; border-radius: 8px; border: 1px solid #30363d; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid #30363d; }
-        th { background: #21262d; color: #8b949e; font-weight: 600; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #30363d; vertical-align: middle; }
+        th { background: #21262d; color: #8b949e; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        tr:hover { background-color: #1f242c; }
         
-        /* Status Dropdown Colors */
-        .status-select { padding: 4px 8px; border-radius: 4px; background: #0d1117; color: white; border: 1px solid #30363d; font-size: 13px; font-weight: bold; }
-        .status-Pending { color: #ff0055; font-weight: bold; }
-        .status-Repairing { color: #ffb703; font-weight: bold; }
-        .status-Testing { color: #2196f3; font-weight: bold; }
-        .status-Ready { color: #00b4d8; font-weight: bold; }
-        .status-Delivered { color: #2bc016; font-weight: bold; }
-        .status-Not-Repair { color: #d62828; font-weight: bold; }
-        .status-Undelivered { color: #9b5de5; font-weight: bold; }
+        /* Dropdowns status style */
+        .status-select { padding: 6px 10px; border-radius: 4px; background: #0d1117; border: 1px solid #30363d; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .status-Pending { color: #ff0055; border-color: #ff0055; }
+        .status-Repairing { color: #ffb703; border-color: #ffb703; }
+        .status-Testing { color: #2196f3; border-color: #2196f3; }
+        .status-Ready { color: #00b4d8; border-color: #00b4d8; }
+        .status-Delivered { color: #2bc016; border-color: #2bc016; }
+        .status-Not-Repair { color: #d62828; border-color: #d62828; }
+        .status-Undelivered { color: #9b5de5; border-color: #9b5de5; }
 
-        .print-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .print-btn:hover { background: #f77f00; color: white; }
+.action-row { display: flex; gap: 5px; flex-direction: row; align-items: center; justify-content: flex-start; }
+.print-btn, .update-btn { padding: 4px 6px !important; font-size: 11px !important; font-weight: bold; white-space: nowrap; height: 28px; }
+        .print-btn:hover { background: #f77f00; color: white; border-color: #f77f00; }
+        
+        .update-btn { background: #238636; border: 1px solid #30363d; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .update-btn:hover { background: #2ea043; }
 
-        /* ==================== PRINT PORTRAIT LAYOUT SYSTEM ==================== */
         #print-area { display: none; }
 
+        /* ==================== ORIGINAL PORTRAIT PRINT LAYOUT SYSTEM ==================== */
         @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: A4 portrait; margin: 8mm 10mm; }
             body * { display: none !important; }
             #print-area { display: block !important; width: 100% !important; color: #000 !important; background: #fff !important; font-family: 'Arial', sans-serif; font-size: 12px; }
             #print-area * { display: block !important; }
             
-            /* Two separate receipts arranged vertically in Portrait */
-            .portrait-receipt { width: 100% !important; border: 2px dashed #000; padding: 15px; margin-bottom: 25px; background: #fff !important; color: #000 !important; border-radius: 10px; }
-            .receipt-header { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-            .receipt-title-block { text-align: left; }
-            .receipt-title { font-size: 20px !important; font-weight: bold !important; color: #000 !important; text-transform: uppercase; }
-            .receipt-subtitle { font-size: 11px !important; color: #555 !important; margin-top: 2px; }
+            .portrait-receipt { width: 100% !important; border: 2px dashed #000; padding: 15px; margin-bottom: 30px; background: #fff !important; color: #000 !important; border-radius: 8px; position: relative; }
+            .receipt-header { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; }
+            .receipt-title { font-size: 22px !important; font-weight: bold !important; color: #000 !important; letter-spacing: 0.5px; }
+            .receipt-subtitle { font-size: 11px !important; color: #333 !important; margin-top: 2px; line-height: 1.3; }
             
-            .badge-copy { background: #000 !important; color: #fff !important; padding: 4px 10px !important; font-weight: bold !important; font-size: 12px !important; border-radius: 4px; text-transform: uppercase; display: inline-block !important; }
+            .badge-copy { background: #000 !important; color: #fff !important; padding: 4px 10px !important; font-weight: bold !important; font-size: 11px !important; border-radius: 4px; text-transform: uppercase; height: fit-content; }
             
-            .info-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-bottom: 12px; }
-            .info-line { font-size: 13px !important; line-height: 1.4; color: #000 !important; }
-            .info-line strong { font-weight: bold !important; }
+            .info-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px 15px !important; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 8px; }
+            .info-line { font-size: 12px !important; line-height: 1.4; color: #000 !important; }
             
-            .price-table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px; margin-bottom: 12px; }
-            .price-table th { background: #f2f2f2 !important; color: #000 !important; font-weight: bold !important; border: 1px solid #000 !important; padding: 6px !important; }
-            .price-table td { border: 1px solid #000 !important; padding: 6px !important; font-size: 13px !important; color: #000 !important; }
+            .price-table { width: 100% !important; border-collapse: collapse !important; margin-top: 5px; margin-bottom: 10px; }
+            .price-table th { background: #f2f2f2 !important; color: #000 !important; font-weight: bold !important; border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; text-transform: none; }
+            .price-table td { border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; color: #000 !important; }
             
-            .terms-box { font-size: 10px !important; color: #444 !important; line-height: 1.3; border-top: 1px solid #ccc; padding-top: 6px; margin-top: 10px; }
-            .dot-matrix-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; margin-top: 8px; border: 1px solid #ccc; padding: 5px; width: fit-content; }
-            .dot-box { width: 12px; height: 12px; border: 1px solid #000; border-radius: 2px; display: inline-block !important; }
+            /* The requested 3-Line Format Grid Box */
+            .three-line-box { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; border: 1px solid #000 !important; margin-top: 8px; background: #fff !important; text-align: center; }
+            .three-line-cell { border-right: 1px solid #000 !important; padding: 8px !important; font-size: 12px !important; }
+            .three-line-cell:last-child { border-right: none !important; }
+            .three-line-cell div:first-child { font-weight: bold !important; text-transform: uppercase; font-size: 10px !important; color: #444 !important; margin-bottom: 3px; }
+            .three-line-cell div:last-child { font-size: 14px !important; font-weight: bold !important; color: #000 !important; }
+
+            .terms-section { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; margin-top: 10px; }
+            .terms-box { font-size: 9px !important; color: #333 !important; line-height: 1.3; width: 75% !important; }
             
-            .footer-sign { display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 15px; font-weight: bold; font-size: 12px; }
+            /* 9 Box Pattern */
+            .dot-matrix-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; border: 1px solid #000 !important; padding: 5px !important; width: fit-content !important; margin-top: 5px; background: #fff !important; }
+            .dot-box { width: 11px; height: 11px; border: 1px solid #000 !important; border-radius: 2px; background: transparent !important; display: block !important; }
+            
+            .footer-sign { display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 25px; font-weight: bold; font-size: 11px; }
         }
     </style>
 </head>
@@ -99,14 +110,14 @@
             <div class="logo-section">
                 <div class="logo-circle">F</div>
                 <div>
-                    <h2>FIXIFY TECH REPAIR v15.0</h2>
-                    <p style="font-size: 12px; color: #8b949e;">Pipla Road, Nagpur | Cloud Control Active</p>
+                    <h2 style="font-weight: 800; letter-spacing: 0.5px;">FIXIFY TECH REPAIR v15.0</h2>
+                    <p style="font-size: 12px; color: #8b949e;">Pipla Road, Nagpur | Premium Cloud Operations Active</p>
                 </div>
             </div>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><h3>Total Active Orders</h3><p id="stat-total">0</p></div>
+            <div class="stat-card"><h3>Total Repairing Orders</h3><p id="stat-total">0</p></div>
             <div class="stat-card"><h3>Mobile Pending</h3><p id="stat-m-pend" style="color: #ff0055;">0</p></div>
             <div class="stat-card"><h3>Laptop Pending</h3><p id="stat-l-pend" style="color: #ffb703;">0</p></div>
             <div class="stat-card"><h3>Ready for Delivery</h3><p id="stat-ready" style="color: #00b4d8;">0</p></div>
@@ -129,7 +140,7 @@
                     </div>
                     <div class="form-group">
                         <label>Mobile Number</label>
-                        <input type="text" class="form-control" id="form-phone" required placeholder="e.g. 98XXXXXXXX">
+                        <input type="text" class="form-control" id="form-phone" required placeholder="e.g. 9890XXXXXX">
                     </div>
                     <div class="form-group">
                         <label>Device Model</label>
@@ -140,19 +151,19 @@
                         <input type="text" class="form-control" id="form-imei" placeholder="Optional">
                     </div>
                     <div class="form-group">
-                        <label>Device Pattern Lock / Password</label>
+                        <label>Pattern Lock / Password</label>
                         <input type="text" class="form-control" id="form-password" placeholder="Optional">
                     </div>
                     <div class="form-group">
                         <label>Problem Reported</label>
-                        <textarea class="form-control" id="form-problem" rows="2" required placeholder="e.g. Folder change, Charging issue"></textarea>
+                        <textarea class="form-control" id="form-problem" rows="2" required placeholder="e.g. Folder change, Charging section dead"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Estimated Repair Cost (₹)</label>
+                        <label>Estimated Cost (₹)</label>
                         <input type="number" class="form-control" id="form-estimate" value="0">
                     </div>
                     <div class="form-group">
-                        <label>Advance Payment (₹)</label>
+                        <label>Advance Paid (₹)</label>
                         <input type="number" class="form-control" id="form-advance" value="0">
                     </div>
                     <button type="submit" class="btn">💾 Submit & Print Portrait Bill</button>
@@ -160,11 +171,11 @@
             </div>
 
             <div class="card">
-                <h2>📋 Active Repairs Counter</h2>
+                <h2>📋 Central Repairs Counter</h2>
                 <div class="table-filters">
-                    <input type="text" class="form-control search-bar" id="search-input" placeholder="Search by name, order ID, or phone number...">
-                    <select class="form-control" id="filter-status" style="width: 150px;">
-                        <option value="ALL">All Status</option>
+                    <input type="text" class="form-control search-bar" id="search-input" placeholder="Search by Customer name, order ID, phone number...">
+                    <select class="form-control" id="filter-status" style="width: 160px;">
+                        <option value="ALL">All Status Types</option>
                         <option value="Pending">Pending</option>
                         <option value="Repairing">Repairing</option>
                         <option value="Testing">Testing</option>
@@ -181,10 +192,10 @@
                             <tr>
                                 <th>Order ID</th>
                                 <th>Date</th>
-                                <th>Customer Details</th>
-                                <th>Device</th>
-                                <th>Estimated (₹)</th>
-                                <th>Status Control</th>
+                                <th>Customer Info</th>
+                                <th>Device Name</th>
+                                <th>Pricing Details (₹)</th>
+                                <th>Status Rule</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -196,8 +207,7 @@
         </div>
     </div>
 
-    <div id="print-area">
-        </div>
+    <div id="print-area"></div>
 
     <script>
         let allJobs = [];
@@ -208,7 +218,7 @@
                 allJobs = await response.json();
                 renderTable(allJobs);
                 updateStats();
-            } catch (err) { console.error("Error fetching jobs:", err); }
+            } catch (err) { console.error("Error fetching database:", err); }
         }
 
         function renderTable(jobs) {
@@ -226,162 +236,18 @@
 
                 if (matchesSearch && matchesStatus) {
                     const tr = document.createElement('tr');
+                    const cls = job.status.replace(" ", "-");
                     
-                    // Standardizing status value for CSS formatting
-                    const classStatus = job.status.replace(" ", "-");
+                    // Fallback handles if backend properties are blank
+                    const extCost = job.extra_cost || 0;
+                    const disc = job.discount || 0;
 
                     tr.innerHTML = `
-                        <td style="font-weight:bold; color:#f77f00;">${job.id}</td>
+                        <td style="font-weight:bold; color:#f77f00; font-size:15px;">${job.id}</td>
                         <td style="font-size:12px; color:#8b949e;">${job.date}</td>
                         <td><strong>${job.name}</strong><br><span style="font-size:12px; color:#8b949e;">${job.phone1}</span></td>
-                        <td><span class="badge" style="background:#21262d; padding:2px 6px; border-radius:4px; font-size:11px;">${job.category}</span><br>${job.device}</td>
-                        <td>₹${job.estimate} <br><small style="color:#8b949e">Adv: ₹${job.advance}</small></td>
+                        <td><span style="background:#21262d; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold; color:#f77f00;">${job.category}</span><br>${job.device}</td>
                         <td>
-                            <select class="status-select status-${classStatus}" onchange="updateStatus('${job.id}', this.value)">
-                                <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
-                                <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
-                                <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
-                                <option value="Ready" ${job.status==='Ready'?'selected':''}>Ready</option>
-                                <option value="Delivered" ${job.status==='Delivered'?'selected':''}>Delivered</option>
-                                <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
-                                <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
-                            </select>
-                        </td>
-                        <td><button class="print-btn" onclick="printInvoice('${job.id}')">🖨️ Print Bill</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            });
-        }
-
-        function updateStats() {
-            document.getElementById('stat-total').innerText = allJobs.length;
-            document.getElementById('stat-m-pend').innerText = allJobs.filter(j => j.category === 'Mobile' && j.status === 'Pending').length;
-            document.getElementById('stat-l-pend').innerText = allJobs.filter(j => j.category === 'Laptop' && j.status === 'Pending').length;
-            document.getElementById('stat-ready').innerText = allJobs.filter(j => j.status === 'Ready').length;
-        }
-
-        async function updateStatus(id, newStatus) {
-            // Future API implementation for updating status can be attached here
-            allJobs = allJobs.map(j => j.id === id ? {...j, status: newStatus} : j);
-            renderTable(allJobs);
-            updateStats();
-        }
-
-        document.getElementById('jobsheet-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                category: document.getElementById('form-category').value,
-                name: document.getElementById('form-name').value,
-                phone1: document.getElementById('form-phone').value,
-                device: document.getElementById('form-device').value,
-                imei: document.getElementById('form-imei').value,
-                password: document.getElementById('form-password').value,
-                problem: document.getElementById('form-problem').value,
-                estimate: parseFloat(document.getElementById('form-estimate').value || 0),
-                advance: parseFloat(document.getElementById('form-advance').value || 0)
-            };
-
-            try {
-                const res = await fetch('/api/jobs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    fetchJobs();
-                    document.getElementById('jobsheet-form').reset();
-                    printInvoice(result.id);
-                }
-            } catch (err) { console.error("Error creating job:", err); }
-        });
-
-        function printInvoice(id) {
-            const job = allJobs.find(j => j.id === id);
-            if (!job) return;
-
-            const printArea = document.getElementById('print-area');
-            printArea.innerHTML = '';
-
-            const copyNames = ["Customer Copy", "Office Copy"];
-            
-            // Building vertical stacked portrait structure
-            copyNames.forEach((copyName) => {
-                const receiptHTML = `
-                    <div class="portrait-receipt">
-                        <div class="receipt-header">
-                            <div class="receipt-title-block">
-                                <div class="receipt-title">FIXIFY TECH REPAIR</div>
-                                <div class="receipt-subtitle">Premium Smartphone & Laptop Service Hub<br>Pipla Road, Nagpur | Contact: +91 9890XXXXXX</div>
-                            </div>
-                            <div class="badge-copy">${copyName}</div>
-                        </div>
-                        
-                        <div class="info-grid">
-                            <div class="info-line"><strong>Order ID:</strong> ${job.id}</div>
-                            <div class="info-line"><strong>Date:</strong> ${job.date || 'Live Entry'}</div>
-                            <div class="info-line"><strong>Customer Name:</strong> ${job.name}</div>
-                            <div class="info-line"><strong>Phone Number:</strong> ${job.phone1}</div>
-                            <div class="info-line"><strong>Device / Model:</strong> [${job.category}] ${job.device}</div>
-                            <div class="info-line"><strong>Lock Pattern/Pass:</strong> ${job.password || 'None'}</div>
-                        </div>
-
-                        <table class="price-table">
-                            <thead>
-                                <tr>
-                                    <th>Reported Problem Details</th>
-                                    <th style="width: 120px; text-align: right;">Amount (₹)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${job.problem}</td>
-                                    <td style="text-align: right;">₹${job.estimate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: right; font-weight: bold;">Advance Paid:</td>
-                                    <td style="text-align: right; font-weight: bold; color: green;">- ₹${job.advance}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: right; font-weight: bold; background: #f9f9f9;">Net Balance Due:</td>
-                                    <td style="text-align: right; font-weight: bold; background: #f9f9f9;">₹${(job.estimate - job.advance)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <div class="terms-box" style="width:75%;">
-                                <strong>Terms & Conditions:</strong><br>
-                                1. Replaced parts carry no replacement warranty unless specified by vendor.<br>
-                                2. Devices not claimed within 30 days of repair or marked as <strong>Undelivered/Not Repair</strong> will be disposed of.<br>
-                                3. We are not responsible for data loss during software or hardware flashing jobs.
-                            </div>
-                            <div class="dot-matrix-grid">
-                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
-                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
-                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
-                            </div>
-                        </div>
-
-                        <div class="footer-sign">
-                            <div>Customer Signature: ________________</div>
-                            <div>Authorized Signatory: ________________</div>
-                        </div>
-                    </div>
-                `;
-                printArea.innerHTML += receiptHTML;
-            });
-
-            window.print();
-        }
-
-        // Search & Filter Listeners
-        document.getElementById('search-input').addEventListener('input', () => renderTable(allJobs));
-        document.getElementById('filter-status').addEventListener('change', () => renderTable(allJobs));
-
-        // Auto Initial Load
-        window.onload = fetchJobs;
-    </script>
-</body>
-</html>
+                            <div style="font-size:13px; line-height:1.4;">
+                                <span>Est: ₹${job.estimate}</span> | <span style="color:#00b4d8">Adv: ₹${job.advance}</span><br>
+                                <label style="font-size:11px; color:#ffb703;">Extra: </label><input type="number" style="width:55px; background:#0d1117; border:1px solid #30363d; color:white; font-size:11px; padding:1px;" value="${extCost}" id="ext-${job.id}"
