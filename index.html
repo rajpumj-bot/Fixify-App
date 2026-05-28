@@ -7,19 +7,23 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { background-color: #0d1117; color: #c9d1d9; padding: 20px; }
-        .container { max-width: 1300px; margin: 0 auto; }
+        .container { max-width: 1350px; margin: 0 auto; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #21262d; padding-bottom: 15px; }
+        /* Top Header & Navbar Box */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #21262d; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
         .logo-section { display: flex; align-items: center; gap: 15px; }
         .logo-circle { width: 55px; height: 55px; border-radius: 50%; background-color: #f77f00; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 24px; border: 2px solid #fff; box-shadow: 0 0 10px rgba(247,127,0,0.5); }
         
-        /* Stats System */
+        /* THE LEGENDARY TOTAL SALES COUNTER BOX */
+        .total-sales-badge { background: #1f242c; border: 2px solid #2bc016; color: #2bc016; padding: 10px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; box-shadow: 0 0 12px rgba(43,192,22,0.2); letter-spacing: 0.5px; }
+
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; text-align: center; border-bottom: 4px solid #f77f00; }
         .stat-card h3 { font-size: 13px; color: #8b949e; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
         .stat-card p { font-size: 26px; font-weight: bold; color: #f77f00; }
 
-        /* Main Workspace split */
+        /* Split Layout */
         .main-grid { display: grid; grid-template-columns: 1fr; gap: 25px; }
         @media(min-width: 992px) { .main-grid { grid-template-columns: 380px 1fr; } }
         
@@ -29,23 +33,29 @@
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 5px; font-weight: 600; }
         .form-control { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: white; font-size: 14px; }
-        .form-control:focus { border-color: #f77f00; outline: none; box-shadow: 0 0 5px rgba(247,127,0,0.3); }
+        .form-control:focus { border-color: #f77f00; outline: none; }
         
-        .btn { width: 100%; padding: 12px; background: #f77f00; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; }
+        .btn { width: 100%; padding: 12px; background: #f77f00; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase; }
         .btn:hover { background: #fcbf49; color: #0d1117; }
 
-        /* Filter Controls */
         .table-filters { display: flex; gap: 10px; margin-bottom: 15px; }
         .search-bar { flex: 1; }
         
-        /* Table Design */
+        /* Table Layout */
         .table-wrapper { overflow-x: auto; background: #161b22; border-radius: 8px; border: 1px solid #30363d; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         th, td { padding: 12px 15px; border-bottom: 1px solid #30363d; vertical-align: middle; }
-        th { background: #21262d; color: #8b949e; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        tr:hover { background-color: #1f242c; }
+        th { background: #21262d; color: #8b949e; font-weight: 600; text-transform: uppercase; font-size: 11px; }
         
-        /* Dropdowns status style */
+        /* Action buttons completely online layout fix */
+        .action-row { display: flex; gap: 6px; flex-direction: row; align-items: center; justify-content: flex-start; min-width: 130px; }
+        .print-btn, .update-btn { padding: 5px 8px !important; font-size: 11px !important; font-weight: bold; white-space: nowrap; height: 28px; cursor: pointer; border-radius: 4px; }
+        .update-btn { background: #238636; border: 1px solid #30363d; color: white; }
+        .update-btn:hover { background: #2ea043; }
+        .print-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
+        .print-btn:hover { background: #f77f00; color: white; border-color: #f77f00; }
+
+        /* Status Colors */
         .status-select { padding: 6px 10px; border-radius: 4px; background: #0d1117; border: 1px solid #30363d; font-size: 13px; font-weight: bold; cursor: pointer; }
         .status-Pending { color: #ff0055; border-color: #ff0055; }
         .status-Repairing { color: #ffb703; border-color: #ffb703; }
@@ -55,36 +65,30 @@
         .status-Not-Repair { color: #d62828; border-color: #d62828; }
         .status-Undelivered { color: #9b5de5; border-color: #9b5de5; }
 
-.action-row { display: flex; gap: 5px; flex-direction: row; align-items: center; justify-content: flex-start; }
-.print-btn, .update-btn { padding: 4px 6px !important; font-size: 11px !important; font-weight: bold; white-space: nowrap; height: 28px; }
-        .print-btn:hover { background: #f77f00; color: white; border-color: #f77f00; }
-        
-
-
         #print-area { display: none; }
 
-        /* ==================== ORIGINAL PORTRAIT PRINT LAYOUT SYSTEM ==================== */
+        /* ==================== A4 PORTRAIT PRINT SYSTEM WITH 3-LINE BOX ==================== */
         @media print {
             @page { size: A4 portrait; margin: 8mm 10mm; }
             body * { display: none !important; }
             #print-area { display: block !important; width: 100% !important; color: #000 !important; background: #fff !important; font-family: 'Arial', sans-serif; font-size: 12px; }
             #print-area * { display: block !important; }
             
-            .portrait-receipt { width: 100% !important; border: 2px dashed #000; padding: 15px; margin-bottom: 30px; background: #fff !important; color: #000 !important; border-radius: 8px; position: relative; }
+            .portrait-receipt { width: 100% !important; border: 2px dashed #000; padding: 15px; margin-bottom: 30px; background: #fff !important; color: #000 !important; border-radius: 8px; }
             .receipt-header { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; }
-            .receipt-title { font-size: 22px !important; font-weight: bold !important; color: #000 !important; letter-spacing: 0.5px; }
+            .receipt-title { font-size: 22px !important; font-weight: bold !important; color: #000 !important; }
             .receipt-subtitle { font-size: 11px !important; color: #333 !important; margin-top: 2px; line-height: 1.3; }
             
-            .badge-copy { background: #000 !important; color: #fff !important; padding: 4px 10px !important; font-weight: bold !important; font-size: 11px !important; border-radius: 4px; text-transform: uppercase; height: fit-content; }
+            .badge-copy { background: #000 !important; color: #fff !important; padding: 4px 10px !important; font-weight: bold !important; font-size: 11px !important; border-radius: 4px; text-transform: uppercase; }
             
             .info-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px 15px !important; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 8px; }
             .info-line { font-size: 12px !important; line-height: 1.4; color: #000 !important; }
             
             .price-table { width: 100% !important; border-collapse: collapse !important; margin-top: 5px; margin-bottom: 10px; }
-            .price-table th { background: #f2f2f2 !important; color: #000 !important; font-weight: bold !important; border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; text-transform: none; }
-            .price-table td { border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; color: #000 !important; }
+            .price-table th { background: #f2f2f2 !important; color: #000 !important; font-weight: bold !important; border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; }
+            .price-table td { border: 1px solid #000 !important; padding: 6px !important; font-size: 12px !important; }
             
-            /* The requested 3-Line Format Grid Box */
+            /* The 3-Line Format Grid Box */
             .three-line-box { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; border: 1px solid #000 !important; margin-top: 8px; background: #fff !important; text-align: center; }
             .three-line-cell { border-right: 1px solid #000 !important; padding: 8px !important; font-size: 12px !important; }
             .three-line-cell:last-child { border-right: none !important; }
@@ -94,9 +98,8 @@
             .terms-section { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; margin-top: 10px; }
             .terms-box { font-size: 9px !important; color: #333 !important; line-height: 1.3; width: 75% !important; }
             
-            /* 9 Box Pattern */
-            .dot-matrix-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; border: 1px solid #000 !important; padding: 5px !important; width: fit-content !important; margin-top: 5px; background: #fff !important; }
-            .dot-box { width: 11px; height: 11px; border: 1px solid #000 !important; border-radius: 2px; background: transparent !important; display: block !important; }
+            .dot-matrix-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 3px !important; border: 1px solid #000 !important; padding: 5px !important; width: fit-content !important; background: #fff !important; }
+            .dot-box { width: 11px; height: 11px; border: 1px solid #000 !important; border-radius: 2px; }
             
             .footer-sign { display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 25px; font-weight: bold; font-size: 11px; }
         }
@@ -110,13 +113,16 @@
                 <div class="logo-circle">F</div>
                 <div>
                     <h2 style="font-weight: 800; letter-spacing: 0.5px;">FIXIFY TECH REPAIR v15.0</h2>
-                    <p style="font-size: 12px; color: #8b949e;">Pipla Road, Nagpur | Premium Cloud Operations Active</p>
+                    <p style="font-size: 12px; color: #8b949e;">Pipla Road, Nagpur | Premium Operations</p>
                 </div>
+            </div>
+            <div class="total-sales-badge">
+                Total Repairing Sales: <span id="main-total-sales">₹0</span>
             </div>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><h3>Total Repairing Orders</h3><p id="stat-total">0</p></div>
+            <div class="stat-card"><h3>Total Orders</h3><p id="stat-total">0</p></div>
             <div class="stat-card"><h3>Mobile Pending</h3><p id="stat-m-pend" style="color: #ff0055;">0</p></div>
             <div class="stat-card"><h3>Laptop Pending</h3><p id="stat-l-pend" style="color: #ffb703;">0</p></div>
             <div class="stat-card"><h3>Ready for Delivery</h3><p id="stat-ready" style="color: #00b4d8;">0</p></div>
@@ -155,7 +161,7 @@
                     </div>
                     <div class="form-group">
                         <label>Problem Reported</label>
-                        <textarea class="form-control" id="form-problem" rows="2" required placeholder="e.g. Folder change, Charging section dead"></textarea>
+                        <textarea class="form-control" id="form-problem" rows="2" required placeholder="e.g. Folder change"></textarea>
                     </div>
                     <div class="form-group">
                         <label>Estimated Cost (₹)</label>
@@ -172,7 +178,7 @@
             <div class="card">
                 <h2>📋 Central Repairs Counter</h2>
                 <div class="table-filters">
-                    <input type="text" class="form-control search-bar" id="search-input" placeholder="Search by Customer name, order ID, phone number...">
+                    <input type="text" class="form-control search-bar" id="search-input" placeholder="Search by name, ID...">
                     <select class="form-control" id="filter-status" style="width: 160px;">
                         <option value="ALL">All Status Types</option>
                         <option value="Pending">Pending</option>
@@ -198,8 +204,7 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="jobs-table-body">
-                            </tbody>
+                        <tbody id="jobs-table-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -217,7 +222,7 @@
                 allJobs = await response.json();
                 renderTable(allJobs);
                 updateStats();
-            } catch (err) { console.error("Error fetching database:", err); }
+            } catch (err) { console.error("Error:", err); }
         }
 
         function renderTable(jobs) {
@@ -236,8 +241,6 @@
                 if (matchesSearch && matchesStatus) {
                     const tr = document.createElement('tr');
                     const cls = job.status.replace(" ", "-");
-                    
-                    // Fallback handles if backend properties are blank
                     const extCost = job.extra_cost || 0;
                     const disc = job.discount || 0;
 
@@ -247,6 +250,207 @@
                         <td><strong>${job.name}</strong><br><span style="font-size:12px; color:#8b949e;">${job.phone1}</span></td>
                         <td><span style="background:#21262d; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold; color:#f77f00;">${job.category}</span><br>${job.device}</td>
                         <td>
-                            <div style="font-size:13px; line-height:1.4;">
+                            <div style="font-size:13px; line-height:1.4; min-width: 140px;">
                                 <span>Est: ₹${job.estimate}</span> | <span style="color:#00b4d8">Adv: ₹${job.advance}</span><br>
-                                <label style="font-size:11px; color:#ffb703;">Extra: </label><input type="number" style="width:55px; background:#0d1117; border:1px solid #30363d; color:white; font-size:11px; padding:1px;" value="${extCost}" id="ext-${job.id}"
+                                <label style="font-size:11px; color:#ffb703;">Extra: </label><input type="number" style="width:48px; background:#0d1117; border:1px solid #30363d; color:white; font-size:11px; padding:1px;" value="${extCost}" id="ext-${job.id}">
+                                <label style="font-size:11px; color:#ff0055; margin-left:2px;">Disc: </label><input type="number" style="width:48px; background:#0d1117; border:1px solid #30363d; color:white; font-size:11px; padding:1px;" value="${disc}" id="disc-${job.id}">
+                            </div>
+                        </td>
+                        <td>
+                            <select class="status-select status-${cls}" onchange="updateStatus('${job.id}', this.value)">
+                                <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
+                                <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
+                                <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
+                                <option value="Ready" ${job.status==='Ready'?'selected':''}>Ready</option>
+                                <option value="Delivered" ${job.status==='Delivered'?'selected':''}>Delivered</option>
+                                <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
+                                <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="action-row">
+                                <button class="update-btn" onclick="saveRowPricing('${job.id}')">💾 Save</button>
+                                <button class="print-btn" onclick="printInvoice('${job.id}')">🖨️ Bill</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = allJobs.length;
+            document.getElementById('stat-m-pend').innerText = allJobs.filter(j => j.category === 'Mobile' && j.status === 'Pending').length;
+            document.getElementById('stat-l-pend').innerText = allJobs.filter(j => j.category === 'Laptop' && j.status === 'Pending').length;
+            document.getElementById('stat-ready').innerText = allJobs.filter(j => j.status === 'Ready').length;
+            
+            // Dynamic top live cash calculator logic
+            let totalSales = 0;
+            allJobs.forEach(j => {
+                if(j.status === 'Delivered') {
+                    totalSales += ((j.estimate + (j.extra_cost || 0)) - (j.discount || 0));
+                }
+            });
+            document.getElementById('main-total-sales').innerText = '₹' + totalSales;
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                await fetch('/api/jobs/update_status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: id, status: newStatus})
+                });
+                allJobs = allJobs.map(j => j.id === id ? {...j, status: newStatus} : j);
+                updateStats();
+                renderTable(allJobs);
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveRowPricing(id) {
+            const extra_cost = parseFloat(document.getElementById(`ext-${id}`).value || 0);
+            const discount = parseFloat(document.getElementById(`disc-${id}`).value || 0);
+            
+            try {
+                const res = await fetch('/api/jobs/update_pricing', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: id, extra_cost: extra_cost, discount: discount})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert(`Order ${id} ke charges safe ho gaye bhai!`);
+                    fetchJobs();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        document.getElementById('jobsheet-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                category: document.getElementById('form-category').value,
+                name: document.getElementById('form-name').value,
+                phone1: document.getElementById('form-phone').value,
+                device: document.getElementById('form-device').value,
+                imei: document.getElementById('form-imei').value,
+                password: document.getElementById('form-password').value,
+                problem: document.getElementById('form-problem').value,
+                estimate: parseFloat(document.getElementById('form-estimate').value || 0),
+                advance: parseFloat(document.getElementById('form-advance').value || 0)
+            };
+
+            try {
+                const res = await fetch('/api/jobs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    fetchJobs();
+                    document.getElementById('jobsheet-form').reset();
+                    setTimeout(() => { printInvoice(result.id); }, 600);
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        function printInvoice(id) {
+            const job = allJobs.find(j => j.id === id);
+            if (!job) return;
+
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = '';
+
+            const copyNames = ["Customer Copy", "Office Copy"];
+            const baseEst = parseFloat(job.estimate || 0);
+            const adv = parseFloat(job.advance || 0);
+            const ext = parseFloat(job.extra_cost || 0);
+            const disc = parseFloat(job.discount || 0);
+            const netBalance = (baseEst + ext) - adv - disc;
+
+            copyNames.forEach((copyName) => {
+                const receiptHTML = `
+                    <div class="portrait-receipt">
+                        <div class="receipt-header">
+                            <div>
+                                <div class="receipt-title">FIXIFY TECH REPAIR</div>
+                                <div class="receipt-subtitle">Premium Smartphone & Laptop Hub<br>Pipla Road, Nagpur | Contact: +91 9890XXXXXX</div>
+                            </div>
+                            <div class="badge-copy">${copyName}</div>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-line"><strong>Order ID:</strong> ${job.id}</div>
+                            <div class="info-line"><strong>Date:</strong> ${job.date || 'Live Entry'}</div>
+                            <div class="info-line"><strong>Customer Name:</strong> ${job.name}</div>
+                            <div class="info-line"><strong>Phone Number:</strong> ${job.phone1}</div>
+                            <div class="info-line"><strong>Device / Model:</strong> [${job.category}] ${job.device}</div>
+                            <div class="info-line"><strong>Lock Password/Pattern:</strong> ${job.password || 'None'}</div>
+                        </div>
+
+                        <table class="price-table">
+                            <thead>
+                                <tr>
+                                    <th>Job Work / Fault Problem Reported Details</th>
+                                    <th style="width: 140px; text-align: right;">Estimated Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-size:13px; font-weight:bold;">${job.problem}</td>
+                                    <td style="text-align: right; font-weight:bold;">₹${baseEst}</td>
+                                </tr>
+                                ${ext > 0 ? `<tr><td style="text-align: right; font-size:11px;">Extra Work Cost:</td><td style="text-align: right; font-weight:bold;">+ ₹${ext}</td></tr>` : ''}
+                                ${disc > 0 ? `<tr><td style="text-align: right; font-size:11px; color:red;">Special Discount:</td><td style="text-align: right; font-weight:bold; color:red;">- ₹${disc}</td></tr>` : ''}
+                            </tbody>
+                        </table>
+
+                        <div class="three-line-box">
+                            <div class="three-line-cell">
+                                <div>Total Amount</div>
+                                <div>₹${baseEst + ext}</div>
+                            </div>
+                            <div class="three-line-cell">
+                                <div>Advance Paid</div>
+                                <div style="color: green;">₹${adv}</div>
+                            </div>
+                            <div class="three-line-cell">
+                                <div>Net Cash Due</div>
+                                <div style="color: #000; font-size:16px;">₹${netBalance}</div>
+                            </div>
+                        </div>
+
+                        <div class="terms-section">
+                            <div class="terms-box">
+                                <strong>Terms & Conditions:</strong><br>
+                                1. Replaced hardware parts carry no guarantee/warranty unless specified by vendor.<br>
+                                2. Items not collected within 30 days of repair or marked <strong>Not Repair/Undelivered</strong> are disposed of.<br>
+                                3. We assume zero responsibility for personal user data backup safety during work repairs.
+                            </div>
+                            <div class="dot-matrix-grid">
+                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
+                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
+                                <div class="dot-box"></div> <div class="dot-box"></div> <div class="dot-box"></div>
+                            </div>
+                        </div>
+
+                        <div class="footer-sign">
+                            <div>Customer Signature: ________________</div>
+                            <div>Authorized Signatory: ________________</div>
+                        </div>
+                    </div>
+                `;
+                printArea.innerHTML += receiptHTML;
+            });
+
+            window.print();
+        }
+
+        document.getElementById('search-input').addEventListener('input', () => renderTable(allJobs));
+        document.getElementById('filter-status').addEventListener('change', () => renderTable(allJobs));
+
+        window.onload = fetchJobs;
+    </script>
+</body>
+</html>
