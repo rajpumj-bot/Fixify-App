@@ -1,27 +1,39 @@
 import os
+import json
 from datetime import datetime
-import requests
+import urllib.request
+import urllib.parse
 from flask import Flask, render_template, request, jsonify, session
 
 app = Flask(__name__, template_folder='.')
-app.secret_key = "fixify_super_cloud_secure_key_99" # Session encryption token
+app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# PERMANENT CLOUD DATABASE CREDENTIALS (CONNECTED)
+# SUPABASE CLOUD CONNECTION
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
-SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W" # Placed from your screen
+SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
-# HARDCODED LOGIN SECURITY CREDS
 ADMIN_USER = "admin"
 ADMIN_PASS = "fixify@2026"
 
-# Helper for secure header management
-def get_supabase_headers():
-    return {
+def make_supabase_request(url, method="GET", data=None):
+    headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json",
         "Prefer": "return=representation"
     }
+    
+    req_data = None
+    if data:
+        req_data = json.dumps(data).encode("utf-8")
+        
+    req = urllib.request.Request(url, headers=headers, method=method, data=req_data)
+    try:
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print("Supabase Error:", e)
+        return []
 
 @app.route('/')
 def home():
@@ -32,10 +44,7 @@ def home():
 @app.route('/api/login', methods=['POST'])
 def do_login():
     data = request.json or {}
-    username = data.get('username')
-    password = data.get('password')
-    
-    if username == ADMIN_USER and password == ADMIN_PASS:
+    if data.get('username') == ADMIN_USER and data.get('password') == ADMIN_PASS:
         session['logged_in'] = True
         return jsonify({"success": True})
     return jsonify({"success": False, "message": "Galat ID ya Password bhai!"})
@@ -52,16 +61,12 @@ def handle_jobs():
         
     if request.method == 'POST':
         data = request.json
-        headers = get_supabase_headers()
         
-        # Pull count from cloud to generate next order index ID
-        count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=count=exact"
-        count_res = requests.get(count_url, headers=headers)
-        try:
-            next_num = count_res.json()[0].get('count', 0) + 1
-        except Exception:
-            next_num = len(count_res.json()) + 1 if isinstance(count_res.json(), list) else 1
-            
+        # Pull data safely using native urllib
+        count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
+        all_rows = make_supabase_request(count_url, method="GET")
+        next_num = len(all_rows) + 1 if isinstance(all_rows, list) else 1
+        
         next_id = f"FIX{next_num:04d}"
         today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         
@@ -73,15 +78,16 @@ def handle_jobs():
             "extra_cost": 0.0, "discount": 0.0, "created_date": today_str, "status": "Pending"
         }
         
-        requests.post(f"{SUPABASE_URL}/rest/v1/jobs", headers=headers, json=payload)
+        insert_url = f"{SUPABASE_URL}/rest/v1/jobs"
+        make_supabase_request(insert_url, method="POST", data=payload)
         return jsonify({"success": True, "id": next_id})
         
-    # GET Methods - Fetch rows descending sorted from Cloud storage
-    url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
-    res = requests.get(url, headers=get_supabase_headers())
+    # GET Method
+    fetch_url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
+    rows = make_supabase_request(fetch_url, method="GET")
     jobs = []
-    if res.status_code == 200:
-        for r in res.json():
+    if isinstance(rows, list):
+        for r in rows:
             jobs.append({
                 "id": r.get('id'), "category": r.get('category'), "name": r.get('name'),
                 "phone1": r.get('phone1'), "device": r.get('device'), "estimate": r.get('estimate'),
@@ -96,7 +102,7 @@ def update_status():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
     url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
-    requests.patch(url, headers=get_supabase_headers(), json={"status": data.get('status')})
+    make_supabase_request(url, method="PATCH", data={"status": data.get('status')})
     return jsonify({"success": True})
 
 @app.route('/api/jobs/update_pricing', methods=['POST'])
@@ -106,7 +112,7 @@ def update_pricing():
     data = request.json
     url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
     payload = {"extra_cost": float(data.get('extra_cost', 0)), "discount": float(data.get('discount', 0))}
-    requests.patch(url, headers=get_supabase_headers(), json=payload)
+    make_supabase_request(url, method="PATCH", data=payload)
     return jsonify({"success": True})
 
 if __name__ == '__main__':
