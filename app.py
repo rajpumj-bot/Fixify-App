@@ -16,40 +16,39 @@ HEADERS = {
 }
 
 ADMIN_USER = "admin"
-
-def get_admin_pass():
-    # Pehle DB se password check karega, agar nahi mila toh default "fixify#0821" rakhega
-    try:
-        url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
-        res = requests.get(url, headers=HEADERS)
-        if res.status_code == 200 and len(res.json()) > 0:
-            return res.json()[0]["password"]
-    except:
-        pass
-    return "fixify#0821"
+ADMIN_PASS = "fixify#0821" # Yeh aapka permanent master password rahega
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
+@app.route("/health")
+def health():
+    return "Fixify Server Running"
+
+# =========================
+# LOGIN ENGINE (BYPASS FIX)
+# =========================
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
-    if username == ADMIN_USER and password == get_admin_pass():
+    # MASTER BYPASS: Agar admin aur sahi pass dala toh direct entry bina DB check kiye
+    if username == ADMIN_USER and password == ADMIN_PASS:
         session.update({"logged_in": True, "role": "Chairman", "name": "Chairman"})
         return jsonify({"success": True, "role": "Chairman", "name": "Chairman"})
 
+    # Baki employees ke liye DB check
     url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{username}"
     try:
         res = requests.get(url, headers=HEADERS)
         if res.status_code == 200:
             users = res.json()
-            if len(users) > 0 and users[0]["password"] == password and users[0]["role"] != "Chairman":
-                session.update({"logged_in": True, "role": "Employee", "name": users[0]["emp_name"]})
-                return jsonify({"success": True, "role": "Employee", "name": users[0]["emp_name"]})
+            if len(users) > 0 and users[0]["password"] == password:
+                session.update({"logged_in": True, "role": users[0].get("role", "Employee"), "name": users[0]["emp_name"]})
+                return jsonify({"success": True, "role": users[0].get("role", "Employee"), "name": users[0]["emp_name"]})
     except Exception as e:
         print("LOGIN ERROR:", str(e))
 
@@ -73,18 +72,10 @@ def update_chairman_pass():
     data = request.json
     new_pass = data.get("new_password", "").strip()
     
-    # DB me check karenge ki admin row h ya nahi, h toh patch nahi to post
-    check_url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
-    res = requests.get(check_url, headers=HEADERS)
-    
-    if res.status_code == 200 and len(res.json()) > 0:
-        url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
-        r = requests.patch(url, headers=HEADERS, json={"password": new_pass})
-    else:
-        url = f"{SUPABASE_URL}/rest/v1/fixify_users"
-        r = requests.post(url, headers=HEADERS, json={"username": "admin", "password": new_pass, "emp_name": "Chairman", "role": "Chairman"})
-        
-    return jsonify({"success": r.status_code in [200, 201, 204]})
+    # Global MASTER_PASS update mechanism
+    global ADMIN_PASS
+    ADMIN_PASS = new_pass
+    return jsonify({"success": True})
 
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
 def employees():
