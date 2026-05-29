@@ -53,7 +53,6 @@
         .st-Delivered { background:#166534; } .st-Not-Repair { background:#7f1d1d; }
         .st-Undelivered { background:#6b21a8; }
 
-        /* TOGGLE LEDGER STYLING */
         .ledger-toggle-btn {
             background: rgba(249,115,22,0.1);
             border: 1px dashed #f97316;
@@ -70,16 +69,21 @@
             margin-top: 10px;
             transition: 0.3s;
         }
-        .ledger-toggle-btn:hover {
-            background: rgba(249,115,22,0.2);
+        .ledger-toggle-btn:hover { background: rgba(249,115,22,0.2); }
+        .ledger-content { display: none; margin-top: 15px; }
+        .ledger-content.open { display: block !important; }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            margin-bottom: 15px;
+            background: #1f2937;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
         }
-        .ledger-content {
-            display: none;
-            margin-top: 15px;
-        }
-        .ledger-content.open {
-            display: block !important;
-        }
+        .filter-label { font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
@@ -128,8 +132,26 @@
                 </button>
                 
                 <div class="ledger-content" id="ledgerContent">
+                    <div class="filter-row">
+                        <div>
+                            <span class="filter-label">🔍 Select Specific Date</span>
+                            <input type="date" id="ledgerDateFilter" class="input" style="margin:0;" onchange="calculateFinancials()">
+                        </div>
+                        <div>
+                            <span class="filter-label">📆 Select Month Matrix</span>
+                            <select id="ledgerMonthFilter" class="input" style="margin:0;" onchange="calculateFinancials()">
+                                <option value="all">Lifetime History Total</option>
+                                <option value="current">Current Active Month</option>
+                                <option value="last">Previous Month Ledger</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:flex-end;">
+                            <button class="btn" style="padding:12px 20px; background:#4b5563;" onclick="resetLedgerFilters()">🔄 Reset</button>
+                        </div>
+                    </div>
+
                     <div class="card" style="border:1px solid rgba(249,115,22,0.3); background:#0f172a; margin-bottom:0;">
-                        <h2 style="display:flex; align-items:center; gap:10px;">📈 Financial Status Ledger <span style="font-size:12px; color:#94a3b8; font-weight:normal;">(Net Profit Engine)</span></h2>
+                        <h2 style="display:flex; align-items:center; gap:10px;">📈 Financial Status Ledger <span style="font-size:12px; color:#94a3b8; font-weight:normal;" id="ledgerTimeSpan">(Lifetime History)</span></h2>
                         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; text-align:center; margin-top:15px;">
                             <div style="background:#1e293b; padding:20px; border-radius:10px; border-bottom:4px solid #3b82f6;"><p style="color:#94a3b8; font-size:11px; font-weight:bold; letter-spacing:1px;">GROSS REVENUE</p><h3 id="lbl-revenue" style="color:#3b82f6; font-size:26px; margin-top:8px; font-weight:800;">₹0</h3></div>
                             <div style="background:#1e293b; padding:20px; border-radius:10px; border-bottom:4px solid #ef4444;"><p style="color:#94a3b8; font-size:11px; font-weight:bold; letter-spacing:1px;">SPARE PARTS COST</p><h3 id="lbl-expenses" style="color:#ef4444; font-size:26px; margin-top:8px; font-weight:800;">₹0</h3></div>
@@ -240,7 +262,6 @@
             if(btn) btn.classList.add("active");
         }
 
-        // TOGGLE LOGIC
         function toggleLedger() {
             const content = document.getElementById("ledgerContent");
             const arrow = document.getElementById("ledgerArrow");
@@ -250,6 +271,7 @@
             } else {
                 content.classList.add("open");
                 arrow.innerText = "▲";
+                calculateFinancials(); // Refresh values upon expand toggle
             }
         }
 
@@ -346,17 +368,11 @@
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
             let p=0; let r=0; let t=0; let ry=0; let d=0;
-            let rev=0; let exp=0;
 
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
                 if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
-                
-                if(job.status==="Delivered"){ 
-                    rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
-                    exp += parseFloat(job.spare_cost || 0); 
-                }
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -393,11 +409,76 @@
             document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
             document.getElementById("deliveredCount").innerText=d;
             
-            if(CURRENT_ROLE==="Chairman"){ 
-                document.getElementById("lbl-revenue").innerText="₹"+rev.toFixed(2); 
-                document.getElementById("lbl-expenses").innerText="₹"+exp.toFixed(2); 
-                document.getElementById("lbl-profit").innerText="₹"+(rev-exp).toFixed(2); 
+            calculateFinancials(); // Trigger updates asynchronously
+        }
+
+        // ==========================================
+        // 🔥 MULTI-TIMELINE DATE MATRIX CALCULATOR ENGINE
+        // ==========================================
+        function calculateFinancials(){
+            if(CURRENT_ROLE !== "Chairman") return;
+
+            let rev=0; let exp=0;
+            let dateSelect = document.getElementById("ledgerDateFilter").value; // Format: YYYY-MM-DD
+            let monthSelect = document.getElementById("ledgerMonthFilter").value;
+            let timeSpanText = "Lifetime History";
+
+            // Process internal JavaScript date parameters
+            let today = new Date();
+            let currentMonthStr = ("0" + (today.getMonth() + 1)).slice(-2) + "-" + today.getFullYear(); // MM-YYYY
+            
+            let lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            let lastMonthStr = ("0" + (lastMonthDate.getMonth() + 1)).slice(-2) + "-" + lastMonthDate.getFullYear(); // MM-YYYY
+
+            if (dateSelect) {
+                // Convert YYYY-MM-DD to DD-MM-YYYY format matching text rows
+                let dParts = dateSelect.split("-");
+                let formattedTargetDate = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
+                timeSpanText = "Date: " + formattedTargetDate;
+                
+                jobs.forEach(job => {
+                    if(job.status === "Delivered" && job.date && job.date.startsWith(formattedTargetDate)){
+                        rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                        exp += parseFloat(job.spare_cost || 0);
+                    }
+                });
+            } else if (monthSelect === "current") {
+                timeSpanText = "Current Month Matrix";
+                jobs.forEach(job => {
+                    if(job.status === "Delivered" && job.date && job.date.includes(currentMonthStr)){
+                        rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                        exp += parseFloat(job.spare_cost || 0);
+                    }
+                });
+            } else if (monthSelect === "last") {
+                timeSpanText = "Last Month Record";
+                jobs.forEach(job => {
+                    if(job.status === "Delivered" && job.date && job.date.includes(lastMonthStr)){
+                        rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                        exp += parseFloat(job.spare_cost || 0);
+                    }
+                });
+            } else {
+                // Lifetime fall-through default calculation logic
+                jobs.forEach(job => {
+                    if(job.status === "Delivered"){
+                        rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                        exp += parseFloat(job.spare_cost || 0);
+                    }
+                });
             }
+
+            // Bind into text elements values layout
+            document.getElementById("ledgerTimeSpan").innerText = `(${timeSpanText})`;
+            document.getElementById("lbl-revenue").innerText = "₹" + rev.toFixed(2); 
+            document.getElementById("lbl-expenses").innerText = "₹" + exp.toFixed(2); 
+            document.getElementById("lbl-profit").innerText = "₹" + (rev - exp).toFixed(2);
+        }
+
+        function resetLedgerFilters(){
+            document.getElementById("ledgerDateFilter").value = "";
+            document.getElementById("ledgerMonthFilter").value = "all";
+            calculateFinancials();
         }
 
         function printJobcard(jobId) {
