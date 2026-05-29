@@ -288,6 +288,7 @@
     <script>
         let globalDatabase = [];
         let globalPartsList = [];
+        let statusHistoryCache = {}; // Local memory to store employee status changes
         let CURRENT_USER_ROLE = "{{ user_role }}";
         let CURRENT_USER_NAME = "{{ emp_name }}";
 
@@ -369,6 +370,12 @@
                     const spareCost = job.spare_part_cost || 0;
                     const entryProfit = finalCustomerBill - spareCost;
 
+                    // Setup the history warning if user triggers Delivered -> Undelivered
+                    let historyLabel = '';
+                    if(statusHistoryCache[job.id] === 'TriggeredAlert') {
+                        historyLabel = `<br><span style="background:#ef4444; color:white; padding:1px 4px; font-size:10px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:4px;">⚠️ History: Delivered -> Undelivered</span>`;
+                    }
+
                     tr.innerHTML = `
                         <td style="font-weight:bold; color:#f97316; font-size:14px;">${job.id}</td>
                         <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
@@ -387,7 +394,7 @@
                         </td>
                         <td style="font-weight:600; font-size:11px; color:#9ca3af;">👤 ${job.created_by || 'Staff'}</td>
                         <td>
-                            <select class="status-dropdown status-${cStyle}" onchange="modifyStatus('${job.id}', this.value)">
+                            <select class="status-dropdown status-${cStyle}" onchange="modifyStatus('${job.id}', this.value, '${job.status}')">
                                 <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
                                 <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
                                 <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
@@ -396,6 +403,7 @@
                                 <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
                                 <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
                             </select>
+                            ${historyLabel}
                         </td>
                         <td>
                             <div class="action-flex">
@@ -427,8 +435,17 @@
             document.getElementById('lbl-emp-sales').innerText = '₹' + grossIncome;
         }
 
-        async function modifyStatus(id, newStatus) {
-            await fetch('/api/jobs/update_status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, status: newStatus}) });
+        async function modifyStatus(id, newStatus, oldStatus) {
+            // Track employee toggling form Delivered down to Undelivered row parameters
+            if(oldStatus === 'Delivered' && newStatus === 'Undelivered') {
+                statusHistoryCache[id] = 'TriggeredAlert';
+            }
+            
+            await fetch('/api/jobs/update_status', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({id: id, status: newStatus}) 
+            });
             reloadSystemData();
         }
 
@@ -462,9 +479,19 @@
 
         async function handlePartRegister(e) {
             e.preventDefault();
-            const payload = { part_name: document.getElementById('part-name').value, model_compatibility: document.getElementById('part-model').value, wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) };
-            await fetch('/api/parts', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            document.getElementById('spare-part-form').reset(); fetchPartsList();
+            const payload = { 
+                part_name: document.getElementById('part-name').value, 
+                model_compatibility: document.getElementById('part-model').value, 
+                wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) 
+            };
+            
+            await fetch('/api/parts', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(payload) 
+            });
+            document.getElementById('spare-part-form').reset(); 
+            fetchPartsList();
         }
 
         async function deleteSparePartRecord(id) {
@@ -495,9 +522,19 @@
         document.getElementById('jobsheet-entry-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = { category: document.getElementById('ins-category').value, device: document.getElementById('ins-device').value, imei: document.getElementById('ins-imei').value, name: document.getElementById('ins-name').value, phone1: document.getElementById('ins-phone').value, password: document.getElementById('ins-password').value, problem: document.getElementById('ins-problem').value, estimate: parseFloat(document.getElementById('ins-estimate').value || 0), advance: parseFloat(document.getElementById('ins-advance').value || 0) };
-            const res = await fetch('/api/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            
+            const res = await fetch('/api/jobs', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
             const out = await res.json();
-            if(out.success) { await reloadSystemData(); document.getElementById('jobsheet-entry-form').reset(); switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); setTimeout(() => { executePortraitPrint(out.id); }, 600); }
+            if(out.success) { 
+                await reloadSystemData(); 
+                document.getElementById('jobsheet-entry-form').reset(); 
+                switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
+                setTimeout(() => { executePortraitPrint(out.id); }, 600); 
+            }
         });
 
         function executePortraitPrint(id) {
