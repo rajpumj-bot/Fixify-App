@@ -1,70 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fixify Tech Repair</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fixify Tech Repair</title>
 
-  <style>
-    body{
-      margin:0;
-      padding:0;
-      background:#0f172a;
-      color:white;
-      font-family:Arial, sans-serif;
-      text-align:center;
-    }
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
 
-    .container{
-      padding:50px 20px;
-    }
+body{
+background:#0f172a;
+color:white;
+}
 
-    img{
-      width:120px;
-      margin-bottom:20px;
-    }
+.header{
+background:#111827;
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:2px solid #1e293b;
+}
 
-    h1{
-      font-size:40px;
-      margin-bottom:10px;
-      color:#38bdf8;
-    }
+.logo{
+font-size:28px;
+font-weight:bold;
+color:#38bdf8;
+}
 
-    p{
-      font-size:20px;
-      color:#cbd5e1;
-    }
+.status{
+background:#16a34a;
+padding:8px 15px;
+border-radius:8px;
+font-size:14px;
+font-weight:bold;
+}
 
-    .btn{
-      display:inline-block;
-      margin-top:30px;
-      padding:14px 30px;
-      background:#38bdf8;
-      color:black;
-      text-decoration:none;
-      border-radius:10px;
-      font-weight:bold;
-    }
+.container{
+padding:20px;
+}
 
-    .btn:hover{
-      background:white;
-    }
-  </style>
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:#111827;
+padding:25px;
+border-radius:15px;
+border:1px solid #334155;
+}
+
+.card h2{
+font-size:18px;
+margin-bottom:10px;
+color:#38bdf8;
+}
+
+.card p{
+font-size:30px;
+font-weight:bold;
+}
+
+.form-box{
+background:#111827;
+padding:25px;
+border-radius:15px;
+border:1px solid #334155;
+margin-bottom:30px;
+}
+
+.form-box h2{
+margin-bottom:20px;
+color:#38bdf8;
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+.input-group label{
+display:block;
+margin-bottom:5px;
+font-size:14px;
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select{
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+background:#1e293b;
+color:white;
+}
+
+.btn{
+background:#38bdf8;
+color:black;
+padding:12px 20px;
+border:none;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn:hover{
+background:white;
+}
+
+.table-box{
+background:#111827;
+padding:25px;
+border-radius:15px;
+border:1px solid #334155;
+overflow:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #334155;
+text-align:left;
+}
+
+th{
+color:#38bdf8;
+}
+
+.footer{
+text-align:center;
+padding:20px;
+color:#94a3b8;
+font-size:14px;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="header">
+<div class="logo">FIXIFY TECH REPAIR</div>
+<div class="status">SERVER ONLINE</div>
+</div>
 
-    <img src="logo.webp" alt="Fixify Logo">
+<div class="container">
 
-    <h1>Fixify Tech Repair</h1>
+<div class="cards">
 
-    <p>Mobile & Laptop Repair Service</p>
+<div class="card">
+<h2>Total Jobs</h2>
+<p>0</p>
+</div>
 
-    <a class="btn" href="https://wa.me/">Contact on WhatsApp</a>
+<div class="card">
+<h2>Pending Repair</h2>
+<p>0</p>
+</div>
 
-  </div>
+<div class="card">
+<h2>Delivered</h2>
+<p>0</p>
+</div>
+
+</div>
+
+<div class="form-box">
+
+<h2>Create Repair Job</h2>
+
+<div class="input-group">
+<label>Customer Name</label>
+<input type="text" placeholder="Enter customer name">
+</div>
+
+<div class="input-group">
+<label>Phone Number</label>
+<input type="text" placeholder="Enter phone number">
+</div>
+
+<div class="input-group">
+<label>Device Model</label>
+<input type="text" placeholder="Enter device model">
+</div>
+
+<div class="input-group">
+<label>Problem</label>
+<textarea rows="4" placeholder="Enter device problem"></textarea>
+</div>
+
+<button class="btn">Save Jobsheet</button>
+
+</div>
+
+<div class="table-box">
+
+<h2>Repair Records</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Job ID</th>
+<th>Customer</th>
+<th>Phone</th>
+<th>Device</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>FIX001</td>
+<td>Demo User</td>
+<td>9999999999</td>
+<td>iPhone 13</td>
+<td>Pending</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="footer">
+Fixify Tech Repair © 2026
+</div>
 
 </body>
 </html>
