@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIXIFY TECH REPAIR v15.0</title>
+    <title>FIXIFY TECH REPAIR v15.5</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #cbd5e1; display: flex; height: 100vh; overflow: hidden; }
@@ -469,43 +469,54 @@
             const txt = document.getElementById('search-parts-box').value.toLowerCase();
             const isChairman = (CURRENT_USER_ROLE === "Chairman");
 
-            globalPartsList.forEach(p => {
-                if(p.part_name.toLowerCase().includes(txt) || p.model_compatibility.toLowerCase().includes(txt)) {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td><strong>${p.part_name}</strong></td><td><span style="color:#3b82f6; font-weight:bold;">${p.model_compatibility}</span></td><td style="color:#10b981; font-weight:bold; font-size:14px;">₹${p.wholesale_cost}</td><td>📅 ${p.updated_at}</td><td>${isChairman ? `<button class="btn-del-action" onclick="deleteSparePartRecord('${p.id}')">❌ Remove</button>` : '<small style="color:#6b7280;">View Only</small>'}</td>`;
-                    tbody.appendChild(tr);
-                }
-            });
+            if (Array.isArray(globalPartsList)) {
+                globalPartsList.forEach(p => {
+                    if(p.part_name.toLowerCase().includes(txt) || p.model_compatibility.toLowerCase().includes(txt)) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td><strong>${p.part_name}</strong></td><td><span style="color:#3b82f6; font-weight:bold;">${p.model_compatibility}</span></td><td style="color:#10b981; font-weight:bold; font-size:14px;">₹${p.wholesale_cost}</td><td>📅 ${p.updated_at}</td><td>${isChairman ? `<button class="btn-del-action" onclick="deleteSparePartRecord('${p.id}')">❌ Remove</button>` : '<small style="color:#6b7280;">View Only</small>'}</td>`;
+                        tbody.appendChild(tr);
+                    }
+                });
+            }
         }
 
         async function handlePartRegister(e) {
             e.preventDefault();
             const payload = { 
-                part_name: document.getElementById('part-name').value, 
-                model_compatibility: document.getElementById('part-model').value, 
+                part_name: document.getElementById('part-name').value.trim(), 
+                model_compatibility: document.getElementById('part-model').value.trim(), 
                 wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) 
             };
-            await fetch('/api/parts', { 
+            
+            const res = await fetch('/api/parts', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify(payload) 
             });
-            document.getElementById('spare-part-form').reset(); 
-            fetchPartsList();
+            
+            if(res.ok) {
+                document.getElementById('spare-part-form').reset(); 
+                await fetchPartsList();
+            }
         }
 
         async function deleteSparePartRecord(id) {
-            if(confirm("Delete part record?")) { await fetch(`/api/parts?id=${id}`, { method: 'DELETE' }); fetchPartsList(); }
+            if(confirm("Delete part record?")) { 
+                await fetch(`/api/parts?id=${id}`, { method: 'DELETE' }); 
+                fetchPartsList(); 
+            }
         }
 
         async function fetchEmployeeList() {
             const res = await fetch('/api/employees'); const data = await res.json();
             const tbody = document.getElementById('emp-table-rows'); tbody.innerHTML = '';
-            data.forEach(user => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><strong>${user.emp_name}</strong></td><td style="color:#fbbf24;">${user.username}</td><td><span class="user-tag-badge role-chairman" style="padding:2px 8px; font-size:11px;">${user.role}</span></td><td>${user.username !== 'admin' ? `<button class="btn-del-user" onclick="deleteEmployeeAccount('${user.username}')">❌ Delete</button>` : '<small style="color:#6b7280;">Master Lock</small>'}</td>`;
-                tbody.appendChild(tr);
-            });
+            if (Array.isArray(data)) {
+                data.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td><strong>${user.emp_name}</strong></td><td style="color:#fbbf24;">${user.username}</td><td><span class="user-tag-badge role-chairman" style="padding:2px 8px; font-size:11px;">${user.role}</span></td><td>${user.username !== 'admin' ? `<button class="btn-del-user" onclick="deleteEmployeeAccount('${user.username}')">❌ Delete</button>` : '<small style="color:#6b7280;">Master Lock</small>'}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
         async function handleEmployeeRegister(e) {
