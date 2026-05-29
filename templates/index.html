@@ -312,4 +312,309 @@
                 loadEmployees();
             } else {
                 document.getElementById("profitCardWrapper").style.display="none";
-                document.getElementById("parts-menu").style.display
+                document.getElementById("parts-menu").style.display="none";
+                document.getElementById("emp-menu").style.display="none";
+                document.getElementById("settings-menu").style.display="none";
+            }
+        }
+
+        async function changeChairmanPassword(){
+            let newP = document.getElementById("newChairmanPass").value;
+            if(!newP) { alert("Please enter a valid password."); return; }
+            const res = await fetch("/api/update_chairman_pass", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_password:newP})});
+            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
+        }
+
+        async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
+
+        async function loadJobs(){ const res=await fetch("/api/jobs"); jobs=await res.json(); renderJobs(); }
+        async function loadParts(){ const res=await fetch("/api/parts"); parts=await res.json(); renderParts(); }
+        async function loadEmployees(){ const res=await fetch("/api/employees"); employees=await res.json(); renderEmployees(); }
+
+        async function saveJob(){
+            let c_name = document.getElementById("customerName").value;
+            let c_phone = document.getElementById("customerPhone").value;
+            let c_model = document.getElementById("deviceModel").value;
+            let c_prob = document.getElementById("problem").value;
+            
+            if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
+
+            const payload={
+                category: document.getElementById("deviceType").value, 
+                device: c_model,
+                imei: document.getElementById("deviceIMEI").value, 
+                password: document.getElementById("devicePassword").value,
+                problem: c_prob, 
+                estimate: parseFloat(document.getElementById("estimate").value || 0),
+                advance: parseFloat(document.getElementById("advance").value || 0), 
+                name: c_name, 
+                phone1: c_phone
+            };
+            
+            const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+            const output = await res.json();
+            
+            if(output.success){ 
+                alert("Jobcard Registry Generated Successfully."); 
+                document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
+                document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
+                document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
+                document.getElementById("estimate").value=""; document.getElementById("advance").value="";
+                await loadJobs(); 
+                showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
+            } else { 
+                alert(output.message || "Database Error. Data Refused to Save."); 
+            }
+        }
+
+        function renderJobs(){
+            let tbody=document.getElementById("repairTable"); tbody.innerHTML="";
+            let search=document.getElementById("searchInput").value.toLowerCase();
+            let filter=document.getElementById("statusFilter").value;
+            let p=0; let r=0; let t=0; let ry=0; let d=0;
+
+            if(!Array.isArray(jobs)) return;
+
+            jobs.forEach(job=>{
+                if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
+
+                let match = !filter || job.status === filter;
+                let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
+                if(!match || !sMatch) return;
+
+                tbody.innerHTML += `<tr>
+                    <td style="color:#f97316; font-weight:bold;">${job.id}</td>
+                    <td><strong>${job.name}</strong><br><small style="color:#9ca3af;">${job.phone1}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
+                    <td>
+                        <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
+                            <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
+                            <option ${job.status==="Testing"?"selected":""}>Testing</option><option ${job.status==="Ready"?"selected":""}>Ready</option>
+                            <option ${job.status==="Delivered"?"selected":""}>Delivered</option><option ${job.status==="Not Repair"?"selected":""}>Not Repair</option>
+                            <option ${job.status==="Undelivered"?"selected":""}>Undelivered</option>
+                        </select>
+                    </td>
+                    <td>₹${job.estimate}</td><td>₹${job.advance}</td>
+                    <td><input type="number" id="disc-${job.id}" value="${job.discount || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
+                    <td><input type="number" id="ext-${job.id}" value="${job.extra_charge || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            ${CURRENT_ROLE==='Chairman' ? `
+                            <span style="font-size:10px; color:#ef4444;">Part Cost:</span>
+                            <input type="number" id="sp-${job.id}" value="${job.spare_cost || 0}" class="input" style="width:80px; margin:0; color:#ef4444; font-weight:bold;">
+                            <button class="tbl-btn" onclick="savePricing('${job.id}')">Save</button>
+                            ` : '<span style="color:#6b7280; font-size:11px;">Restricted</span>'}
+                            <button class="print-btn" onclick="printJobcard('${job.id}')">🖨️ Print Receipt</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
+            document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
+            document.getElementById("deliveredCount").innerText=d;
+            
+            calculateFinancials(); 
+        }
+
+        function handleMonthQuickSelect(){
+            let monthSelect = document.getElementById("ledgerMonthFilter").value;
+            let fromInput = document.getElementById("ledgerFromDate");
+            let toInput = document.getElementById("ledgerToDate");
+
+            let today = new Date();
+            if(monthSelect === "current") {
+                let y = today.getFullYear();
+                let m = today.getMonth();
+                fromInput.value = `${y}-${("0" + (m + 1)).slice(-2)}-01`;
+                toInput.value = `${y}-${("0" + (m + 1)).slice(-2)}-${new Date(y, m + 1, 0).getDate()}`;
+            } else if(monthSelect === "last") {
+                let lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                let y = lastMonth.getFullYear();
+                let m = lastMonth.getMonth();
+                fromInput.value = `${y}-${("0" + (m + 1)).slice(-2)}-01`;
+                toInput.value = `${y}-${("0" + (m + 1)).slice(-2)}-${new Date(y, m + 1, 0).getDate()}`;
+            } else {
+                fromInput.value = "";
+                toInput.value = "";
+            }
+            calculateFinancials();
+        }
+
+        function calculateFinancials(){
+            if(CURRENT_ROLE !== "Chairman") return;
+
+            let rev=0; let exp=0;
+            let fromValue = document.getElementById("ledgerFromDate").value; 
+            let toValue = document.getElementById("ledgerToDate").value;     
+            let timeSpanText = "Lifetime History";
+
+            if (fromValue || toValue) {
+                let fromDate = fromValue ? new Date(fromValue + "T00:00:00") : new Date("1970-01-01");
+                let toDate = toValue ? new Date(toValue + "T23:59:59") : new Date("2099-12-31");
+
+                timeSpanText = `Range: ${fromValue || 'Start'} to ${toValue || 'End'}`;
+                
+                jobs.forEach(job => {
+                    if(job.status === "Delivered" && job.date) {
+                        let parts = job.date.split(" ");
+                        let dParts = parts[0].split("-");
+                        let jobDateObj = new Date(`${dParts[2]}-${dParts[1]}-${dParts[0]}T${parts[1] || '00:00'}:00`);
+
+                        if(jobDateObj >= fromDate && jobDateObj <= toDate) {
+                            rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                            exp += parseFloat(job.spare_cost || 0);
+                        }
+                    }
+                });
+            } else {
+                jobs.forEach(job => {
+                    if(job.status === "Delivered"){
+                        rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                        exp += parseFloat(job.spare_cost || 0);
+                    }
+                });
+            }
+
+            document.getElementById("ledgerTimeSpan").innerText = `(${timeSpanText})`;
+            document.getElementById("lbl-revenue").innerText = "₹" + rev.toFixed(2); 
+            document.getElementById("lbl-expenses").innerText = "₹" + exp.toFixed(2); 
+            document.getElementById("lbl-profit").innerText = "₹" + (rev - exp).toFixed(2);
+        }
+
+        function resetLedgerFilters(){
+            document.getElementById("ledgerFromDate").value = "";
+            document.getElementById("ledgerToDate").value = "";
+            document.getElementById("ledgerMonthFilter").value = "all";
+            calculateFinancials();
+        }
+
+        function printJobcard(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) { alert("Job not found in cache registry."); return; }
+
+            const printWindow = window.open('', '_blank', 'width=450,height=700');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>FIXIFY INVOICE - ${job.id}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; padding: 10px; font-size: 13px; line-height: 1.5; background: #fff; }
+                        .text-center { text-align: center; }
+                        .text-right { text-align: right; }
+                        .brand-box { background: #0f172a; color: #f97316; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                        .header-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; margin-bottom: 2px; }
+                        .sub-title { font-size: 11px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+                        .divider { border-bottom: 2px dashed #334155; margin: 15px 0; }
+                        .light-divider { border-bottom: 1px solid #e2e8f0; margin: 10px 0; }
+                        .section-title { font-size: 14px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 5px 8px; border-left: 4px solid #f97316; margin-bottom: 10px; text-transform: uppercase; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+                        td { padding: 5px 4px; vertical-align: top; }
+                        .label { color: #64748b; font-weight: 600; width: 40%; }
+                        .value { color: #0f172a; font-weight: 500; }
+                        .total-row { font-size: 16px; font-weight: bold; background: #fff7ed; color: #ea580c; border: 1px dashed #f97316; }
+                        .total-row td { padding: 8px 6px; }
+                        .barcode-area { font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; letter-spacing: 4px; background: #f8fafc; padding: 8px; margin: 15px 0; border: 1px solid #e2e8f0; text-align:center; }
+                        .footer-note { font-size: 11px; color: #64748b; text-align: justify; line-height: 1.4; padding: 0 5px; }
+                        @media print { 
+                            body { padding: 0; background: #fff; color: #000; }
+                            .brand-box { background: #000 !important; color: #fff !important; border: 1px solid #000; }
+                            .sub-title { color: #fff !important; }
+                            .section-title { background: #eee !important; border-left: 4px solid #000 !important; }
+                            .total-row { background: #eee !important; color: #000 !important; border: 1px dashed #000 !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="brand-box text-center">
+                        <div class="header-title">FIXIFY</div>
+                        <div class="sub-title">Smart Device Repair Network</div>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; margin-bottom: 15px; padding: 0 4px;">
+                        <div><strong>DATE:</strong> ${job.date || 'N/A'}</div>
+                        <div><strong>OPERATOR:</strong> ${job.created_by || 'Terminal'}</div>
+                    </div>
+                    <div class="barcode-area">||| ${job.id} |||</div>
+                    <div class="section-title">Client & Device Details</div>
+                    <table>
+                        <tr><td class="label">Customer Name</td><td class="value">: <strong>${job.name || 'N/A'}</strong></td></tr>
+                        <tr><td class="label">Contact Number</td><td class="value">: ${job.phone1 || 'N/A'}</td></tr>
+                        <tr><td class="label">Device Profile</td><td class="value">: <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">${job.category || 'N/A'}</span></td></tr>
+                        <tr><td class="label">Model Config</td><td class="value">: <strong>${job.device || 'N/A'}</strong></td></tr>
+                        <tr><td class="label">IMEI / Serial No</td><td class="value">: ${job.imei || 'None'}</td></tr>
+                        <tr><td class="label">Device Password</td><td class="value">: <code style="background:#f8fafc; padding:2px 4px; border:1px solid #e2e8f0; border-radius:3px;">${job.password || 'None'}</code></td></tr>
+                        <tr><td class="label">Reported Fault</td><td class="value" style="color: #b91c1c; font-weight: bold;">: ${job.problem || 'N/A'}</td></tr>
+                    </table>
+                    <div class="divider"></div>
+                    <div class="section-title">Cost Breakdown Ledger</div>
+                    <table>
+                        <tr><td class="label">Initial Estimate</td><td class="value text-right">₹${parseFloat(job.estimate || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Markup / Extra Cost</td><td class="value text-right">+ ₹${parseFloat(job.extra_charge || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Discounts Availed</td><td class="value text-right" style="color:#16a34a;">- ₹${parseFloat(job.discount || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Advance Deposit</td><td class="value text-right" style="color:#2563eb;">- ₹${parseFloat(job.advance || 0).toFixed(2)}</td></tr>
+                        <tr class="light-divider"></tr>
+                        <tr class="total-row">
+                            <td style="text-transform: uppercase; font-size:12px;">Net Balance Due</td>
+                            <td class="text-right">₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0)).toFixed(2)}</td>
+                        </tr>
+                    </table>
+                    <div class="divider"></div>
+                    <div class="footer-note">
+                        <strong>Terms & Conditions:</strong><br>
+                        1. Please present this authenticated digital thermal receipt slip during pickup hours.<br>
+                        2. Fixify takes zero liabilities for system data patterns, cloud storage configurations, or internal motherboard health failures during teardown phases.<br>
+                        3. Maximum storage threshold for fixed units is 30 days post repair timestamp alerts.
+                    </div>
+                    <div class="divider"></div>
+                    <div class="text-center" style="font-weight: bold; font-size: 14px; color: #0f172a; margin-top: 10px;">
+                        Thank You For Trusting Fixify! ❤️
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        async function updateStatus(id,status){ await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})}); loadJobs(); }
+        async function savePricing(id){
+            let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
+            let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
+            let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
+            const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
+            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); } else { alert("Failed to update price. Ensure Supabase column types accept this format."); }
+        }
+
+        async function savePart(){
+            let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
+            if(!n || !m) { alert("Please fill all mandatory stock details."); return; }
+            const res = await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
+            if((await res.json()).success) {
+                alert("Stock added successfully!");
+                document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts();
+            } else {
+                alert("Error saving part. Ensure table 'fixify_parts' exists in Supabase.");
+            }
+        }
+        function renderParts(){
+            let t=document.getElementById("partsTable"); t.innerHTML="";
+            if(!Array.isArray(parts)) return;
+            parts.forEach(p=>{ t.innerHTML+=`<tr><td><strong>${p.part_name}</strong></td><td>${p.model}</td><td style="color:#10b981; font-weight:bold;">₹${p.price}</td><td>${p.date || ''}</td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deletePart('${p.id}')">❌</button></td></tr>`; });
+        }
+        async function deletePart(id){ if(confirm("Delete record?")){ await fetch("/api/parts?id="+id,{method:"DELETE"}); loadParts(); } }
+
+        async function saveEmployee(){
+            let n=document.getElementById("e-name").value; let u=document.getElementById("e-user").value; let p=document.getElementById("e-pass").value;
+            await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p})});
+            document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees();
+        }
+        function renderEmployees(){
+            let t=document.getElementById("empTable"); t.innerHTML="";
+            if(!Array.isArray(employees)) return;
+            employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
+        }
+        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
+
+        window.onload=checkSession;
+        showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
+    </script>
+</body>
+</html>
