@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify, session
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# SUPABASE CLOUD CENTRAL GATEWAY
+# SUPABASE CENTRAL CREDENTIALS
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
@@ -25,7 +25,7 @@ def make_supabase_request(url, method="GET", data=None):
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json"
     }
-    if method in ["POST", "PATCH"]:
+    if method in ["POST", "PATCH", "DELETE"]:
         headers["Prefer"] = "return=representation"
         
     if req_data:
@@ -37,7 +37,7 @@ def make_supabase_request(url, method="GET", data=None):
             res_read = response.read().decode("utf-8")
             return json.loads(res_read) if res_read else []
     except Exception as e:
-        print("Supabase Core Crash Alert:", e)
+        print("Supabase Engine Alert:", e)
         return None
 
 @app.route('/')
@@ -95,7 +95,7 @@ def handle_parts():
         data = request.json or {}
         today_str = datetime.now().strftime("%Y-%m-%d")
         payload = {
-            "part_name": str(data.get('part_name', 'Spare')),
+            "part_name": str(data.get('part_name', 'Part')),
             "model_compatibility": str(data.get('model_compatibility', '')),
             "wholesale_cost": float(data.get('wholesale_cost', 0) or 0),
             "updated_at": today_str
@@ -133,8 +133,6 @@ def handle_employees():
         
     if request.method == 'DELETE':
         username = request.args.get('username')
-        if username == 'admin':
-            return jsonify({"success": False, "message": "Chairman terminal block delete nahi ho sakta!"})
         url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{urllib.parse.quote(username)}"
         make_supabase_request(url, method="DELETE")
         return jsonify({"success": True})
@@ -151,11 +149,16 @@ def handle_jobs():
     if request.method == 'POST':
         data = request.json or {}
         
-        # Fresh count for sequential tracking generation
-        count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
-        all_rows = make_supabase_request(count_url, method="GET")
-        next_num = len(all_rows) + 1 if isinstance(all_rows, list) else 1
-        
+        # Safe count handling block
+        next_num = 1
+        try:
+            count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
+            all_rows = make_supabase_request(count_url, method="GET")
+            if isinstance(all_rows, list):
+                next_num = len(all_rows) + 1
+        except:
+            next_num = 1
+            
         next_id = f"FIX{next_num:04d}"
         today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         
@@ -182,22 +185,28 @@ def handle_jobs():
         make_supabase_request(insert_url, method="POST", data=payload)
         return jsonify({"success": True, "id": next_id})
         
-    # GET Methods Link
+    # GET Method Engine
     fetch_url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
     rows = make_supabase_request(fetch_url, method="GET")
     jobs = []
     if isinstance(rows, list):
         for r in rows:
             jobs.append({
-                "id": str(r.get('id', '')), "category": str(r.get('category', 'Mobile')), "name": str(r.get('name', '')),
-                "phone1": str(r.get('phone1', '')), "device": str(r.get('device', '')), "problem": str(r.get('problem', '')),
-                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0), 
-                "extra_cost": float(r.get('extra_cost', 0) or 0), "discount": float(r.get('discount', 0) or 0),
+                "id": str(r.get('id', '')),
+                "category": str(r.get('category', 'Mobile')),
+                "name": str(r.get('name', '')),
+                "phone1": str(r.get('phone1', '')),
+                "device": str(r.get('device', '')),
+                "problem": str(r.get('problem', '')),
+                "estimate": float(r.get('estimate', 0) or 0),
+                "advance": float(r.get('advance', 0) or 0),
+                "extra_cost": float(r.get('extra_cost', 0) or 0),
+                "discount": float(r.get('discount', 0) or 0),
                 "spare_part_cost": float(r.get('spare_part_cost', 0) or 0),
-                "date": str(r.get('created_date', '')), "status": str(r.get('status', 'Pending')),
+                "date": str(r.get('created_date', '')),
+                "status": str(r.get('status', 'Pending')),
                 "created_by": str(r.get('created_by', 'Staff'))
             })
-    jobs.sort(key=lambda x: x['id'], reverse=True)
     return jsonify(jobs)
 
 @app.route('/api/jobs/update_status', methods=['POST'])
@@ -215,9 +224,8 @@ def update_pricing():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
     url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
-    
     payload = {
-        "extra_cost": float(data.get('extra_cost', 0) or 0), 
+        "extra_cost": float(data.get('extra_cost', 0) or 0),
         "discount": float(data.get('discount', 0) or 0),
         "spare_part_cost": float(data.get('spare_part_cost', 0) or 0)
     }
