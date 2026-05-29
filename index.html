@@ -12,7 +12,6 @@
         .login-box { background: #111827; border: 2px solid #1f2937; padding: 40px; border-radius: 16px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
         .login-box h2 { color: #f97316; margin-bottom: 5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .login-btn { background-color: #f97316; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 15px; font-size: 13px; }
-        .login-btn:hover { background-color: #ea580c; }
 
         .sidebar { width: 265px; background-color: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
         .brand-title { color: #f97316; font-size: 21px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #1f2937; padding-bottom: 15px; text-align: center; }
@@ -118,7 +117,6 @@
 </head>
 <body>
 
-    <!-- SYSTEM LOGIN OVERLAY -->
     <div class="login-overlay" id="login-screen" style="display: none;">
         <div class="login-box">
             <h2>Fixify Core Gateway</h2>
@@ -135,7 +133,6 @@
         </div>
     </div>
 
-    <!-- Sidebar Navigation Menu Left side -->
     <div class="sidebar">
         <div>
             <div class="brand-title">Fixify Cloud</div>
@@ -153,7 +150,6 @@
         <div><button class="logout-btn" onclick="triggerSystemLogout()">🚪 Lock Terminal Account</button></div>
     </div>
 
-    <!-- Right Container Workspace -->
     <div class="main-content">
         <div class="navbar">
             <div id="navbar-user-display" class="user-tag-badge role-employee">💼 Loading session...</div>
@@ -167,7 +163,6 @@
         </div>
 
         <div class="view-body">
-            <!-- VIEW 1 -->
             <div id="counter-view" class="view-panel active">
                 <div class="counters-grid">
                     <div class="counter-card blue-card">
@@ -185,11 +180,10 @@
                 </div>
             </div>
 
-            <!-- VIEW 2 -->
             <div id="form-view" class="view-panel">
                 <div class="panel-card">
                     <h3>📝 New Device Repairing Entry (Mobile / Laptop Counter)</h3>
-                    <form id="jobsheet-entry-form" style="margin-top:15px;">
+                    <form id="jobsheet-entry-form" style="margin-top:15px;" onsubmit="handleJobsheetSubmit(event)">
                         <div class="form-row-3">
                             <div class="form-group"><label>Device Category *</label>
                                 <select class="form-input" id="ins-category"><option value="Mobile">MOBILE PHONE</option><option value="Laptop">LAPTOP CORE</option></select>
@@ -212,7 +206,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 3 -->
             <div id="summary-view" class="view-panel">
                 <div class="panel-card">
                     <h3>Live Central Repairing Records Counter</h3>
@@ -234,7 +227,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 4 -->
             <div id="parts-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -259,7 +251,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 5 -->
             <div id="employee-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -392,7 +383,7 @@
                         <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
                         <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
                         <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
-                        <td>mathbf{${job.device}}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
+                        <td><strong>${job.device}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
                         <td>
                             <div style="font-size:12px; line-height:1.4; min-width:160px;">
                                 <span style="font-weight:bold; color:#fff;">Bill: ₹${finalCustomerBill}</span> 
@@ -527,23 +518,40 @@
             if(confirm(`Delete ${username}?`)) { await fetch(`/api/employees?username=${username}`, { method: 'DELETE' }); fetchEmployeeList(); }
         }
 
-        document.getElementById('jobsheet-entry-form').addEventListener('submit', async (e) => {
+        async function handleJobsheetSubmit(e) {
             e.preventDefault();
-            const payload = { category: document.getElementById('ins-category').value, device: document.getElementById('ins-device').value, imei: document.getElementById('ins-imei').value, name: document.getElementById('ins-name').value, phone1: document.getElementById('ins-phone').value, password: document.getElementById('ins-password').value, problem: document.getElementById('ins-problem').value, estimate: parseFloat(document.getElementById('ins-estimate').value || 0), advance: parseFloat(document.getElementById('ins-advance').value || 0) };
             
-            const res = await fetch('/api/jobs', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(payload) 
-            });
-            const out = await res.json();
-            if(out.success) { 
-                await reloadSystemData(); 
-                document.getElementById('jobsheet-entry-form').reset(); 
-                switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
-                setTimeout(() => { executePortraitPrint(out.id); }, 600); 
+            const payload = { 
+                category: document.getElementById('ins-category').value, 
+                device: document.getElementById('ins-device').value, 
+                imei: document.getElementById('ins-imei').value, 
+                name: document.getElementById('ins-name').value, 
+                phone1: document.getElementById('ins-phone').value, 
+                password: document.getElementById('ins-password').value, 
+                problem: document.getElementById('ins-problem').value, 
+                estimate: parseFloat(document.getElementById('ins-estimate').value || 0), 
+                advance: parseFloat(document.getElementById('ins-advance').value || 0) 
+            };
+            
+            try {
+                const res = await fetch('/api/jobs', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                const out = await res.json();
+                if(out.success) { 
+                    document.getElementById('jobsheet-entry-form').reset();
+                    await reloadSystemData(); 
+                    switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
+                    setTimeout(() => { executePortraitPrint(out.id); }, 500); 
+                } else {
+                    alert("Database Error: Entry save nahi ho saki bhai.");
+                }
+            } catch (err) {
+                alert("Network Connection issue: Server se contact nahi ho pa raha.");
             }
-        });
+        }
 
         function executePortraitPrint(id) {
             const job = globalDatabase.find(j => j.id === id); if (!job) return;
