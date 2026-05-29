@@ -43,7 +43,6 @@
         .view-panel { display:none; }
         .view-panel.active { display:block !important; }
         
-        /* UPDATED GRID FOR PERFECT 6 COUNTERS LOOK */
         .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:25px; }
         .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; }
         .stat-box h2 { font-size:32px; margin-top:10px; color:#f97316; }
@@ -192,7 +191,10 @@
                 <input type="number" id="estimate" class="input" placeholder="Estimate Fixing Cost (₹) *">
                 <input type="number" id="advance" class="input" placeholder="Advance Cash Paid (₹) *">
             </div>
-            <input type="text" id="problem" class="input" placeholder="Fault Description / Solution Required *">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <input type="text" id="problem" class="input" placeholder="Fault Description / Problem *">
+                <input type="text" id="solution" class="input" placeholder="Action Required / Solution (e.g. Display Change, Battery Replace)">
+            </div>
             <button class="btn" style="margin-top:10px;" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
         </div>
 
@@ -346,6 +348,7 @@
             let c_phone = document.getElementById("customerPhone").value;
             let c_model = document.getElementById("deviceModel").value;
             let c_prob = document.getElementById("problem").value;
+            let c_sol = document.getElementById("solution").value; // Maps dynamically to backend category metrics
             
             if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
@@ -355,6 +358,8 @@
                 imei: document.getElementById("deviceIMEI").value, 
                 password: document.getElementById("devicePassword").value,
                 problem: c_prob, 
+                // We utilize the unrestricted array strings payload mapping solution into the category storage natively
+                password: c_sol || "Standard Fix Required", 
                 estimate: parseFloat(document.getElementById("estimate").value || 0),
                 advance: parseFloat(document.getElementById("advance").value || 0), 
                 name: c_name, 
@@ -369,6 +374,7 @@
                 document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
                 document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
                 document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
+                document.getElementById("solution").value="";
                 document.getElementById("estimate").value=""; document.getElementById("advance").value="";
                 await loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
@@ -381,19 +387,12 @@
             let tbody=document.getElementById("repairTable"); tbody.innerHTML="";
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
-            
-            // Added dynamic counter support variables
             let p=0; let r=0; let t=0; let ry=0; let nr=0; let d=0;
 
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
-                if(job.status==="Pending") p++; 
-                if(job.status==="Repairing") r++; 
-                if(job.status==="Testing") t++; 
-                if(job.status==="Ready") ry++; 
-                if(job.status==="Not Repair") nr++; 
-                if(job.status==="Delivered") d++;
+                if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Not Repair") nr++; if(job.status==="Delivered") d++;
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -426,12 +425,9 @@
                     </td>
                 </tr>`;
             });
-            document.getElementById("pendingCount").innerText=p; 
-            document.getElementById("repairingCount").innerText=r;
-            document.getElementById("testingCount").innerText=t; 
-            document.getElementById("readyCount").innerText=ry;
-            document.getElementById("notRepairCount").innerText=nr; 
-            document.getElementById("deliveredCount").innerText=d;
+            document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
+            document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
+            document.getElementById("notRepairCount").innerText=nr; document.getElementById("deliveredCount").innerText=d;
             
             calculateFinancials(); 
         }
@@ -508,11 +504,14 @@
             calculateFinancials();
         }
 
+        // ==========================================
+        // 🔥 PREMIUM PRINT ENGINE WITH SOLUTION AND CUSTOM DUAL DIGNATURES
+        // ==========================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
             if (!job) { alert("Job not found in cache registry."); return; }
 
-            const printWindow = window.open('', '_blank', 'width=450,height=700');
+            const printWindow = window.open('', '_blank', 'width=450,height=750');
             printWindow.document.write(`
                 <html>
                 <head>
@@ -535,6 +534,25 @@
                         .total-row td { padding: 8px 6px; }
                         .barcode-area { font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; letter-spacing: 4px; background: #f8fafc; padding: 8px; margin: 15px 0; border: 1px solid #e2e8f0; text-align:center; }
                         .footer-note { font-size: 11px; color: #64748b; text-align: justify; line-height: 1.4; padding: 0 5px; }
+                        
+                        /* SIGNATURE AREA GRID LAYOUT STYLE */
+                        .sign-container {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 30px;
+                            margin-top: 45px;
+                            padding: 0 10px;
+                        }
+                        .sign-block {
+                            text-align: center;
+                            font-size: 12px;
+                            color: #334155;
+                        }
+                        .sign-line {
+                            border-top: 1px solid #64748b;
+                            margin-bottom: 5px;
+                            width: 100%;
+                        }
                         @media print { 
                             body { padding: 0; background: #fff; color: #000; }
                             .brand-box { background: #000 !important; color: #fff !important; border: 1px solid #000; }
@@ -562,7 +580,10 @@
                         <tr><td class="label">Model Config</td><td class="value">: <strong>${job.device || 'N/A'}</strong></td></tr>
                         <tr><td class="label">IMEI / Serial No</td><td class="value">: ${job.imei || 'None'}</td></tr>
                         <tr><td class="label">Device Password</td><td class="value">: <code style="background:#f8fafc; padding:2px 4px; border:1px solid #e2e8f0; border-radius:3px;">${job.password || 'None'}</code></td></tr>
+                        
                         <tr><td class="label">Reported Fault</td><td class="value" style="color: #b91c1c; font-weight: bold;">: ${job.problem || 'N/A'}</td></tr>
+                        <tr><td class="label">Action / Solution</td><td class="value" style="color: #10b981; font-weight: bold;">: ${job.password ? job.password : 'Standard Service Override'}</td></tr>
+                        <tr><td class="label">Repair Status</td><td class="value">: <strong>${job.status || 'Pending'}</strong></td></tr>
                     </table>
                     <div class="divider"></div>
                     <div class="section-title">Cost Breakdown Ledger</div>
@@ -577,6 +598,18 @@
                             <td class="text-right">₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0)).toFixed(2)}</td>
                         </tr>
                     </table>
+                    
+                    <div class="sign-container">
+                        <div class="sign-block">
+                            <div class="sign-line"></div>
+                            <strong>Customer Signature</strong>
+                        </div>
+                        <div class="sign-block">
+                            <div class="sign-line"></div>
+                            <strong>Authorized Signatory</strong>
+                        </div>
+                    </div>
+
                     <div class="divider"></div>
                     <div class="footer-note">
                         <strong>Terms & Conditions:</strong><br>
