@@ -10,7 +10,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="#0b1120">
     <meta name="theme-color" content="#f97316">
-<link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.json">
+
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
         body { background:#0b1120; color:white; display:flex; height:100vh; overflow:hidden; }
@@ -42,7 +43,8 @@
         .view-panel { display:none; }
         .view-panel.active { display:block !important; }
         
-        .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:25px; }
+        /* UPDATED GRID FOR PERFECT 6 COUNTERS LOOK */
+        .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin-bottom:25px; }
         .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; }
         .stat-box h2 { font-size:32px; margin-top:10px; color:#f97316; }
         .card { background:#111827; padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid #1e293b; }
@@ -129,7 +131,8 @@
                 <div class="stat-box">Repairing<h2 id="repairingCount">0</h2></div>
                 <div class="stat-box">Testing<h2 id="testingCount">0</h2></div>
                 <div class="stat-box">Ready<h2 id="readyCount">0</h2></div>
-                <div class="stat-box">Delivered<h2 id="deliveredCount">0</h2></div>
+                <div class="stat-box" style="border-left-color: #ef4444;">Not Repaired<h2 id="notRepairCount" style="color: #ef4444;">0</h2></div>
+                <div class="stat-box" style="border-left-color: #10b981;">Delivered<h2 id="deliveredCount" style="color: #10b981;">0</h2></div>
             </div>
 
             <div id="profitCardWrapper" style="display:none;">
@@ -378,12 +381,19 @@
             let tbody=document.getElementById("repairTable"); tbody.innerHTML="";
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
-            let p=0; let r=0; let t=0; let ry=0; let d=0;
+            
+            // Added dynamic counter support variables
+            let p=0; let r=0; let t=0; let ry=0; let nr=0; let d=0;
 
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
-                if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
+                if(job.status==="Pending") p++; 
+                if(job.status==="Repairing") r++; 
+                if(job.status==="Testing") t++; 
+                if(job.status==="Ready") ry++; 
+                if(job.status==="Not Repair") nr++; 
+                if(job.status==="Delivered") d++;
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -416,8 +426,11 @@
                     </td>
                 </tr>`;
             });
-            document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
-            document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
+            document.getElementById("pendingCount").innerText=p; 
+            document.getElementById("repairingCount").innerText=r;
+            document.getElementById("testingCount").innerText=t; 
+            document.getElementById("readyCount").innerText=ry;
+            document.getElementById("notRepairCount").innerText=nr; 
             document.getElementById("deliveredCount").innerText=d;
             
             calculateFinancials(); 
