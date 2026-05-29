@@ -8,12 +8,12 @@ from flask import Flask, render_template, request, jsonify, session
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# SUPABASE CLOUD CONNECTION
+# SUPABASE CLOUD CONNECTION INFO
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
 ADMIN_USER = "admin"
-ADMIN_PASS = "fixify@2026" 
+ADMIN_PASS = "fixify@2026"
 
 def make_supabase_request(url, method="GET", data=None):
     req_data = None
@@ -23,11 +23,10 @@ def make_supabase_request(url, method="GET", data=None):
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
     }
-    if method in ["POST", "PATCH"]:
-        headers["Prefer"] = "return=representation"
-        
+    
     if req_data:
         headers["Content-Length"] = str(len(req_data))
         
@@ -35,10 +34,12 @@ def make_supabase_request(url, method="GET", data=None):
     try:
         with urllib.request.urlopen(req) as response:
             res_read = response.read().decode("utf-8")
-            return json.loads(res_read) if res_read else []
+            if res_read:
+                return json.loads(res_read)
+            return []
     except Exception as e:
-        print("Supabase Dynamic Crash Logger:", e)
-        return None
+        print("Supabase Fatal Network Log:", e)
+        return []
 
 @app.route('/')
 def home():
