@@ -496,11 +496,14 @@
 
         async function handlePartRegister(e) {
             e.preventDefault();
+            const d = new Date();
+            const todayDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            
             const payload = { 
                 part_name: document.getElementById('part-name').value, 
                 model_compatibility: document.getElementById('part-model').value, 
                 wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0),
-                updated_at: new datetime().toISOString().split('T')[0]
+                updated_at: todayDateStr
             };
             await fetch(`${CLOUD_URL}/rest/v1/fixify_parts`, { 
                 method: 'POST', 
@@ -579,7 +582,7 @@
                 created_by: CURRENT_USER_NAME
             };
             
-            const res = await fetch(`${CLOUD_URL}/rest/v1/jobs`, { 
+            await fetch(`${CLOUD_URL}/rest/v1/jobs`, { 
                 method: 'POST', 
                 headers: cloudHeaders, 
                 body: JSON.stringify(payload) 
