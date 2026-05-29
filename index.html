@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIXIFY TECH REPAIR v15.0</title>
+    <title>FIXIFY TECH REPAIR v15.5</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #cbd5e1; display: flex; height: 100vh; overflow: hidden; }
@@ -220,7 +220,7 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>Order ID</th><th>In Date</th><th>Customer</th><th>Category</th><th>Model Name</th><th>Pricing Panel (₹)</th><th>Job Staff</th><th>Change Status</th><th>Actions</th></tr>
+                                <tr><th>Order ID</th><th>In Date</th><th>Customer</th><th>Category</th><th>Model Name</th><th>Pricing & Wholesale Panel (₹)</th><th>Job Staff</th><th>Change Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody id="live-table-rows"></tbody>
                         </table>
@@ -371,7 +371,7 @@
                     if (matchSearch && matchStatus) {
                         const tr = document.createElement('tr');
                         const cStyle = job.status.replace(" ", "-");
-                        const finalCustomerBill = job.estimate + job.extra_cost - job.discount;
+                        const finalCustomerBill = (job.estimate || 0) + (job.extra_cost || 0) - (job.discount || 0);
                         const spareCost = job.spare_part_cost || 0;
                         const entryProfit = finalCustomerBill - spareCost;
 
@@ -431,8 +431,8 @@
             let grossIncome = 0; let totalSpareExpense = 0;
             globalDatabase.forEach(j => {
                 if(j.status === 'Delivered') {
-                    grossIncome += (j.estimate + j.extra_cost - j.discount);
-                    totalSpareExpense += j.spare_part_cost;
+                    grossIncome += ((j.estimate || 0) + (j.extra_cost || 0) - (job.discount || 0));
+                    totalSpareExpense += (j.spare_part_cost || 0);
                 }
             });
             document.getElementById('lbl-total-sales').innerText = '₹' + grossIncome;
@@ -490,13 +490,11 @@
                 model_compatibility: document.getElementById('part-model').value.trim(), 
                 wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) 
             };
-            
             const res = await fetch('/api/parts', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify(payload) 
             });
-            
             if(res.ok) {
                 document.getElementById('spare-part-form').reset(); 
                 await fetchPartsList();
