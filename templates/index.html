@@ -211,7 +211,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Authentication Security Tokens."); }
+            } else { alert(data.message || "Invalid Security Token ID/Password."); }
         }
 
         async function checkSession(){
@@ -244,8 +244,7 @@
             let newP = document.getElementById("newChairmanPass").value;
             if(!newP) { alert("Please enter a valid password."); return; }
             const res = await fetch("/api/update_chairman_pass", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_password:newP})});
-            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully! Use new password from next login."); document.getElementById("newChairmanPass").value=""; }
-            else { alert("Error updating security tokens."); }
+            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
         }
 
         async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
@@ -268,15 +267,21 @@
                 problem:prob, estimate:parseFloat(document.getElementById("estimate").value || 0),
                 advance:parseFloat(document.getElementById("advance").value || 0), customer_name:name, phone:phone
             };
+            
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-            if((await res.json()).success){ 
+            const output = await res.json();
+            
+            if(output.success){ 
                 alert("Jobcard Registry Generated Successfully."); 
                 document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
                 document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
                 document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
                 document.getElementById("estimate").value=""; document.getElementById("advance").value="";
-                loadJobs(); showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
-            } else { alert("Network Connection Refused to Save Data."); }
+                await loadJobs(); 
+                showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
+            } else { 
+                alert(output.message || "Database Error. Data Refused to Save."); 
+            }
         }
 
         function renderJobs(){
@@ -298,7 +303,7 @@
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
                     <td><strong>${job.customer_name}</strong><br><small style="color:#9ca3af;">${job.phone}</small></td>
-                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault/Solution: ${job.problem}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
                             <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
