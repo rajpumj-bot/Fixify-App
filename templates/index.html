@@ -316,7 +316,7 @@
                             <span style="font-size:10px; color:#ef4444;">Part Cost:</span>
                             <input type="number" id="sp-${job.id}" value="${job.spare_cost || 0}" class="input" style="width:80px; margin:0; color:#ef4444; font-weight:bold;">
                             <button class="tbl-btn" onclick="savePricing('${job.id}')">Save</button>
-                            ` : '<span style="color:#6b7280; font-size:11px;">Restricted Pricing</span>'}
+                            ` : '<span style="color:#6b7280; font-size:11px;">Restricted</span>'}
                             <button class="print-btn" onclick="printJobcard('${job.id}')">🖨️ Print Receipt</button>
                         </div>
                     </td>
@@ -327,67 +327,136 @@
             document.getElementById("deliveredCount").innerText=d;
         }
 
-        // ==========================================
-        // 100% FIXED THERMAL BILL PRINT ENGINE
-        // ==========================================
+        // ========================================================
+        // 🔥 ATTRACTIVE & PROFESSIONAL THERMAL PRINT RECEIPT ENGINE
+        // ========================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
-            if (!job) { alert("Job not found in tracking cache."); return; }
+            if (!job) { alert("Job not found in cache registry."); return; }
 
-            const printWindow = window.open('', '_blank', 'width=700,height=800');
+            const printWindow = window.open('', '_blank', 'width=450,height=700');
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>Print Invoice - ${job.id}</title>
+                    <title>FIXIFY INVOICE - ${job.id}</title>
                     <style>
-                        body { font-family: 'Courier New', Courier, monospace; color: #000; padding: 20px; font-size: 14px; line-height: 1.4; }
+                        body { 
+                            font-family: 'Segoe UI', Arial, sans-serif; 
+                            color: #111; 
+                            padding: 10px; 
+                            font-size: 13px; 
+                            line-height: 1.5; 
+                            background: #fff;
+                        }
                         .text-center { text-align: center; }
-                        .header { font-size: 24px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-                        .divider { border-bottom: 2px dashed #000; margin: 15px 0; }
-                        table { width: 100%; border-collapse: collapse; }
-                        td { padding: 6px 0; vertical-align: top; }
-                        .label { font-weight: bold; width: 45%; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 12px; }
-                        @media print { body { padding: 0; } }
+                        .text-right { text-align: right; }
+                        .brand-box { 
+                            background: #0f172a; 
+                            color: #f97316; 
+                            padding: 15px; 
+                            border-radius: 8px; 
+                            margin-bottom: 15px;
+                        }
+                        .header-title { 
+                            font-size: 28px; 
+                            font-weight: 900; 
+                            letter-spacing: 2px;
+                            margin-bottom: 2px;
+                        }
+                        .sub-title { font-size: 11px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
+                        .divider { border-bottom: 2px dashed #334155; margin: 15px 0; }
+                        .light-divider { border-bottom: 1px solid #e2e8f0; margin: 10px 0; }
+                        
+                        .section-title { 
+                            font-size: 14px; 
+                            font-weight: bold; 
+                            color: #0f172a; 
+                            background: #f1f5f9; 
+                            padding: 5px 8px; 
+                            border-left: 4px solid #f97316;
+                            margin-bottom: 10px;
+                            text-transform: uppercase;
+                        }
+                        
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+                        td { padding: 5px 4px; vertical-align: top; }
+                        .label { color: #64748b; font-weight: 600; width: 40%; }
+                        .value { color: #0f172a; font-weight: 500; }
+                        
+                        .price-table td { padding: 6px 4px; }
+                        .total-row { 
+                            font-size: 16px; 
+                            font-weight: bold; 
+                            background: #fff7ed; 
+                            color: #ea580c;
+                            border: 1px dashed #f97316;
+                        }
+                        .total-row td { padding: 8px 6px; }
+                        
+                        .barcode-area { font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; letter-spacing: 4px; background: #f8fafc; padding: 8px; margin: 15px 0; border: 1px solid #e2e8f0; text-align:center; }
+                        .footer-note { font-size: 11px; color: #64748b; text-align: justify; line-height: 1.4; padding: 0 5px; }
+                        
+                        @media print { 
+                            body { padding: 0; background: #fff; color: #000; }
+                            .brand-box { background: #000 !important; color: #fff !important; border: 1px solid #000; }
+                            .sub-title { color: #fff !important; }
+                            .section-title { background: #eee !important; border-left: 4px solid #000 !important; }
+                            .total-row { background: #eee !important; color: #000 !important; border: 1px dashed #000 !important; }
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="text-center">
-                        <div class="header">FIXIFY TECH REPAIR</div>
-                        <div>Premium Smartphone & Laptop Service Hub</div>
-                        <div>Date: ${job.date || 'N/A'}</div>
+                    <div class="brand-box text-center">
+                        <div class="header-title">FIXIFY</div>
+                        <div class="sub-title">Smart Device Repair Network</div>
                     </div>
-                    <div class="divider"></div>
-                    <div class="text-center" style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">CUSTOMER COPY RECEIPT</div>
+                    
+                    <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; margin-bottom: 15px; padding: 0 4px;">
+                        <div><strong>DATE:</strong> ${job.date || 'N/A'}</div>
+                        <div><strong>OPERATOR:</strong> ${job.created_by || 'Terminal'}</div>
+                    </div>
+
+                    <div class="barcode-area">||| ${job.id} |||</div>
+
+                    <div class="section-title">Client & Device Details</div>
                     <table>
-                        <tr><td class="label">JOB ID:</td><td style="font-weight:bold; font-size:16px; color:#f97316;">${job.id}</td></tr>
-                        <tr><td class="label">Client Name:</td><td>${job.name || 'N/A'}</td></tr>
-                        <tr><td class="label">Phone Specs:</td><td>${job.phone1 || 'N/A'}</td></tr>
-                        <tr><td class="label">Device Group:</td><td>${job.category || 'N/A'}</td></tr>
-                        <tr><td class="label">Model Name:</td><td>${job.device || 'N/A'}</td></tr>
-                        <tr><td class="label">IMEI/Serial:</td><td>${job.imei || 'None'}</td></tr>
-                        <tr><td class="label">Screen Lock Code:</td><td>${job.password || 'None'}</td></tr>
-                        <tr><td class="label">Fault/Problem:</td><td>${job.problem || 'N/A'}</td></tr>
-                        <tr><td class="label">Repair Status:</td><td style="font-weight:bold;">${job.status || 'Pending'}</td></tr>
+                        <tr><td class="label">Customer Name</td><td class="value">: <strong>${job.name || 'N/A'}</strong></td></tr>
+                        <tr><td class="label">Contact Number</td><td class="value">: ${job.phone1 || 'N/A'}</td></tr>
+                        <tr><td class="label">Device Profile</td><td class="value">: <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">${job.category || 'N/A'}</span></td></tr>
+                        <tr><td class="label">Model Config</td><td class="value">: <strong>${job.device || 'N/A'}</strong></td></tr>
+                        <tr><td class="label">IMEI / Serial No</td><td class="value">: ${job.imei || 'None'}</td></tr>
+                        <tr><td class="label">Device Password</td><td class="value">: <code style="background:#f8fafc; padding:2px 4px; border:1px solid #e2e8f0; border-radius:3px;">${job.password || 'None'}</code></td></tr>
+                        <tr><td class="label">Reported Fault</td><td class="value" style="color: #b91c1c; font-weight: bold;">: ${job.problem || 'N/A'}</td></tr>
                     </table>
+
                     <div class="divider"></div>
-                    <table>
-                        <tr><td class="label">Estimated Quote:</td><td style="font-weight:bold;">₹${job.estimate || '0'}</td></tr>
-                        <tr><td class="label">Advance Deposit:</td><td style="font-weight:bold;">₹${job.advance || '0'}</td></tr>
-                        <tr><td class="label">Markup/Extra:</td><td>₹${job.extra_charge || '0'}</td></tr>
-                        <tr><td class="label">Discount Availed:</td><td>₹${job.discount || '0'}</td></tr>
-                        <tr style="font-size:16px; font-weight:bold;"><td class="label">Net Balance Due:</td><td>₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0))}</td></tr>
+
+                    <div class="section-title">Cost Breakdown Ledger</div>
+                    <table class="price-table">
+                        <tr><td class="label">Initial Estimate</td><td class="value text-right">₹${parseFloat(job.estimate || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Markup / Extra Cost</td><td class="value text-right">+ ₹${parseFloat(job.extra_charge || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Discounts Availed</td><td class="value text-right" style="color:#16a34a;">- ₹${parseFloat(job.discount || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Advance Deposit</td><td class="value text-right" style="color:#2563eb;">- ₹${parseFloat(job.advance || 0).toFixed(2)}</td></tr>
+                        <tr class="light-divider"></tr>
+                        <tr class="total-row">
+                            <td style="text-transform: uppercase; font-size:12px;">Net Balance Due</td>
+                            <td class="text-right">₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0)).toFixed(2)}</td>
+                        </tr>
                     </table>
+
                     <div class="divider"></div>
-                    <div style="font-size: 11px; font-style: italic; text-align:justify;">
-                        * Terms & Conditions: Please produce this thermal bill at workshop during retrieval hours. Fixify holds zero liabilities for internal hardware patterns or pre-existing unbootable chip architectures.
+
+                    <div class="footer-note">
+                        <strong>Terms & Conditions:</strong><br>
+                        1. Please present this authenticated digital thermal receipt slip during pickup hours.<br>
+                        2. Fixify takes zero liabilities for system data patterns, cloud storage configurations, or internal motherboard health failures during teardown phases.<br>
+                        3. Maximum storage threshold for fixed units is 30 days post repair timestamp alerts.
                     </div>
-                    <div class="footer">
-                        <p>Thank you for choosing FIXIFY! ❤️</p>
+
+                    <div class="divider"></div>
+                    <div class="text-center" style="font-weight: bold; font-size: 14px; color: #0f172a; margin-top: 10px;">
+                        Thank You For Trusting Fixify! ❤️
                     </div>
-                    <script>
-                        window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
-                    <\/script>
                 </body>
                 </html>
             `);
