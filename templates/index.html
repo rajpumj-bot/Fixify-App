@@ -33,23 +33,24 @@
         .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #1e293b; }
         .user-role { background:rgba(249,115,22,0.2); border:1px solid #f97316; color:#f97316; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:14px; }
 
-        /* PANELS */
+        /* VIEW PANELS CONTROL */
         .view-panel { display:none; }
-        .view-panel.active { display:block; }
+        .view-panel.active { display:block !important; }
+        
         .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:25px; }
         .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.3); }
         .stat-box h2 { font-size:32px; margin-top:10px; color:#f97316; }
         .card { background:#111827; padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid #1e293b; }
         .card h2 { color:#f97316; margin-bottom:20px; font-size:20px; }
 
-        /* TABLE GRID */
+        /* TABLES */
         .table-container { overflow-x:auto; background:#111827; border-radius:8px; border:1px solid #1e293b; margin-top:15px; }
         table { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
         th { background:#f97316; color:white; padding:12px; font-weight:bold; }
         td { padding:12px; border-bottom:1px solid #1e293b; vertical-align:middle; }
         .search-bar { display:flex; gap:15px; margin-bottom:20px; }
         
-        /* STATUS COLOR TAGS */
+        /* DROPDOWNS */
         .status-dropdown { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; color:white; border:none; cursor:pointer; }
         .st-Pending { background:#991b1b; } .st-Repairing { background:#92400e; }
         .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
@@ -105,7 +106,7 @@
             </div>
         </div>
 
-        <div class="card view-panel" id="jobcardSection">
+        <div id="jobcardSection" class="view-panel card">
             <h2>Create Repair Jobcard Entry</h2>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                 <input type="text" id="customerName" class="input" placeholder="Customer Name *">
@@ -125,7 +126,7 @@
             <button class="btn" style="margin-top:10px;" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
         </div>
 
-        <div class="card view-panel" id="repairsSection">
+        <div id="repairsSection" class="view-panel card">
             <h2>Live Repair Tracking Ledger</h2>
             <div class="search-bar">
                 <input type="text" id="searchInput" class="input" oninput="renderJobs()" placeholder="Search by Client Name, Phone, Job ID, or Date...">
@@ -189,10 +190,11 @@
         let jobs = []; let parts = []; let employees = []; let CURRENT_ROLE = "Employee";
 
         function showSection(section, btn){
-            document.querySelectorAll(".view-panel").forEach(p=>p.classList.remove("active"));
-            document.querySelectorAll(".menu-btn").forEach(b=>b.classList.remove("active"));
-            document.getElementById(section+"Section").style.display="block";
-            document.getElementById(section+"Section").classList.add("active");
+            document.querySelectorAll(".view-panel").forEach(p => { p.classList.remove("active"); });
+            document.querySelectorAll(".menu-btn").forEach(b => { b.classList.remove("active"); });
+            
+            const activePanel = document.getElementById(section+"Section");
+            if(activePanel) { activePanel.classList.add("active"); }
             if(btn) btn.classList.add("active");
         }
 
