@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify, session
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# SUPABASE GATEWAY CREDENTIALS
+# SUPABASE CLOUD CONNECTION CENTRAL CREDENTIALS
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
@@ -37,8 +37,8 @@ def make_supabase_request(url, method="GET", data=None):
             res_read = response.read().decode("utf-8")
             return json.loads(res_read) if res_read else []
     except Exception as e:
-        print("Supabase Engine Alert:", e)
-        return None
+        print("Supabase Engine Runtime Log:", e)
+        return []
 
 @app.route('/')
 def home():
@@ -86,6 +86,7 @@ def do_logout():
     session.clear()
     return jsonify({"success": True})
 
+# --- FIXED SPARE PARTS RATES API WRAPPER ---
 @app.route('/api/parts', methods=['GET', 'POST', 'DELETE'])
 def handle_parts():
     if not session.get('logged_in'):
@@ -94,6 +95,7 @@ def handle_parts():
     if request.method == 'POST':
         data = request.json or {}
         today_str = datetime.now().strftime("%Y-%m-%d")
+        
         payload = {
             "part_name": str(data.get('part_name', 'Part')),
             "model_compatibility": str(data.get('model_compatibility', '')),
@@ -114,6 +116,7 @@ def handle_parts():
     rows = make_supabase_request(url, method="GET")
     return jsonify(rows if isinstance(rows, list) else [])
 
+# --- ADMINISTRATIVE EMPLOYEE SYSTEM ---
 @app.route('/api/employees', methods=['GET', 'POST', 'DELETE'])
 def handle_employees():
     if not session.get('logged_in') or session.get('role') != 'Chairman':
@@ -141,6 +144,7 @@ def handle_employees():
     rows = make_supabase_request(url, method="GET")
     return jsonify(rows if isinstance(rows, list) else [])
 
+# --- MAIN JOBSHEET ENGINE PANEL ---
 @app.route('/api/jobs', methods=['GET', 'POST'])
 def handle_jobs():
     if not session.get('logged_in'):
@@ -148,11 +152,13 @@ def handle_jobs():
         
     if request.method == 'POST':
         data = request.json or {}
+        
+        # Fixed Exception Counting handling if table is totally null
         next_num = 1
         try:
             count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
             all_rows = make_supabase_request(count_url, method="GET")
-            if isinstance(all_rows, list):
+            if isinstance(all_rows, list) and len(all_rows) > 0:
                 next_num = len(all_rows) + 1
         except:
             next_num = 1
@@ -191,7 +197,7 @@ def handle_jobs():
             jobs.append({
                 "id": str(r.get('id', '')), "category": str(r.get('category', 'Mobile')), "name": str(r.get('name', '')),
                 "phone1": str(r.get('phone1', '')), "device": str(r.get('device', '')), "problem": str(r.get('problem', '')),
-                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0),
+                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0), 
                 "extra_cost": float(r.get('extra_cost', 0) or 0), "discount": float(r.get('discount', 0) or 0),
                 "spare_part_cost": float(r.get('spare_part_cost', 0) or 0),
                 "date": str(r.get('created_date', '')), "status": str(r.get('status', 'Pending')),
@@ -215,8 +221,9 @@ def update_pricing():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
     url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
+    
     payload = {
-        "extra_cost": float(data.get('extra_cost', 0) or 0),
+        "extra_cost": float(data.get('extra_cost', 0) or 0), 
         "discount": float(data.get('discount', 0) or 0),
         "spare_part_cost": float(data.get('spare_part_cost', 0) or 0)
     }
