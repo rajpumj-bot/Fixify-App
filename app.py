@@ -193,6 +193,12 @@ def parts():
                 "date": p.get("updated_at")
             })
     return jsonify(normalized_data)
-
+@app.route("/manifest.json")
+def manifest():
+    return app.send_static_file("manifest.json") if os.path.exists("static/manifest.json") else jsonify({
+        "short_name": "Fixify", "name": "FIXIFY TECH REPAIR",
+        "icons": [{"src": "https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"}],
+        "start_url": "/?utm_source=homescreen", "background_color": "#0b1120", "theme_color": "#f97316", "display": "standalone"
+    })
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
