@@ -118,6 +118,7 @@
 </head>
 <body>
 
+    <!-- SYSTEM LOGIN OVERLAY -->
     <div class="login-overlay" id="login-screen" style="display: none;">
         <div class="login-box">
             <h2>Fixify Core Gateway</h2>
@@ -134,6 +135,7 @@
         </div>
     </div>
 
+    <!-- Sidebar Navigation Menu Left side -->
     <div class="sidebar">
         <div>
             <div class="brand-title">Fixify Cloud</div>
@@ -151,6 +153,7 @@
         <div><button class="logout-btn" onclick="triggerSystemLogout()">🚪 Lock Terminal Account</button></div>
     </div>
 
+    <!-- Right Container Workspace -->
     <div class="main-content">
         <div class="navbar">
             <div id="navbar-user-display" class="user-tag-badge role-employee">💼 Loading session...</div>
@@ -164,6 +167,7 @@
         </div>
 
         <div class="view-body">
+            <!-- VIEW 1 -->
             <div id="counter-view" class="view-panel active">
                 <div class="counters-grid">
                     <div class="counter-card blue-card">
@@ -181,6 +185,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 2 -->
             <div id="form-view" class="view-panel">
                 <div class="panel-card">
                     <h3>📝 New Device Repairing Entry (Mobile / Laptop Counter)</h3>
@@ -207,6 +212,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 3 -->
             <div id="summary-view" class="view-panel">
                 <div class="panel-card">
                     <h3>Live Central Repairing Records Counter</h3>
@@ -228,6 +234,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 4 -->
             <div id="parts-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -252,6 +259,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 5 -->
             <div id="employee-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -281,21 +289,11 @@
     <div id="print-deck"></div>
 
     <script>
-        const CLOUD_URL = "https://wgkdrknsynjipoynjof.supabase.co";
-        const CLOUD_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W";
-
         let globalDatabase = [];
         let globalPartsList = [];
         let statusHistoryCache = {}; 
         let CURRENT_USER_ROLE = "Employee";
         let CURRENT_USER_NAME = "Staff";
-
-        const cloudHeaders = {
-            "apikey": CLOUD_KEY,
-            "Authorization": `Bearer ${CLOUD_KEY}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-        };
 
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
@@ -360,9 +358,8 @@
         }
 
         async function reloadSystemData() {
-            const res = await fetch(`${CLOUD_URL}/rest/v1/jobs?select=*`, { headers: cloudHeaders });
+            const res = await fetch('/api/jobs');
             globalDatabase = await res.json();
-            globalDatabase.sort((a,b) => b.id.localeCompare(a.id));
             populateSummaryTable(globalDatabase);
             computeStatsAndSales();
         }
@@ -381,8 +378,8 @@
                 if (matchSearch && matchStatus) {
                     const tr = document.createElement('tr');
                     const cStyle = job.status.replace(" ", "-");
-                    const finalCustomerBill = (parseFloat(job.estimate || 0) + parseFloat(job.extra_cost || 0)) - parseFloat(job.discount || 0);
-                    const spareCost = parseFloat(job.spare_part_cost || 0);
+                    const finalCustomerBill = job.estimate + job.extra_cost - job.discount;
+                    const spareCost = job.spare_part_cost || 0;
                     const entryProfit = finalCustomerBill - spareCost;
 
                     let historyLabel = '';
@@ -392,7 +389,7 @@
 
                     tr.innerHTML = `
                         <td style="font-weight:bold; color:#f97316; font-size:14px;">${job.id}</td>
-                        <td style="font-size:11px; color:#9ca3af;">${job.created_date}</td>
+                        <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
                         <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
                         <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
                         <td><strong>${job.device}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
@@ -402,7 +399,7 @@
                                 ${isChairman ? `<br><span style="color:#ef4444; font-size:11px;">Cost (Saman): </span><input type="number" style="width:55px; background:#0b0f19; border:1px solid #1f2937; color:#ef4444; font-weight:bold;" value="${spareCost}" id="tx-scost-${job.id}">` : ''}
                                 ${isChairman && job.status === 'Delivered' ? `<br><span style="color:#10b981; font-weight:bold;">Profit: ₹${entryProfit}</span>` : ''}
                                 <div style="margin-top:4px; font-size:10px; color:#6b7280; display: ${isChairman ? 'block' : 'none'};">
-                                    Est: ${job.estimate} | Ext: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.extra_cost || 0}" id="tx-ext-${job.id}"> | Disc: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.discount || 0}" id="tx-disc-${job.id}">
+                                    Est: ${job.estimate} | Ext: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.extra_cost}" id="tx-ext-${job.id}"> | Disc: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.discount}" id="tx-disc-${job.id}">
                                 </div>
                             </div>
                         </td>
@@ -439,8 +436,8 @@
             let grossIncome = 0; let totalSpareExpense = 0;
             globalDatabase.forEach(j => {
                 if(j.status === 'Delivered') {
-                    grossIncome += ((parseFloat(j.estimate || 0) + parseFloat(j.extra_cost || 0)) - parseFloat(j.discount || 0));
-                    totalSpareExpense += parseFloat(j.spare_part_cost || 0);
+                    grossIncome += (j.estimate + j.extra_cost - j.discount);
+                    totalSpareExpense += j.spare_part_cost;
                 }
             });
             document.getElementById('lbl-total-sales').innerText = '₹' + grossIncome;
@@ -453,10 +450,10 @@
             if(oldStatus === 'Delivered' && newStatus === 'Undelivered') {
                 statusHistoryCache[id] = 'TriggeredAlert';
             }
-            await fetch(`${CLOUD_URL}/rest/v1/jobs?id=eq.${id}`, { 
-                method: 'PATCH', 
-                headers: cloudHeaders, 
-                body: JSON.stringify({status: newStatus}) 
+            await fetch('/api/jobs/update_status', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({id: id, status: newStatus}) 
             });
             reloadSystemData();
         }
@@ -465,17 +462,12 @@
             const extra = parseFloat(document.getElementById(`tx-ext-${id}`).value || 0);
             const discount = parseFloat(document.getElementById(`tx-disc-${id}`).value || 0);
             const spareCost = parseFloat(document.getElementById(`tx-scost-${id}`).value || 0);
-            
-            await fetch(`${CLOUD_URL}/rest/v1/jobs?id=eq.${id}`, { 
-                method: 'PATCH', 
-                headers: cloudHeaders, 
-                body: JSON.stringify({extra_cost: extra, discount: discount, spare_part_cost: spareCost}) 
-            });
+            await fetch('/api/jobs/update_pricing', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, extra_cost: extra, discount: discount, spare_part_cost: spareCost}) });
             reloadSystemData();
         }
 
         async function fetchPartsList() {
-            const res = await fetch(`${CLOUD_URL}/rest/v1/fixify_parts?select=*`, { headers: cloudHeaders });
+            const res = await fetch('/api/parts');
             globalPartsList = await res.json();
             populatePartsTable();
         }
@@ -496,18 +488,14 @@
 
         async function handlePartRegister(e) {
             e.preventDefault();
-            const d = new Date();
-            const todayDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            
             const payload = { 
                 part_name: document.getElementById('part-name').value, 
                 model_compatibility: document.getElementById('part-model').value, 
-                wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0),
-                updated_at: todayDateStr
+                wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) 
             };
-            await fetch(`${CLOUD_URL}/rest/v1/fixify_parts`, { 
+            await fetch('/api/parts', { 
                 method: 'POST', 
-                headers: cloudHeaders, 
+                headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify(payload) 
             });
             document.getElementById('spare-part-form').reset(); 
@@ -515,15 +503,11 @@
         }
 
         async function deleteSparePartRecord(id) {
-            if(confirm("Delete part record?")) { 
-                await fetch(`${CLOUD_URL}/rest/v1/fixify_parts?id=eq.${id}`, { method: 'DELETE', headers: cloudHeaders }); 
-                fetchPartsList(); 
-            }
+            if(confirm("Delete part record?")) { await fetch(`/api/parts?id=${id}`, { method: 'DELETE' }); fetchPartsList(); }
         }
 
         async function fetchEmployeeList() {
-            const res = await fetch(`${CLOUD_URL}/rest/v1/fixify_users?select=*`, { headers: cloudHeaders }); 
-            const data = await res.json();
+            const res = await fetch('/api/employees'); const data = await res.json();
             const tbody = document.getElementById('emp-table-rows'); tbody.innerHTML = '';
             data.forEach(user => {
                 const tr = document.createElement('tr');
@@ -534,37 +518,18 @@
 
         async function handleEmployeeRegister(e) {
             e.preventDefault();
-            const payload = { 
-                emp_name: document.getElementById('add-emp-name').value, 
-                username: document.getElementById('add-emp-user').value, 
-                password: document.getElementById('add-emp-pass').value,
-                role: 'Employee'
-            };
-            await fetch(`${CLOUD_URL}/rest/v1/fixify_users`, { method: 'POST', headers: cloudHeaders, body: JSON.stringify(payload) });
-            document.getElementById('create-emp-form').reset(); 
-            fetchEmployeeList();
+            const payload = { emp_name: document.getElementById('add-emp-name').value, username: document.getElementById('add-emp-user').value, password: document.getElementById('add-emp-pass').value };
+            await fetch('/api/employees', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            document.getElementById('create-emp-form').reset(); fetchEmployeeList();
         }
 
         async function deleteEmployeeAccount(username) {
-            if(confirm(`Delete ${username}?`)) { 
-                await fetch(`${CLOUD_URL}/rest/v1/fixify_users?username=eq.${username}`, { method: 'DELETE', headers: cloudHeaders }); 
-                fetchEmployeeList(); 
-            }
+            if(confirm(`Delete ${username}?`)) { await fetch(`/api/employees?username=${username}`, { method: 'DELETE' }); fetchEmployeeList(); }
         }
 
         async function handleJobsheetSubmit(e) {
             e.preventDefault();
-            
-            const totalRes = await fetch(`${CLOUD_URL}/rest/v1/jobs?select=id`, { headers: cloudHeaders });
-            const totalData = await totalRes.json();
-            const nextNum = (totalData.length || 0) + 1;
-            const nextId = `FIX${String(nextNum).padStart(4, '0')}`;
-            
-            const d = new Date();
-            const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-
             const payload = { 
-                id: nextId,
                 category: document.getElementById('ins-category').value, 
                 device: document.getElementById('ins-device').value, 
                 imei: document.getElementById('ins-imei').value, 
@@ -573,25 +538,21 @@
                 password: document.getElementById('ins-password').value, 
                 problem: document.getElementById('ins-problem').value, 
                 estimate: parseFloat(document.getElementById('ins-estimate').value || 0), 
-                advance: parseFloat(document.getElementById('ins-advance').value || 0),
-                extra_cost: 0.0,
-                discount: 0.0,
-                spare_part_cost: 0.0,
-                created_date: todayStr,
-                status: 'Pending',
-                created_by: CURRENT_USER_NAME
+                advance: parseFloat(document.getElementById('ins-advance').value || 0) 
             };
             
-            await fetch(`${CLOUD_URL}/rest/v1/jobs`, { 
+            const res = await fetch('/api/jobs', { 
                 method: 'POST', 
-                headers: cloudHeaders, 
+                headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify(payload) 
             });
-            
-            document.getElementById('jobsheet-entry-form').reset();
-            await reloadSystemData(); 
-            switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
-            setTimeout(() => { executePortraitPrint(nextId); }, 500);
+            const out = await res.json();
+            if(out.success) { 
+                document.getElementById('jobsheet-entry-form').reset(); 
+                await reloadSystemData(); 
+                switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
+                setTimeout(() => { executePortraitPrint(out.id); }, 500); 
+            }
         }
 
         function executePortraitPrint(id) {
@@ -610,7 +571,7 @@
                             <div class="copy-tag-badge">${copyName}</div>
                         </div>
                         <div class="print-info-grid">
-                            <div><strong>Order Tracking ID:</strong> ${job.id}</div><div><strong>Inward Date/Time:</strong> ${job.created_date}</div>
+                            <div><strong>Order Tracking ID:</strong> ${job.id}</div><div><strong>Inward Date/Time:</strong> ${job.date}</div>
                             <div><strong>Customer Name:</strong> ${job.name}</div><div><strong>Registered Mobile:</strong> +91 ${job.phone1}</div>
                             <div><strong>Device Model:</strong> [${job.category.toUpperCase()}] ${job.device}</div><div><strong>Device Lock Pass:</strong> ${job.password || 'None'}</div>
                         </div>
