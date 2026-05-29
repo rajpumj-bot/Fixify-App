@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>FIXIFY TECH REPAIR</title>
 
 <style>
+
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, sans-serif;
+font-family:Arial,sans-serif;
 }
 
 body{
@@ -150,10 +153,6 @@ color:#f97316;
 font-weight:bold;
 }
 
-.hidden{
-display:none;
-}
-
 .stats{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -175,6 +174,7 @@ margin-top:10px;
 }
 
 @media(max-width:900px){
+
 body{
 flex-direction:column;
 }
@@ -193,11 +193,16 @@ min-width:200px;
 .stats{
 grid-template-columns:1fr;
 }
+
 }
+
 </style>
+
 </head>
 
 <body>
+
+<!-- LOGIN SCREEN -->
 
 <div class="login-screen" id="loginScreen">
 
@@ -207,9 +212,17 @@ grid-template-columns:1fr;
 FIXIFY LOGIN
 </div>
 
-<input type="text" id="username" class="input" placeholder="Username">
+<input 
+type="text" 
+id="username" 
+class="input" 
+placeholder="Username">
 
-<input type="password" id="password" class="input" placeholder="Password">
+<input 
+type="password" 
+id="password" 
+class="input" 
+placeholder="Password">
 
 <button class="btn" onclick="login()">
 LOGIN
@@ -218,6 +231,8 @@ LOGIN
 </div>
 
 </div>
+
+<!-- SIDEBAR -->
 
 <div class="sidebar">
 
@@ -247,65 +262,101 @@ FIXIFY
 
 </div>
 
+<!-- MAIN -->
+
 <div class="main">
 
 <div class="topbar">
-<h1>Mobile & Laptop Repair System</h1>
+
+<h1>
+Mobile & Laptop Repair System
+</h1>
 
 <div style="color:#f97316;font-weight:bold;">
 Chairman Panel
 </div>
+
 </div>
+
+<!-- STATS -->
 
 <div class="stats">
 
 <div class="stat-box">
 Pending
-<h3 id="pendingCount">0</h3>
+<h3>0</h3>
 </div>
 
 <div class="stat-box">
 Ready
-<h3 id="readyCount">0</h3>
+<h3>0</h3>
 </div>
 
 <div class="stat-box">
 Delivered
-<h3 id="deliveredCount">0</h3>
+<h3>0</h3>
 </div>
 
 </div>
+
+<!-- CREATE JOBCARD -->
 
 <div class="card">
 
 <h2>Create Repair Jobcard</h2>
 
-<input type="text" class="input" placeholder="Customer Name">
+<input 
+type="text" 
+class="input" 
+placeholder="Customer Name">
 
-<input type="text" class="input" placeholder="Phone Number">
+<input 
+type="text" 
+class="input" 
+placeholder="Phone Number">
 
 <select class="input">
 <option>Mobile</option>
 <option>Laptop</option>
 </select>
 
-<input type="text" class="input" placeholder="Device Model">
+<input 
+type="text" 
+class="input" 
+placeholder="Device Model">
 
-<input type="text" class="input" placeholder="IMEI / Serial Number">
+<input 
+type="text" 
+class="input" 
+placeholder="IMEI / Serial Number">
 
-<input type="text" class="input" placeholder="PIN / Pattern Lock">
+<input 
+type="text" 
+class="input" 
+placeholder="PIN / Pattern Lock">
 
-<input type="text" class="input" placeholder="Problem">
+<input 
+type="text" 
+class="input" 
+placeholder="Problem">
 
-<input type="number" class="input" placeholder="Estimate Amount">
+<input 
+type="number" 
+class="input" 
+placeholder="Estimate Amount">
 
-<input type="number" class="input" placeholder="Advance Payment">
+<input 
+type="number" 
+class="input" 
+placeholder="Advance Payment">
 
 <button class="btn">
 SAVE JOBCARD
 </button>
 
 </div>
+
+<!-- TABLE -->
 
 <div class="card">
 
@@ -314,6 +365,7 @@ SAVE JOBCARD
 <table>
 
 <thead>
+
 <tr>
 <th>ID</th>
 <th>Customer</th>
@@ -321,6 +373,7 @@ SAVE JOBCARD
 <th>Status</th>
 <th>Amount</th>
 </tr>
+
 </thead>
 
 <tbody>
@@ -351,18 +404,37 @@ SAVE JOBCARD
 
 <script>
 
-function login(){
+async function login(){
 
-let user=document.getElementById("username").value;
-let pass=document.getElementById("password").value;
+let user = document.getElementById("username").value;
+let pass = document.getElementById("password").value;
 
-if(user==="admin" && pass==="123456"){
+const res = await fetch("/api/login",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+username:user,
+password:pass
+})
+
+});
+
+const data = await res.json();
+
+if(data.success){
 
 document.getElementById("loginScreen").style.display="none";
 
+alert("Login Success");
+
 }else{
 
-alert("Wrong Username Password");
+alert(data.message || "Wrong Username Password");
 
 }
 
