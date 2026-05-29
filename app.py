@@ -16,31 +16,22 @@ HEADERS = {
 }
 
 ADMIN_USER = "admin"
-ADMIN_PASS = "fixify#0821" # Yeh aapka permanent master password rahega
+ADMIN_PASS = "fixify#0821"
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/health")
-def health():
-    return "Fixify Server Running"
-
-# =========================
-# LOGIN ENGINE (BYPASS FIX)
-# =========================
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
-    # MASTER BYPASS: Agar admin aur sahi pass dala toh direct entry bina DB check kiye
     if username == ADMIN_USER and password == ADMIN_PASS:
         session.update({"logged_in": True, "role": "Chairman", "name": "Chairman"})
         return jsonify({"success": True, "role": "Chairman", "name": "Chairman"})
 
-    # Baki employees ke liye DB check
     url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{username}"
     try:
         res = requests.get(url, headers=HEADERS)
@@ -49,8 +40,8 @@ def login():
             if len(users) > 0 and users[0]["password"] == password:
                 session.update({"logged_in": True, "role": users[0].get("role", "Employee"), "name": users[0]["emp_name"]})
                 return jsonify({"success": True, "role": users[0].get("role", "Employee"), "name": users[0]["emp_name"]})
-    except Exception as e:
-        print("LOGIN ERROR:", str(e))
+    except:
+        pass
 
     return jsonify({"success": False, "message": "Wrong Username or Password"})
 
@@ -70,11 +61,8 @@ def update_chairman_pass():
     if session.get("role") != "Chairman":
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    new_pass = data.get("new_password", "").strip()
-    
-    # Global MASTER_PASS update mechanism
     global ADMIN_PASS
-    ADMIN_PASS = new_pass
+    ADMIN_PASS = data.get("new_password", "").strip()
     return jsonify({"success": True})
 
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
@@ -96,6 +84,9 @@ def employees():
     res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_users?select=*", headers=HEADERS)
     return jsonify([u for u in res.json() if u['username'] != 'admin'] if res.status_code == 200 else [])
 
+# ==========================================
+# JOBCARD SAVE SYSTEM WITH AUTO-COLUMN MATCH
+# ==========================================
 @app.route("/api/jobs", methods=["GET", "POST"])
 def jobs():
     if not session.get("logged_in"):
@@ -105,18 +96,39 @@ def jobs():
         data = request.json
         now = datetime.now().strftime("%d-%m-%Y %H:%M")
         
+        # ID generating check
         get_res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=id", headers=HEADERS)
         total = len(get_res.json()) + 1 if get_res.status_code == 200 else 1
         job_id = f"FIX{total:04d}"
 
+        # Ekdum safety payload jo Supabase standard structure ke rules follow karega
         payload = {
-            "id": job_id, "customer_name": data["customer_name"], "phone": data["phone"],
-            "device": data["device"], "category": data["category"], "problem": data["problem"],
-            "pin_password": data["pin_password"], "estimate": float(data["estimate"]), "advance": float(data["advance"]),
-            "extra_charge": 0, "discount": 0, "spare_cost": 0, "status": "Pending", "date": now, "created_by": session.get("name")
+            "id": job_id,
+            "customer_name": data["customer_name"],
+            "phone": data["phone"],
+            "device": data["device"],
+            "category": data["category"],
+            "problem": data["problem"],
+            "pin_password": data["pin_password"],
+            "estimate": float(data["estimate"]),
+            "advance": float(data["advance"]),
+            "extra_charge": 0,
+            "discount": 0,
+            "spare_cost": 0,
+            "status": "Pending",
+            "date": now,
+            "created_by": session.get("name")
         }
+        
+        # Supabase me insert command push
         res = requests.post(f"{SUPABASE_URL}/rest/v1/fixify_jobs", headers=HEADERS, json=payload)
-        return jsonify({"success": res.status_code in [200, 201], "job_id": job_id})
+        
+        # Agar column missing hone ki wajah se direct error aaye, toh error logs check karenge
+        if res.status_code not in [200, 201]:
+            print("SUPABASE ERROR RESPONSE:", res.text)
+            return jsonify({"success": False, "message": f"Database Error: {res.text}"})
+            
+        return jsonify({"success": True, "job_id": job_id})
 
     res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*", headers=HEADERS)
     return jsonify(res.json() if res.status_code == 200 else [])
