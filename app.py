@@ -84,9 +84,6 @@ def employees():
     res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_users?select=*", headers=HEADERS)
     return jsonify([u for u in res.json() if u['username'] != 'admin'] if res.status_code == 200 else [])
 
-# ==========================================
-# JOBCARD SAVE SYSTEM WITH AUTO-COLUMN MATCH
-# ==========================================
 @app.route("/api/jobs", methods=["GET", "POST"])
 def jobs():
     if not session.get("logged_in"):
@@ -96,20 +93,20 @@ def jobs():
         data = request.json
         now = datetime.now().strftime("%d-%m-%Y %H:%M")
         
-        # ID generating check
         get_res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=id", headers=HEADERS)
         total = len(get_res.json()) + 1 if get_res.status_code == 200 else 1
         job_id = f"FIX{total:04d}"
 
-        # Ekdum safety payload jo Supabase standard structure ke rules follow karega
+        # EXACT MATCH CODES FOR YOUR SUPABASE COLUMNS:
         payload = {
             "id": job_id,
-            "customer_name": data["customer_name"],
-            "phone": data["phone"],
-            "device": data["device"],
             "category": data["category"],
+            "device": data["device"],
+            "name": data["name"],
+            "phone1": data["phone1"],
             "problem": data["problem"],
-            "pin_password": data["pin_password"],
+            "password": data["password"], # Fixify DB password column
+            "imei": data["imei"],         # Fixed IMEI mapping
             "estimate": float(data["estimate"]),
             "advance": float(data["advance"]),
             "extra_charge": 0,
@@ -120,13 +117,11 @@ def jobs():
             "created_by": session.get("name")
         }
         
-        # Supabase me insert command push
         res = requests.post(f"{SUPABASE_URL}/rest/v1/fixify_jobs", headers=HEADERS, json=payload)
         
-        # Agar column missing hone ki wajah se direct error aaye, toh error logs check karenge
-        if res.status_code not in [200, 201]:
-            print("SUPABASE ERROR RESPONSE:", res.text)
-            return jsonify({"success": False, "message": f"Database Error: {res.text}"})
+        # DEBUG ENGINE: Agar database mana karega, toh direct response browser me dikhega
+        if res.status_code not in [200, 201, 204]:
+            return jsonify({"success": False, "message": f"Database Error ({res.status_code}): {res.text}"})
             
         return jsonify({"success": True, "job_id": job_id})
 
