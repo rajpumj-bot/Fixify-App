@@ -1,0 +1,23 @@
+{
+  "short_name": "Fixify",
+  "name": "FIXIFY TECH REPAIR",
+  "icons": [
+    {
+      "src": "https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/?utm_source=homescreen",
+  "background_color": "#0b1120",
+  "theme_color": "#f97316",
+  "display": "standalone",
+  "orientation": "portrait"
+}
