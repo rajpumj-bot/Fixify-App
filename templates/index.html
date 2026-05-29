@@ -18,6 +18,8 @@
         .btn:hover { background:#ea580c; }
         .tbl-btn { padding:6px 12px; background:#10b981; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; }
         .tbl-btn:hover { background:#059669; }
+        .print-btn { padding:6px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
+        .print-btn:hover { background:#2563eb; }
 
         .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
         .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
@@ -90,15 +92,6 @@
                 <div class="stat-box">Ready<h2 id="readyCount">0</h2></div>
                 <div class="stat-box">Delivered<h2 id="deliveredCount">0</h2></div>
             </div>
-            
-            <div class="card" id="profitCard" style="display:none;">
-                <h2>📈 Financial Status Ledger (Net Profit Engine)</h2>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; text-align:center;">
-                    <div style="background:#1e293b; padding:15px; border-radius:8px;"><p style="color:#9ca3af; font-size:12px;">GROSS REVENUE</p><h3 id="lbl-revenue" style="color:#10b981; font-size:24px; margin-top:5px;">₹0</h3></div>
-                    <div style="background:#1e293b; padding:15px; border-radius:8px;"><p style="color:#9ca3af; font-size:12px;">SPARE PARTS COST</p><h3 id="lbl-expenses" style="color:#ef4444; font-size:24px; margin-top:5px;">₹0</h3></div>
-                    <div style="background:#1e293b; padding:15px; border-radius:8px; border:1px solid #10b981;"><p style="color:#9ca3af; font-size:12px;">NET PURE PROFIT</p><h3 id="lbl-profit" style="color:#0ae093; font-size:24px; font-weight:bold; margin-top:5px;">₹0</h3></div>
-                </div>
-            </div>
         </div>
 
         <div id="jobcardSection" class="view-panel card">
@@ -141,9 +134,9 @@
             <div style="display:grid; grid-template-columns:320px 1fr; gap:20px;">
                 <div class="card" style="height:fit-content;">
                     <h2>📦 Append Spare stock</h2>
-                    <input type="text" id="p-name" class="input" placeholder="Part Specification">
-                    <input type="text" id="p-model" class="input" placeholder="Compatible Models">
-                    <input type="number" id="p-price" class="input" placeholder="Wholesale Base Price (₹)">
+                    <input type="text" id="p-name" class="input" placeholder="Part Specification *">
+                    <input type="text" id="p-model" class="input" placeholder="Compatible Models *">
+                    <input type="number" id="p-price" class="input" placeholder="Wholesale Base Price (₹) *">
                     <button class="btn" onclick="savePart()">Add To Ledger</button>
                 </div>
                 <div class="card">
@@ -227,13 +220,11 @@
 
         function setupUIRoles(){
             if(CURRENT_ROLE === "Chairman"){
-                document.getElementById("profitCard").style.display="block";
                 document.getElementById("parts-menu").style.display="block";
                 document.getElementById("emp-menu").style.display="block";
                 document.getElementById("settings-menu").style.display="block";
                 loadEmployees();
             } else {
-                document.getElementById("profitCard").style.display="none";
                 document.getElementById("parts-menu").style.display="none";
                 document.getElementById("emp-menu").style.display="none";
                 document.getElementById("settings-menu").style.display="none";
@@ -293,13 +284,12 @@
             let tbody=document.getElementById("repairTable"); tbody.innerHTML="";
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
-            let p=0; let r=0; let t=0; let ry=0; let d=0; let rev=0; let exp=0;
+            let p=0; let r=0; let t=0; let ry=0; let d=0;
 
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
                 if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
-                if(job.status==="Delivered"){ rev += (job.estimate + (job.extra_charge || 0) - (job.discount || 0)); exp += (job.spare_cost || 0); }
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -308,7 +298,7 @@
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
                     <td><strong>${job.name}</strong><br><small style="color:#9ca3af;">${job.phone1}</small></td>
-                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault/Solution: ${job.problem}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
                             <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
@@ -321,19 +311,87 @@
                     <td><input type="number" id="disc-${job.id}" value="${job.discount || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
                     <td><input type="number" id="ext-${job.id}" value="${job.extra_charge || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
                     <td>
-                        ${CURRENT_ROLE==='Chairman' ? `
                         <div style="display:flex; flex-direction:column; gap:4px;">
+                            ${CURRENT_ROLE==='Chairman' ? `
                             <span style="font-size:10px; color:#ef4444;">Part Cost:</span>
                             <input type="number" id="sp-${job.id}" value="${job.spare_cost || 0}" class="input" style="width:80px; margin:0; color:#ef4444; font-weight:bold;">
                             <button class="tbl-btn" onclick="savePricing('${job.id}')">Save</button>
-                        </div>` : '<span style="color:#6b7280; font-size:11px;">Restricted</span>'}
+                            ` : '<span style="color:#6b7280; font-size:11px;">Restricted Pricing</span>'}
+                            <button class="print-btn" onclick="printJobcard('${job.id}')">🖨️ Print Receipt</button>
+                        </div>
                     </td>
                 </tr>`;
             });
             document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
             document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
             document.getElementById("deliveredCount").innerText=d;
-            if(CURRENT_ROLE==="Chairman"){ document.getElementById("lbl-revenue").innerText="₹"+rev; document.getElementById("lbl-expenses").innerText="₹"+exp; document.getElementById("lbl-profit").innerText="₹"+(rev-exp); }
+        }
+
+        // ==========================================
+        // 100% FIXED THERMAL BILL PRINT ENGINE
+        // ==========================================
+        function printJobcard(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) { alert("Job not found in tracking cache."); return; }
+
+            const printWindow = window.open('', '_blank', 'width=700,height=800');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Invoice - ${job.id}</title>
+                    <style>
+                        body { font-family: 'Courier New', Courier, monospace; color: #000; padding: 20px; font-size: 14px; line-height: 1.4; }
+                        .text-center { text-align: center; }
+                        .header { font-size: 24px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+                        .divider { border-bottom: 2px dashed #000; margin: 15px 0; }
+                        table { width: 100%; border-collapse: collapse; }
+                        td { padding: 6px 0; vertical-align: top; }
+                        .label { font-weight: bold; width: 45%; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="text-center">
+                        <div class="header">FIXIFY TECH REPAIR</div>
+                        <div>Premium Smartphone & Laptop Service Hub</div>
+                        <div>Date: ${job.date || 'N/A'}</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="text-center" style="font-size: 16px; font-weight: bold; margin-bottom: 12px;">CUSTOMER COPY RECEIPT</div>
+                    <table>
+                        <tr><td class="label">JOB ID:</td><td style="font-weight:bold; font-size:16px; color:#f97316;">${job.id}</td></tr>
+                        <tr><td class="label">Client Name:</td><td>${job.name || 'N/A'}</td></tr>
+                        <tr><td class="label">Phone Specs:</td><td>${job.phone1 || 'N/A'}</td></tr>
+                        <tr><td class="label">Device Group:</td><td>${job.category || 'N/A'}</td></tr>
+                        <tr><td class="label">Model Name:</td><td>${job.device || 'N/A'}</td></tr>
+                        <tr><td class="label">IMEI/Serial:</td><td>${job.imei || 'None'}</td></tr>
+                        <tr><td class="label">Screen Lock Code:</td><td>${job.password || 'None'}</td></tr>
+                        <tr><td class="label">Fault/Problem:</td><td>${job.problem || 'N/A'}</td></tr>
+                        <tr><td class="label">Repair Status:</td><td style="font-weight:bold;">${job.status || 'Pending'}</td></tr>
+                    </table>
+                    <div class="divider"></div>
+                    <table>
+                        <tr><td class="label">Estimated Quote:</td><td style="font-weight:bold;">₹${job.estimate || '0'}</td></tr>
+                        <tr><td class="label">Advance Deposit:</td><td style="font-weight:bold;">₹${job.advance || '0'}</td></tr>
+                        <tr><td class="label">Markup/Extra:</td><td>₹${job.extra_charge || '0'}</td></tr>
+                        <tr><td class="label">Discount Availed:</td><td>₹${job.discount || '0'}</td></tr>
+                        <tr style="font-size:16px; font-weight:bold;"><td class="label">Net Balance Due:</td><td>₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0))}</td></tr>
+                    </table>
+                    <div class="divider"></div>
+                    <div style="font-size: 11px; font-style: italic; text-align:justify;">
+                        * Terms & Conditions: Please produce this thermal bill at workshop during retrieval hours. Fixify holds zero liabilities for internal hardware patterns or pre-existing unbootable chip architectures.
+                    </div>
+                    <div class="footer">
+                        <p>Thank you for choosing FIXIFY! ❤️</p>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         async function updateStatus(id,status){ await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})}); loadJobs(); }
@@ -341,14 +399,20 @@
             let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
             let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
             let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
-            await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
-            loadJobs();
+            const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
+            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); } else { alert("Failed to update price. Ensure Supabase column types accept this format."); }
         }
 
         async function savePart(){
             let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
-            await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
-            document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts();
+            if(!n || !m) { alert("Please fill all mandatory stock details."); return; }
+            const res = await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
+            if((await res.json()).success) {
+                alert("Stock added successfully!");
+                document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts();
+            } else {
+                alert("Error saving part. Ensure table 'fixify_parts' exists in Supabase.");
+            }
         }
         function renderParts(){
             let t=document.getElementById("partsTable"); t.innerHTML="";
