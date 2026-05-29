@@ -12,7 +12,6 @@ app.secret_key = "fixify_super_cloud_secure_key_99"
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
-# CHAIRMAN LOGIN DETAILS (Aap apna password yahan badal sakte ho bhai!)
 ADMIN_USER = "admin"
 ADMIN_PASS = "fixify@2026" 
 
@@ -24,9 +23,11 @@ def make_supabase_request(url, method="GET", data=None):
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
+        "Content-Type": "application/json"
     }
+    if method in ["POST", "PATCH"]:
+        headers["Prefer"] = "return=representation"
+        
     if req_data:
         headers["Content-Length"] = str(len(req_data))
         
@@ -36,7 +37,7 @@ def make_supabase_request(url, method="GET", data=None):
             res_read = response.read().decode("utf-8")
             return json.loads(res_read) if res_read else []
     except Exception as e:
-        print("Supabase Engine Error Details:", e)
+        print("Supabase Dynamic Crash Logger:", e)
         return None
 
 @app.route('/')
@@ -54,7 +55,6 @@ def do_login():
     u = data.get('username', '').strip()
     p = data.get('password', '').strip()
     
-    # Check if local master authentication or cloud match
     if u == ADMIN_USER and p == ADMIN_PASS:
         session['logged_in'] = True
         session['username'] = ADMIN_USER
@@ -151,24 +151,13 @@ def handle_jobs():
         next_id = f"FIX{next_num:04d}"
         today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         
-        # FIXED SECURE ROW PAYLOAD FOR CLOUD STORAGE
         payload = {
-            "id": str(next_id),
-            "category": str(data.get('category', 'Mobile')),
-            "name": str(data.get('name', '')),
-            "phone1": str(data.get('phone1', '')),
-            "device": str(data.get('device', '')),
-            "imei": str(data.get('imei', '')),
-            "password": str(data.get('password', '')),
-            "problem": str(data.get('problem', '')),
-            "estimate": float(data.get('estimate', 0)),
-            "advance": float(data.get('advance', 0)),
-            "extra_cost": 0.0,
-            "discount": 0.0,
-            "spare_part_cost": 0.0,
-            "created_date": str(today_str),
-            "status": "Pending",
-            "created_by": str(session.get('emp_name', 'Staff'))
+            "id": str(next_id), "category": str(data.get('category', 'Mobile')), "name": str(data.get('name', '')),
+            "phone1": str(data.get('phone1', '')), "device": str(data.get('device', '')), "imei": str(data.get('imei', '')),
+            "password": str(data.get('password', '')), "problem": str(data.get('problem', '')),
+            "estimate": float(data.get('estimate', 0)), "advance": float(data.get('advance', 0)),
+            "extra_cost": 0.0, "discount": 0.0, "spare_part_cost": 0.0, "created_date": str(today_str),
+            "status": "Pending", "created_by": str(session.get('emp_name', 'Staff'))
         }
         
         insert_url = f"{SUPABASE_URL}/rest/v1/jobs"
