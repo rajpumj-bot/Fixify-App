@@ -8,7 +8,6 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
         body { background:#0b1120; color:white; display:flex; height:100vh; overflow:hidden; }
         
-        /* LOGIN SCREEN */
         #loginScreen { position:fixed; top:0; left:0; width:100%; height:100%; background:#000000ee; display:flex; justify-content:center; align-items:center; z-index:9999; }
         .login-box { width:350px; background:#111827; padding:30px; border-radius:15px; border:2px solid #f97316; }
         .login-box h1 { text-align:center; color:#f97316; margin-bottom:20px; }
@@ -20,7 +19,6 @@
         .tbl-btn { padding:6px 12px; background:#10b981; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; }
         .tbl-btn:hover { background:#059669; }
 
-        /* SIDEBAR */
         .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
         .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
         .menu-btn { width:100%; padding:14px; margin-bottom:10px; background:#1f2937; border:none; border-radius:8px; color:white; text-align:left; cursor:pointer; font-size:15px; display:flex; align-items:center; gap:10px; }
@@ -28,29 +26,25 @@
         .logout-btn { background:#27272a; color:#f43f5e; border:1px solid #3f3f46; }
         .logout-btn:hover { background:#e11d48; color:white; }
 
-        /* MAIN CONTENT */
         .main { flex:1; padding:20px; overflow-y:auto; }
         .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #1e293b; }
         .user-role { background:rgba(249,115,22,0.2); border:1px solid #f97316; color:#f97316; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:14px; }
 
-        /* VIEW PANELS CONTROL */
         .view-panel { display:none; }
         .view-panel.active { display:block !important; }
         
         .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:25px; }
-        .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.3); }
+        .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; }
         .stat-box h2 { font-size:32px; margin-top:10px; color:#f97316; }
         .card { background:#111827; padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid #1e293b; }
         .card h2 { color:#f97316; margin-bottom:20px; font-size:20px; }
 
-        /* TABLES */
         .table-container { overflow-x:auto; background:#111827; border-radius:8px; border:1px solid #1e293b; margin-top:15px; }
         table { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
         th { background:#f97316; color:white; padding:12px; font-weight:bold; }
         td { padding:12px; border-bottom:1px solid #1e293b; vertical-align:middle; }
         .search-bar { display:flex; gap:15px; margin-bottom:20px; }
         
-        /* DROPDOWNS */
         .status-dropdown { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; color:white; border:none; cursor:pointer; }
         .st-Pending { background:#991b1b; } .st-Repairing { background:#92400e; }
         .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
@@ -77,6 +71,7 @@
             <button class="menu-btn" onclick="showSection('repairs', this)">📱 Total Repairing</button>
             <button class="menu-btn" id="parts-menu" onclick="showSection('parts', this)">📦 Spare Parts</button>
             <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">👨‍💼 Employees</button>
+            <button class="menu-btn" id="settings-menu" onclick="showSection('settings', this)" style="display:none;">⚙️ Admin Settings</button>
         </div>
         <button class="menu-btn logout-btn" onclick="logout()">🚪 Logout</button>
     </div>
@@ -122,7 +117,7 @@
                 <input type="number" id="estimate" class="input" placeholder="Estimate Fixing Cost (₹) *">
                 <input type="number" id="advance" class="input" placeholder="Advance Cash Paid (₹) *">
             </div>
-            <input type="text" id="problem" class="input" placeholder="Problem Details / Fault Summary *">
+            <input type="text" id="problem" class="input" placeholder="Fault Description / Solution Required *">
             <button class="btn" style="margin-top:10px;" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
         </div>
 
@@ -184,6 +179,14 @@
             </div>
         </div>
 
+        <div id="settingsSection" class="view-panel card" style="max-width:450px;">
+            <h2>🔑 Update Chairman Password</h2>
+            <br>
+            <p style="font-size:12px; color:#9ca3af; margin-bottom:10px;">Unique Master Admin: <strong>admin</strong></p>
+            <input type="password" id="newChairmanPass" class="input" placeholder="Enter New Secure Password Token">
+            <button class="btn" onclick="changeChairmanPassword()">Update Security Password</button>
+        </div>
+
     </div>
 
     <script>
@@ -206,16 +209,7 @@
                 document.getElementById("loginScreen").style.display="none";
                 document.getElementById("roleBox").innerText=data.role;
                 CURRENT_ROLE = data.role;
-                if(CURRENT_ROLE === "Chairman"){
-                    document.getElementById("profitCard").style.display="block";
-                    document.getElementById("parts-menu").style.display="block";
-                    document.getElementById("emp-menu").style.display="block";
-                    loadEmployees();
-                } else {
-                    document.getElementById("profitCard").style.display="none";
-                    document.getElementById("parts-menu").style.display="none";
-                    document.getElementById("emp-menu").style.display="none";
-                }
+                setupUIRoles();
                 loadJobs(); loadParts();
             } else { alert(data.message || "Invalid Authentication Security Tokens."); }
         }
@@ -226,18 +220,32 @@
                 document.getElementById("loginScreen").style.display="none";
                 document.getElementById("roleBox").innerText=data.role;
                 CURRENT_ROLE = data.role;
-                if(CURRENT_ROLE === "Chairman"){
-                    document.getElementById("profitCard").style.display="block";
-                    document.getElementById("parts-menu").style.display="block";
-                    document.getElementById("emp-menu").style.display="block";
-                    loadEmployees();
-                } else {
-                    document.getElementById("profitCard").style.display="none";
-                    document.getElementById("parts-menu").style.display="none";
-                    document.getElementById("emp-menu").style.display="none";
-                }
+                setupUIRoles();
                 loadJobs(); loadParts();
             }
+        }
+
+        function setupUIRoles(){
+            if(CURRENT_ROLE === "Chairman"){
+                document.getElementById("profitCard").style.display="block";
+                document.getElementById("parts-menu").style.display="block";
+                document.getElementById("emp-menu").style.display="block";
+                document.getElementById("settings-menu").style.display="block";
+                loadEmployees();
+            } else {
+                document.getElementById("profitCard").style.display="none";
+                document.getElementById("parts-menu").style.display="none";
+                document.getElementById("emp-menu").style.display="none";
+                document.getElementById("settings-menu").style.display="none";
+            }
+        }
+
+        async function changeChairmanPassword(){
+            let newP = document.getElementById("newChairmanPass").value;
+            if(!newP) { alert("Please enter a valid password."); return; }
+            const res = await fetch("/api/update_chairman_pass", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_password:newP})});
+            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully! Use new password from next login."); document.getElementById("newChairmanPass").value=""; }
+            else { alert("Error updating security tokens."); }
         }
 
         async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
@@ -247,15 +255,28 @@
         async function loadEmployees(){ const res=await fetch("/api/employees"); employees=await res.json(); renderEmployees(); }
 
         async function saveJob(){
+            let name = document.getElementById("customerName").value;
+            let phone = document.getElementById("customerPhone").value;
+            let model = document.getElementById("deviceModel").value;
+            let prob = document.getElementById("problem").value;
+            
+            if(!name || !phone || !model || !prob){ alert("Please fill all mandatory (*) fields."); return; }
+
             const payload={
-                category:document.getElementById("deviceType").value, device:document.getElementById("deviceModel").value,
+                category:document.getElementById("deviceType").value, device:model,
                 imei:document.getElementById("deviceIMEI").value, password:document.getElementById("devicePassword").value,
-                problem:document.getElementById("problem").value, estimate:parseFloat(document.getElementById("estimate").value || 0),
-                advance:parseFloat(document.getElementById("advance").value || 0), customer_name:document.getElementById("customerName").value,
-                phone:document.getElementById("customerPhone").value
+                problem:prob, estimate:parseFloat(document.getElementById("estimate").value || 0),
+                advance:parseFloat(document.getElementById("advance").value || 0), customer_name:name, phone:phone
             };
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-            if((await res.json()).success){ alert("Jobcard Registry Generated Successfully."); loadJobs(); showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); }
+            if((await res.json()).success){ 
+                alert("Jobcard Registry Generated Successfully."); 
+                document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
+                document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
+                document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
+                document.getElementById("estimate").value=""; document.getElementById("advance").value="";
+                loadJobs(); showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
+            } else { alert("Network Connection Refused to Save Data."); }
         }
 
         function renderJobs(){
@@ -263,6 +284,8 @@
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
             let p=0; let r=0; let t=0; let ry=0; let d=0; let rev=0; let exp=0;
+
+            if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
                 if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
@@ -275,7 +298,7 @@
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
                     <td><strong>${job.customer_name}</strong><br><small style="color:#9ca3af;">${job.phone}</small></td>
-                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
                             <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
@@ -319,6 +342,7 @@
         }
         function renderParts(){
             let t=document.getElementById("partsTable"); t.innerHTML="";
+            if(!Array.isArray(parts)) return;
             parts.forEach(p=>{ t.innerHTML+=`<tr><td><strong>${p.part_name}</strong></td><td>${p.model}</td><td style="color:#10b981; font-weight:bold;">₹${p.price}</td><td>${p.date || ''}</td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deletePart('${p.id}')">❌</button></td></tr>`; });
         }
         async function deletePart(id){ if(confirm("Delete record?")){ await fetch("/api/parts?id="+id,{method:"DELETE"}); loadParts(); } }
@@ -330,6 +354,7 @@
         }
         function renderEmployees(){
             let t=document.getElementById("empTable"); t.innerHTML="";
+            if(!Array.isArray(employees)) return;
             employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
         }
         async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
