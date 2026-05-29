@@ -2,26 +2,20 @@ import os
 import json
 from datetime import datetime
 import urllib.request
-import urllib.error
 import urllib.parse
-import uuid
 from flask import Flask, render_template, request, jsonify, session
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-SUPABASE_URL = "[https://wgkdrknsynjipoynjof.supabase.co](https://wgkdrknsynjipoynjof.supabase.co)"
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+# SUPABASE CLOUD CENTRAL GATEWAY
+SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
+SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
 ADMIN_USER = "admin"
 ADMIN_PASS = "fixify@2026"
 
 def make_supabase_request(url, method="GET", data=None):
-    if not SUPABASE_KEY:
-        print("❌ CRITICAL ERROR: SUPABASE_KEY environment variable missing on Render!")
-        return None
-        
     req_data = None
     if data is not None:
         req_data = json.dumps(data).encode("utf-8")
@@ -29,29 +23,21 @@ def make_supabase_request(url, method="GET", data=None):
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
+        "Content-Type": "application/json"
     }
+    if method in ["POST", "PATCH"]:
+        headers["Prefer"] = "return=representation"
+        
     if req_data:
         headers["Content-Length"] = str(len(req_data))
         
     req = urllib.request.Request(url, headers=headers, method=method, data=req_data)
     try:
         with urllib.request.urlopen(req) as response:
-            response_text = response.read().decode("utf-8")
-            print("✅ SUPABASE SUCCESS")
-            return json.loads(response_text) if response_text else []
-    except urllib.error.HTTPError as e:
-        print("❌ SUPABASE HTTP ERROR")
-        print("STATUS:", e.code)
-        try:
-            error_body = e.read().decode()
-            print("BODY:", error_body)
-        except Exception as ex:
-            print("READ ERROR:", str(ex))
-        return None
+            res_read = response.read().decode("utf-8")
+            return json.loads(res_read) if res_read else []
     except Exception as e:
-        print("❌ GENERAL ERROR:", str(e))
+        print("Supabase Core Crash Alert:", e)
         return None
 
 @app.route('/')
@@ -86,7 +72,7 @@ def do_login():
     
     if isinstance(user_rows, list) and len(user_rows) > 0:
         db_user = user_rows[0]
-        if check_password_hash(db_user.get('password'), p):
+        if db_user.get('password') == p:
             session['logged_in'] = True
             session['username'] = db_user.get('username')
             session['role'] = db_user.get('role')
@@ -108,28 +94,17 @@ def handle_parts():
     if request.method == 'POST':
         data = request.json or {}
         today_str = datetime.now().strftime("%Y-%m-%d")
-        
-        try: w_cost = float(data.get('wholesale_cost', 0) or 0)
-        except: w_cost = 0.0
-            
-        payload = [{
-            "part_name": str(data.get('part_name', 'Part')),
+        payload = {
+            "part_name": str(data.get('part_name', 'Spare')),
             "model_compatibility": str(data.get('model_compatibility', '')),
-            "wholesale_cost": w_cost,
+            "wholesale_cost": float(data.get('wholesale_cost', 0) or 0),
             "updated_at": today_str
-        }]
-        
+        }
         url = f"{SUPABASE_URL}/rest/v1/fixify_parts"
-        result = make_supabase_request(url, method="POST", data=payload)
-        
-        if result is None:
-            return jsonify({"success": False, "message": "Part save failed"})
+        make_supabase_request(url, method="POST", data=payload)
         return jsonify({"success": True})
         
     if request.method == 'DELETE':
-        if session.get('role') != 'Chairman':
-            return jsonify({"success": False, "message": "Access Denied: Only Chairman can delete records!"}), 401
-            
         part_id = request.args.get('id')
         url = f"{SUPABASE_URL}/rest/v1/fixify_parts?id=eq.{part_id}"
         make_supabase_request(url, method="DELETE")
@@ -146,20 +121,20 @@ def handle_employees():
         
     if request.method == 'POST':
         data = request.json or {}
-        hashed_password = generate_password_hash(str(data.get('password', '')).strip())
-        
-        payload = [{
+        payload = {
             "username": str(data.get('username', '')).strip(),
-            "password": hashed_password,
+            "password": str(data.get('password', '')).strip(),
             "emp_name": str(data.get('emp_name', '')).strip(),
             "role": "Employee"
-        }]
+        }
         url = f"{SUPABASE_URL}/rest/v1/fixify_users"
         make_supabase_request(url, method="POST", data=payload)
         return jsonify({"success": True})
         
     if request.method == 'DELETE':
         username = request.args.get('username')
+        if username == 'admin':
+            return jsonify({"success": False, "message": "Chairman terminal block delete nahi ho sakta!"})
         url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{urllib.parse.quote(username)}"
         make_supabase_request(url, method="DELETE")
         return jsonify({"success": True})
@@ -175,54 +150,54 @@ def handle_jobs():
         
     if request.method == 'POST':
         data = request.json or {}
-        unique_token = uuid.uuid4().hex[:6].upper()
-        next_id = f"FIX-{unique_token}"
+        
+        # Fresh count for sequential tracking generation
+        count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
+        all_rows = make_supabase_request(count_url, method="GET")
+        next_num = len(all_rows) + 1 if isinstance(all_rows, list) else 1
+        
+        next_id = f"FIX{next_num:04d}"
         today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         
-        try: est = float(data.get('estimate', 0) or 0)
-        except: est = 0.0
-        try: adv = float(data.get('advance', 0) or 0)
-        except: adv = 0.0
+        payload = {
+            "id": str(next_id),
+            "category": str(data.get('category', 'Mobile')),
+            "name": str(data.get('name', '')),
+            "phone1": str(data.get('phone1', '')),
+            "device": str(data.get('device', '')),
+            "imei": str(data.get('imei', '')),
+            "password": str(data.get('password', '')),
+            "problem": str(data.get('problem', '')),
+            "estimate": float(data.get('estimate', 0) or 0),
+            "advance": float(data.get('advance', 0) or 0),
+            "extra_cost": 0.0,
+            "discount": 0.0,
+            "spare_part_cost": 0.0,
+            "created_date": str(today_str),
+            "status": "Pending",
+            "created_by": str(session.get('emp_name', 'Staff'))
+        }
         
-        payload = [{
-            "id": str(next_id), "category": str(data.get('category', 'Mobile')), "name": str(data.get('name', '')),
-            "phone1": str(data.get('phone1', '')), "device": str(data.get('device', '')), "imei": str(data.get('imei', '')),
-            "password": str(data.get('password', '')), "problem": str(data.get('problem', '')),
-            "estimate": est, "advance": adv, "extra_cost": 0.0, "discount": 0.0, "spare_part_cost": 0.0,
-            "created_date": str(today_str), "status": "Pending", "created_by": str(session.get('emp_name', 'Staff'))
-        }]
-        
-        insert_url = f"{SUPABASE_URL}/rest/v1/fixify_jobs"
-        result = make_supabase_request(insert_url, method="POST", data=payload)
-        
-        if result is None:
-            return jsonify({"success": False, "message": "Database write protection failure"})
-            
+        insert_url = f"{SUPABASE_URL}/rest/v1/jobs"
+        make_supabase_request(insert_url, method="POST", data=payload)
         return jsonify({"success": True, "id": next_id})
         
-    fetch_url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*"
+    # GET Methods Link
+    fetch_url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
     rows = make_supabase_request(fetch_url, method="GET")
     jobs = []
     if isinstance(rows, list):
         for r in rows:
-            try: est_val = float(r.get('estimate', 0) or 0)
-            except: est_val = 0.0
-            try: adv_val = float(r.get('advance', 0) or 0)
-            except: adv_val = 0.0
-            try: ext_val = float(r.get('extra_cost', 0) or 0)
-            except: ext_val = 0.0
-            try: dsc_val = float(r.get('discount', 0) or 0)
-            except: dsc_val = 0.0
-            try: spc_val = float(r.get('spare_part_cost', 0) or 0)
-            except: spc_val = 0.0
-                
             jobs.append({
                 "id": str(r.get('id', '')), "category": str(r.get('category', 'Mobile')), "name": str(r.get('name', '')),
                 "phone1": str(r.get('phone1', '')), "device": str(r.get('device', '')), "problem": str(r.get('problem', '')),
-                "estimate": est_val, "advance": adv_val, "extra_cost": ext_val, "discount": dsc_val, "spare_part_cost": spc_val,
+                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0), 
+                "extra_cost": float(r.get('extra_cost', 0) or 0), "discount": float(r.get('discount', 0) or 0),
+                "spare_part_cost": float(r.get('spare_part_cost', 0) or 0),
                 "date": str(r.get('created_date', '')), "status": str(r.get('status', 'Pending')),
                 "created_by": str(r.get('created_by', 'Staff'))
             })
+    jobs.sort(key=lambda x: x['id'], reverse=True)
     return jsonify(jobs)
 
 @app.route('/api/jobs/update_status', methods=['POST'])
@@ -230,7 +205,7 @@ def update_status():
     if not session.get('logged_in'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
-    url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{data.get('id')}"
+    url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
     make_supabase_request(url, method="PATCH", data={"status": str(data.get('status'))})
     return jsonify({"success": True})
 
@@ -239,18 +214,15 @@ def update_pricing():
     if not session.get('logged_in'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
-    url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{data.get('id')}"
+    url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
     
-    try: ext = float(data.get('extra_cost', 0) or 0)
-    except: ext = 0.0
-    try: dsc = float(data.get('discount', 0) or 0)
-    except: dsc = 0.0
-    try: spc = float(data.get('spare_part_cost', 0) or 0)
-    except: spc = 0.0
-        
-    payload = {"extra_cost": ext, "discount": dsc, "spare_part_cost": spc}
+    payload = {
+        "extra_cost": float(data.get('extra_cost', 0) or 0), 
+        "discount": float(data.get('discount', 0) or 0),
+        "spare_part_cost": float(data.get('spare_part_cost', 0) or 0)
+    }
     make_supabase_request(url, method="PATCH", data=payload)
     return jsonify({"success": True})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    app.run(host='0.0.0.0', port=5000)
