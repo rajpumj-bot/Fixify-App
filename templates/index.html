@@ -52,6 +52,34 @@
         .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
         .st-Delivered { background:#166534; } .st-Not-Repair { background:#7f1d1d; }
         .st-Undelivered { background:#6b21a8; }
+
+        /* TOGGLE LEDGER STYLING */
+        .ledger-toggle-btn {
+            background: rgba(249,115,22,0.1);
+            border: 1px dashed #f97316;
+            color: #f97316;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .ledger-toggle-btn:hover {
+            background: rgba(249,115,22,0.2);
+        }
+        .ledger-content {
+            display: none;
+            margin-top: 15px;
+        }
+        .ledger-content.open {
+            display: block !important;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +119,24 @@
                 <div class="stat-box">Testing<h2 id="testingCount">0</h2></div>
                 <div class="stat-box">Ready<h2 id="readyCount">0</h2></div>
                 <div class="stat-box">Delivered<h2 id="deliveredCount">0</h2></div>
+            </div>
+
+            <div id="profitCardWrapper" style="display:none;">
+                <button class="ledger-toggle-btn" onclick="toggleLedger()">
+                    <span>📊 TAP TO EXPAND / COLLAPSE FINANCIAL STATUS LEDGER</span>
+                    <span id="ledgerArrow">▼</span>
+                </button>
+                
+                <div class="ledger-content" id="ledgerContent">
+                    <div class="card" style="border:1px solid rgba(249,115,22,0.3); background:#0f172a; margin-bottom:0;">
+                        <h2 style="display:flex; align-items:center; gap:10px;">📈 Financial Status Ledger <span style="font-size:12px; color:#94a3b8; font-weight:normal;">(Net Profit Engine)</span></h2>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; text-align:center; margin-top:15px;">
+                            <div style="background:#1e293b; padding:20px; border-radius:10px; border-bottom:4px solid #3b82f6;"><p style="color:#94a3b8; font-size:11px; font-weight:bold; letter-spacing:1px;">GROSS REVENUE</p><h3 id="lbl-revenue" style="color:#3b82f6; font-size:26px; margin-top:8px; font-weight:800;">₹0</h3></div>
+                            <div style="background:#1e293b; padding:20px; border-radius:10px; border-bottom:4px solid #ef4444;"><p style="color:#94a3b8; font-size:11px; font-weight:bold; letter-spacing:1px;">SPARE PARTS COST</p><h3 id="lbl-expenses" style="color:#ef4444; font-size:26px; margin-top:8px; font-weight:800;">₹0</h3></div>
+                            <div style="background:#1e293b; padding:20px; border-radius:10px; border-bottom:4px solid #10b981; background:rgba(16,185,129,0.03);"><p style="color:#10b981; font-size:11px; font-weight:bold; letter-spacing:1px;">NET PURE PROFIT</p><h3 id="lbl-profit" style="color:#10b981; font-size:28px; font-weight:bold; margin-top:8px; font-weight:900;">₹0</h3></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -194,6 +240,19 @@
             if(btn) btn.classList.add("active");
         }
 
+        // TOGGLE LOGIC
+        function toggleLedger() {
+            const content = document.getElementById("ledgerContent");
+            const arrow = document.getElementById("ledgerArrow");
+            if (content.classList.contains("open")) {
+                content.classList.remove("open");
+                arrow.innerText = "▼";
+            } else {
+                content.classList.add("open");
+                arrow.innerText = "▲";
+            }
+        }
+
         async function login(){
             let u=document.getElementById("username").value; let p=document.getElementById("password").value;
             const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
@@ -220,11 +279,13 @@
 
         function setupUIRoles(){
             if(CURRENT_ROLE === "Chairman"){
+                document.getElementById("profitCardWrapper").style.display="block";
                 document.getElementById("parts-menu").style.display="block";
                 document.getElementById("emp-menu").style.display="block";
                 document.getElementById("settings-menu").style.display="block";
                 loadEmployees();
             } else {
+                document.getElementById("profitCardWrapper").style.display="none";
                 document.getElementById("parts-menu").style.display="none";
                 document.getElementById("emp-menu").style.display="none";
                 document.getElementById("settings-menu").style.display="none";
@@ -285,11 +346,17 @@
             let search=document.getElementById("searchInput").value.toLowerCase();
             let filter=document.getElementById("statusFilter").value;
             let p=0; let r=0; let t=0; let ry=0; let d=0;
+            let rev=0; let exp=0;
 
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
                 if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
+                
+                if(job.status==="Delivered"){ 
+                    rev += (parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0)); 
+                    exp += parseFloat(job.spare_cost || 0); 
+                }
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -325,11 +392,14 @@
             document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
             document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
             document.getElementById("deliveredCount").innerText=d;
+            
+            if(CURRENT_ROLE==="Chairman"){ 
+                document.getElementById("lbl-revenue").innerText="₹"+rev.toFixed(2); 
+                document.getElementById("lbl-expenses").innerText="₹"+exp.toFixed(2); 
+                document.getElementById("lbl-profit").innerText="₹"+(rev-exp).toFixed(2); 
+            }
         }
 
-        // ========================================================
-        // 🔥 ATTRACTIVE & PROFESSIONAL THERMAL PRINT RECEIPT ENGINE
-        // ========================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
             if (!job) { alert("Job not found in cache registry."); return; }
@@ -340,62 +410,23 @@
                 <head>
                     <title>FIXIFY INVOICE - ${job.id}</title>
                     <style>
-                        body { 
-                            font-family: 'Segoe UI', Arial, sans-serif; 
-                            color: #111; 
-                            padding: 10px; 
-                            font-size: 13px; 
-                            line-height: 1.5; 
-                            background: #fff;
-                        }
+                        body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; padding: 10px; font-size: 13px; line-height: 1.5; background: #fff; }
                         .text-center { text-align: center; }
                         .text-right { text-align: right; }
-                        .brand-box { 
-                            background: #0f172a; 
-                            color: #f97316; 
-                            padding: 15px; 
-                            border-radius: 8px; 
-                            margin-bottom: 15px;
-                        }
-                        .header-title { 
-                            font-size: 28px; 
-                            font-weight: 900; 
-                            letter-spacing: 2px;
-                            margin-bottom: 2px;
-                        }
+                        .brand-box { background: #0f172a; color: #f97316; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                        .header-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; margin-bottom: 2px; }
                         .sub-title { font-size: 11px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; }
                         .divider { border-bottom: 2px dashed #334155; margin: 15px 0; }
                         .light-divider { border-bottom: 1px solid #e2e8f0; margin: 10px 0; }
-                        
-                        .section-title { 
-                            font-size: 14px; 
-                            font-weight: bold; 
-                            color: #0f172a; 
-                            background: #f1f5f9; 
-                            padding: 5px 8px; 
-                            border-left: 4px solid #f97316;
-                            margin-bottom: 10px;
-                            text-transform: uppercase;
-                        }
-                        
+                        .section-title { font-size: 14px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 5px 8px; border-left: 4px solid #f97316; margin-bottom: 10px; text-transform: uppercase; }
                         table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
                         td { padding: 5px 4px; vertical-align: top; }
                         .label { color: #64748b; font-weight: 600; width: 40%; }
                         .value { color: #0f172a; font-weight: 500; }
-                        
-                        .price-table td { padding: 6px 4px; }
-                        .total-row { 
-                            font-size: 16px; 
-                            font-weight: bold; 
-                            background: #fff7ed; 
-                            color: #ea580c;
-                            border: 1px dashed #f97316;
-                        }
+                        .total-row { font-size: 16px; font-weight: bold; background: #fff7ed; color: #ea580c; border: 1px dashed #f97316; }
                         .total-row td { padding: 8px 6px; }
-                        
                         .barcode-area { font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; letter-spacing: 4px; background: #f8fafc; padding: 8px; margin: 15px 0; border: 1px solid #e2e8f0; text-align:center; }
                         .footer-note { font-size: 11px; color: #64748b; text-align: justify; line-height: 1.4; padding: 0 5px; }
-                        
                         @media print { 
                             body { padding: 0; background: #fff; color: #000; }
                             .brand-box { background: #000 !important; color: #fff !important; border: 1px solid #000; }
@@ -410,14 +441,11 @@
                         <div class="header-title">FIXIFY</div>
                         <div class="sub-title">Smart Device Repair Network</div>
                     </div>
-                    
                     <div style="font-size: 11px; color: #64748b; display: flex; justify-content: space-between; margin-bottom: 15px; padding: 0 4px;">
                         <div><strong>DATE:</strong> ${job.date || 'N/A'}</div>
                         <div><strong>OPERATOR:</strong> ${job.created_by || 'Terminal'}</div>
                     </div>
-
                     <div class="barcode-area">||| ${job.id} |||</div>
-
                     <div class="section-title">Client & Device Details</div>
                     <table>
                         <tr><td class="label">Customer Name</td><td class="value">: <strong>${job.name || 'N/A'}</strong></td></tr>
@@ -428,11 +456,9 @@
                         <tr><td class="label">Device Password</td><td class="value">: <code style="background:#f8fafc; padding:2px 4px; border:1px solid #e2e8f0; border-radius:3px;">${job.password || 'None'}</code></td></tr>
                         <tr><td class="label">Reported Fault</td><td class="value" style="color: #b91c1c; font-weight: bold;">: ${job.problem || 'N/A'}</td></tr>
                     </table>
-
                     <div class="divider"></div>
-
                     <div class="section-title">Cost Breakdown Ledger</div>
-                    <table class="price-table">
+                    <table>
                         <tr><td class="label">Initial Estimate</td><td class="value text-right">₹${parseFloat(job.estimate || 0).toFixed(2)}</td></tr>
                         <tr><td class="label">Markup / Extra Cost</td><td class="value text-right">+ ₹${parseFloat(job.extra_charge || 0).toFixed(2)}</td></tr>
                         <tr><td class="label">Discounts Availed</td><td class="value text-right" style="color:#16a34a;">- ₹${parseFloat(job.discount || 0).toFixed(2)}</td></tr>
@@ -443,16 +469,13 @@
                             <td class="text-right">₹${(parseFloat(job.estimate || 0) + parseFloat(job.extra_charge || 0) - parseFloat(job.discount || 0) - parseFloat(job.advance || 0)).toFixed(2)}</td>
                         </tr>
                     </table>
-
                     <div class="divider"></div>
-
                     <div class="footer-note">
                         <strong>Terms & Conditions:</strong><br>
                         1. Please present this authenticated digital thermal receipt slip during pickup hours.<br>
                         2. Fixify takes zero liabilities for system data patterns, cloud storage configurations, or internal motherboard health failures during teardown phases.<br>
                         3. Maximum storage threshold for fixed units is 30 days post repair timestamp alerts.
                     </div>
-
                     <div class="divider"></div>
                     <div class="text-center" style="font-weight: bold; font-size: 14px; color: #0f172a; margin-top: 10px;">
                         Thank You For Trusting Fixify! ❤️
