@@ -6,15 +6,9 @@ import os
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "fixify_secure_key_2026"
 
-# =============================
-# CONFIG
-# =============================
 SUPABASE_URL = "https://wgkdrknsynjzipoynjof.supabase.co"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 FAST2SMS_API_KEY = os.environ.get("FAST2SMS_API_KEY")
-
-if not SUPABASE_KEY:
-    print("⚠️ WARNING: SUPABASE_KEY not set in environment")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -26,93 +20,66 @@ ADMIN_USER = "admin"
 ADMIN_PASS = "fixify#0821"
 
 
-# =============================
-# SMS ENGINE
-# =============================
-def send_status_sms(phone, customer_name, device, status):
+# ================= SMS =================
+def send_sms(phone, name, device, status):
     if not FAST2SMS_API_KEY:
-        print("SMS SKIPPED: FAST2SMS_API_KEY missing")
         return False
 
     msg = None
-
     if status == "Repairing":
-        msg = f"Hi {customer_name}, your {device} is now under repair at Fixify."
+        msg = f"{name}, your {device} is under repair - Fixify"
     elif status == "Ready":
-        msg = f"Hi {customer_name}, your {device} is READY for pickup. - Fixify Tech"
-
-    if not msg:
+        msg = f"{name}, your {device} is READY for pickup - Fixify"
+    else:
         return False
 
     try:
-        res = requests.post(
+        requests.post(
             "https://www.fast2sms.com/dev/bulkV2",
-            headers={
-                "authorization": FAST2SMS_API_KEY,
-                "Content-Type": "application/json"
-            },
+            headers={"authorization": FAST2SMS_API_KEY},
             json={
                 "message": msg,
-                "language": "english",
-                "route": "q",
-                "numbers": str(phone)
+                "numbers": phone,
+                "route": "q"
             }
         )
-        return res.status_code == 200
-    except Exception as e:
-        print("SMS ERROR:", e)
+        return True
+    except:
         return False
 
 
-# =============================
-# HOME
-# =============================
+# ================= HOME =================
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# =============================
-# LOGIN
-# =============================
+# ================= LOGIN =================
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
-    username = data.get("username", "").strip()
-    password = data.get("password", "").strip()
+    u = data.get("username", "")
+    p = data.get("password", "")
 
-    if username == ADMIN_USER and password == ADMIN_PASS:
+    if u == ADMIN_USER and p == ADMIN_PASS:
         session.update({"logged_in": True, "role": "Chairman", "name": "Chairman"})
         return jsonify({"success": True, "role": "Chairman", "name": "Chairman"})
 
-    url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{username}"
+    url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{u}"
+    res = requests.get(url, headers=HEADERS)
 
-    try:
-        res = requests.get(url, headers=HEADERS)
-        if res.status_code == 200:
-            users = res.json()
-            if users and users[0]["password"] == password:
-                session.update({
-                    "logged_in": True,
-                    "role": users[0].get("role", "Employee"),
-                    "name": users[0]["emp_name"]
-                })
-                return jsonify({
-                    "success": True,
-                    "role": users[0].get("role", "Employee"),
-                    "name": users[0]["emp_name"]
-                })
-    except Exception as e:
-        print("LOGIN ERROR:", e)
+    if res.status_code == 200 and res.json():
+        user = res.json()[0]
+        if user["password"] == p:
+            session.update({"logged_in": True, "role": user.get("role"), "name": user["emp_name"]})
+            return jsonify({"success": True, "role": user["role"], "name": user["emp_name"]})
 
     return jsonify({"success": False, "message": "Invalid login"})
 
 
-# =============================
-# SESSION
-# =============================
+# ================= SESSION =================
 @app.route("/api/session")
-def check_session():
+def session_check():
     return jsonify({
         "logged_in": bool(session.get("logged_in")),
         "role": session.get("role"),
@@ -120,36 +87,31 @@ def check_session():
     })
 
 
-# =============================
-# LOGOUT
-# =============================
+# ================= LOGOUT =================
 @app.route("/api/logout", methods=["POST"])
 def logout():
     session.clear()
     return jsonify({"success": True})
 
 
-# =============================
-# JOBS (MAIN FIXED ENGINE)
-# =============================
+# ================= JOBS =================
 @app.route("/api/jobs", methods=["GET", "POST"])
 def jobs():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
 
-    # ================= POST JOB =================
+    # CREATE JOB
     if request.method == "POST":
         data = request.json or {}
 
         now = datetime.now().strftime("%d-%m-%Y %H:%M")
 
-        get_res = requests.get(
+        count = requests.get(
             f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=id",
             headers=HEADERS
         )
 
-        total = len(get_res.json()) + 1 if get_res.status_code == 200 else 1
-        job_id = f"FIX{total:04d}"
+        job_id = f"FIX{len(count.json())+1:04d}" if count.status_code == 200 else "FIX0001"
 
         payload = {
             "id": job_id,
@@ -170,25 +132,18 @@ def jobs():
             "created_by": session.get("name")
         }
 
-        print("➡️ INSERT JOB:", payload)
-
         res = requests.post(
             f"{SUPABASE_URL}/rest/v1/fixify_jobs",
             headers=HEADERS,
             json=payload
         )
 
-        print("⬅️ SUPABASE RESPONSE:", res.text)
-
         if res.status_code not in [200, 201, 204]:
-            return jsonify({
-                "success": False,
-                "message": res.text
-            })
+            return jsonify({"success": False, "message": res.text})
 
         return jsonify({"success": True, "job_id": job_id})
 
-    # ================= GET JOBS =================
+    # GET JOBS
     res = requests.get(
         f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*",
         headers=HEADERS
@@ -197,9 +152,7 @@ def jobs():
     return jsonify(res.json() if res.status_code == 200 else [])
 
 
-# =============================
-# STATUS UPDATE + SMS
-# =============================
+# ================= STATUS UPDATE =================
 @app.route("/api/update_status", methods=["POST"])
 def update_status():
     if not session.get("logged_in"):
@@ -207,64 +160,54 @@ def update_status():
 
     data = request.json
     job_id = data.get("id")
-    new_status = data.get("status")
+    status = data.get("status")
 
     url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{job_id}"
 
     old = requests.get(url, headers=HEADERS)
+    res = requests.patch(url, headers=HEADERS, json={"status": status})
 
-    res = requests.patch(url, headers=HEADERS, json={"status": new_status})
+    if res.status_code in [200, 204] and old.status_code == 200:
+        if old.json():
+            j = old.json()[0]
+            send_sms(j.get("phone1"), j.get("name"), j.get("device"), status)
 
-    if res.status_code in [200, 204]:
-        if old.status_code == 200 and old.json():
-            job = old.json()[0]
-            send_status_sms(
-                job.get("phone1"),
-                job.get("name"),
-                job.get("device"),
-                new_status
-            )
-
-    return jsonify({"success": res.status_code in [200, 204]})
+    return jsonify({"success": True})
 
 
-# =============================
-# PRICING MODERATION ROUTE (ADDED FIX)
-# =============================
+# ================= PRICING =================
 @app.route("/api/update_pricing", methods=["POST"])
 def update_pricing():
     if session.get("role") != "Chairman":
         return jsonify({"error": "Unauthorized"}), 401
-    
+
     data = request.json
-    job_id = data.get("id")
-    
+
+    url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{data['id']}"
+
     payload = {
         "extra_charge": float(data.get("extra_charge") or 0),
         "discount": float(data.get("discount") or 0),
         "spare_cost": float(data.get("spare_cost") or 0)
     }
 
-    url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{job_id}"
     res = requests.patch(url, headers=HEADERS, json=payload)
-    
+
     return jsonify({"success": res.status_code in [200, 204]})
 
 
-# =============================
-# PARTS
-# =============================
+# ================= PARTS =================
 @app.route("/api/parts", methods=["GET", "POST", "DELETE"])
 def parts():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
 
     if request.method == "POST":
-        data = request.json
+        d = request.json
         payload = {
-            "part_name": data.get("part_name"),
-            "model": data.get("model"),
-            "price": float(data.get("price") or 0),
+            "part_name": d.get("part_name"),
+            "model": d.get("model"),
+            "price": float(d.get("price") or 0),
             "date": datetime.now().strftime("%d-%m-%Y")
         }
 
@@ -274,12 +217,12 @@ def parts():
             json=payload
         )
 
-        return jsonify({"success": res.status_code in [200, 201]})
+        return jsonify({"success": True})
 
     if request.method == "DELETE":
-        part_id = request.args.get("id")
+        pid = request.args.get("id")
         requests.delete(
-            f"{SUPABASE_URL}/rest/v1/fixify_parts?id=eq.{part_id}",
+            f"{SUPABASE_URL}/rest/v1/fixify_parts?id=eq.{pid}",
             headers=HEADERS
         )
         return jsonify({"success": True})
@@ -292,8 +235,5 @@ def parts():
     return jsonify(res.json() if res.status_code == 200 else [])
 
 
-# =============================
-# RUN APP
-# =============================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
