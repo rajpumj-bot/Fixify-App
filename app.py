@@ -1,42 +1,31 @@
-```python
 import os
 import json
-import uuid
 from datetime import datetime
 import urllib.request
 import urllib.error
 import urllib.parse
 
 from flask import Flask, render_template, request, jsonify, session
-from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__, template_folder='.')
-
-# =========================
-# SECURITY CONFIG
-# =========================
-app.secret_key = os.environ.get(
-    "SECRET_KEY",
-    "fixify_super_cloud_secure_key_99"
-)
+app = Flask(__name__)
+app.secret_key = "fixify_super_cloud_secure_key_99"
 
 # =========================
-# SUPABASE CONFIG
+# CONFIG
 # =========================
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-# =========================
-# ADMIN LOGIN
-# =========================
+SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
+
+SUPABASE_KEY = "YOUR_SUPABASE_SERVICE_ROLE_KEY"
+
 ADMIN_USER = "admin"
 ADMIN_PASS = "fixify@2026"
 
 # =========================
 # SUPABASE REQUEST FUNCTION
 # =========================
-def make_supabase_request(url, method="GET", data=None):
 
+def make_supabase_request(url, method="GET", data=None):
     req_data = None
 
     if data is not None:
@@ -58,37 +47,26 @@ def make_supabase_request(url, method="GET", data=None):
 
     try:
         with urllib.request.urlopen(req) as response:
-
-            response_text = response.read().decode("utf-8")
-
-            print("✅ SUPABASE SUCCESS")
-            print(response_text)
-
-            return json.loads(response_text) if response_text else []
+            result = response.read().decode("utf-8")
+            return json.loads(result) if result else []
 
     except urllib.error.HTTPError as e:
-
-        print("❌ SUPABASE HTTP ERROR")
-        print("STATUS:", e.code)
-
+        print("HTTP ERROR:", e.code)
         try:
-            print("BODY:", e.read().decode())
+            print(e.read().decode())
         except:
             pass
-
         return None
 
     except Exception as e:
-
-        print("❌ GENERAL ERROR")
-        print(str(e))
-
+        print("GENERAL ERROR:", str(e))
         return None
 
 
 # =========================
 # HOME
 # =========================
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -97,40 +75,37 @@ def home():
 # =========================
 # SESSION CHECK
 # =========================
-@app.route('/api/session', methods=['GET'])
+
+@app.route('/api/session')
 def get_session():
-
-    if not session.get('logged_in'):
-
-        return jsonify({
-            "logged_in": False
-        })
+    if not session.get("logged_in"):
+        return jsonify({"logged_in": False})
 
     return jsonify({
         "logged_in": True,
-        "role": session.get('role', 'Employee'),
-        "emp_name": session.get('emp_name', 'Staff')
+        "role": session.get("role"),
+        "emp_name": session.get("emp_name")
     })
 
 
 # =========================
 # LOGIN
 # =========================
+
 @app.route('/api/login', methods=['POST'])
-def do_login():
+def login():
 
     data = request.json or {}
 
-    username = str(data.get('username', '')).strip()
-    password = str(data.get('password', '')).strip()
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
 
-    # ================= ADMIN LOGIN =================
+    # ADMIN LOGIN
     if username == ADMIN_USER and password == ADMIN_PASS:
 
-        session['logged_in'] = True
-        session['username'] = ADMIN_USER
-        session['role'] = "Chairman"
-        session['emp_name'] = "Chairman Master"
+        session["logged_in"] = True
+        session["role"] = "Chairman"
+        session["emp_name"] = "Chairman Master"
 
         return jsonify({
             "success": True,
@@ -138,551 +113,145 @@ def do_login():
             "emp_name": "Chairman Master"
         })
 
-    # ================= EMPLOYEE LOGIN =================
-    safe_username = urllib.parse.quote(username)
+    # EMPLOYEE LOGIN
+    url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.{urllib.parse.quote(username)}"
 
-    url = (
-        f"{SUPABASE_URL}/rest/v1/fixify_users"
-        f"?username=eq.{safe_username}"
-    )
+    users = make_supabase_request(url)
 
-    user_rows = make_supabase_request(url, method="GET")
+    if isinstance(users, list) and len(users) > 0:
 
-    if isinstance(user_rows, list) and len(user_rows) > 0:
+        user = users[0]
 
-        db_user = user_rows[0]
+        if user.get("password") == password:
 
-        stored_password = db_user.get('password', '')
-
-        if check_password_hash(stored_password, password):
-
-            session['logged_in'] = True
-            session['username'] = db_user.get('username')
-            session['role'] = db_user.get('role')
-            session['emp_name'] = db_user.get('emp_name')
+            session["logged_in"] = True
+            session["role"] = user.get("role")
+            session["emp_name"] = user.get("emp_name")
 
             return jsonify({
                 "success": True,
-                "role": db_user.get('role'),
-                "emp_name": db_user.get('emp_name')
+                "role": user.get("role"),
+                "emp_name": user.get("emp_name")
             })
 
     return jsonify({
         "success": False,
-        "message": "Galat ID ya Password!"
+        "message": "Invalid username or password"
     })
 
 
 # =========================
 # LOGOUT
 # =========================
+
 @app.route('/api/logout', methods=['POST'])
-def do_logout():
-
+def logout():
     session.clear()
-
-    return jsonify({
-        "success": True
-    })
+    return jsonify({"success": True})
 
 
 # =========================
-# PARTS API
+# JOBS
 # =========================
-@app.route('/api/parts', methods=['GET', 'POST', 'DELETE'])
-def handle_parts():
 
-    if not session.get('logged_in'):
-
-        return jsonify({
-            "error": "Unauthorized"
-        }), 401
-
-    # ================= ADD PART =================
-    if request.method == 'POST':
-
-        data = request.json or {}
-
-        today_str = datetime.now().strftime("%Y-%m-%d")
-
-        try:
-            wholesale_cost = float(
-                data.get('wholesale_cost', 0) or 0
-            )
-        except:
-            wholesale_cost = 0.0
-
-        payload = [{
-            "part_name": str(data.get('part_name', 'Part')),
-            "model_compatibility": str(
-                data.get('model_compatibility', '')
-            ),
-            "wholesale_cost": wholesale_cost,
-            "updated_at": today_str
-        }]
-
-        url = f"{SUPABASE_URL}/rest/v1/fixify_parts"
-
-        result = make_supabase_request(
-            url,
-            method="POST",
-            data=payload
-        )
-
-        if result is None:
-
-            return jsonify({
-                "success": False,
-                "message": "Part save failed"
-            }), 500
-
-        return jsonify({
-            "success": True
-        })
-
-    # ================= DELETE PART =================
-    if request.method == 'DELETE':
-
-        if session.get('role') != 'Chairman':
-
-            return jsonify({
-                "error": "Unauthorized"
-            }), 401
-
-        part_id = request.args.get('id', '')
-
-        safe_id = urllib.parse.quote(part_id)
-
-        url = (
-            f"{SUPABASE_URL}/rest/v1/fixify_parts"
-            f"?id=eq.{safe_id}"
-        )
-
-        make_supabase_request(url, method="DELETE")
-
-        return jsonify({
-            "success": True
-        })
-
-    # ================= GET PARTS =================
-    url = f"{SUPABASE_URL}/rest/v1/fixify_parts?select=*"
-
-    rows = make_supabase_request(url, method="GET")
-
-    return jsonify(rows if isinstance(rows, list) else [])
-
-
-# =========================
-# EMPLOYEE API
-# =========================
-@app.route('/api/employees', methods=['GET', 'POST', 'DELETE'])
-def handle_employees():
-
-    if (
-        not session.get('logged_in')
-        or session.get('role') != 'Chairman'
-    ):
-
-        return jsonify({
-            "error": "Unauthorized Access"
-        }), 401
-
-    # ================= CREATE EMPLOYEE =================
-    if request.method == 'POST':
-
-        data = request.json or {}
-
-        raw_password = str(
-            data.get('password', '')
-        ).strip()
-
-        hashed_password = generate_password_hash(raw_password)
-
-        payload = [{
-            "username": str(
-                data.get('username', '')
-            ).strip(),
-
-            "password": hashed_password,
-
-            "emp_name": str(
-                data.get('emp_name', '')
-            ).strip(),
-
-            "role": "Employee"
-        }]
-
-        url = f"{SUPABASE_URL}/rest/v1/fixify_users"
-
-        result = make_supabase_request(
-            url,
-            method="POST",
-            data=payload
-        )
-
-        if result is None:
-
-            return jsonify({
-                "success": False,
-                "message": "Employee create failed"
-            }), 500
-
-        return jsonify({
-            "success": True
-        })
-
-    # ================= DELETE EMPLOYEE =================
-    if request.method == 'DELETE':
-
-        username = request.args.get('username', '')
-
-        safe_username = urllib.parse.quote(username)
-
-        url = (
-            f"{SUPABASE_URL}/rest/v1/fixify_users"
-            f"?username=eq.{safe_username}"
-        )
-
-        make_supabase_request(url, method="DELETE")
-
-        return jsonify({
-            "success": True
-        })
-
-    # ================= GET EMPLOYEES =================
-    url = (
-        f"{SUPABASE_URL}/rest/v1/fixify_users"
-        f"?select=username,emp_name,role"
-    )
-
-    rows = make_supabase_request(url, method="GET")
-
-    return jsonify(rows if isinstance(rows, list) else [])
-
-
-# =========================
-# JOBS API
-# =========================
 @app.route('/api/jobs', methods=['GET', 'POST'])
-def handle_jobs():
+def jobs():
 
-    if not session.get('logged_in'):
+    if not session.get("logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
 
-        return jsonify({
-            "error": "Unauthorized"
-        }), 401
-
-    # ================= CREATE JOB =================
+    # CREATE JOB
     if request.method == 'POST':
 
         data = request.json or {}
 
-        job_id = f"FIX-{uuid.uuid4().hex[:6].upper()}"
+        count_url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=id"
 
-        today_str = datetime.now().strftime(
-            "%Y-%m-%d %H:%M"
-        )
+        all_jobs = make_supabase_request(count_url)
 
-        try:
-            estimate = float(
-                data.get('estimate', 0) or 0
-            )
-        except:
-            estimate = 0.0
+        next_num = 1
 
-        try:
-            advance = float(
-                data.get('advance', 0) or 0
-            )
-        except:
-            advance = 0.0
+        if isinstance(all_jobs, list):
+            next_num = len(all_jobs) + 1
+
+        job_id = f"FIX{next_num:04d}"
 
         payload = [{
             "id": job_id,
-
-            "category": str(
-                data.get('category', 'Mobile')
-            ),
-
-            "name": str(
-                data.get('name', '')
-            ),
-
-            "phone1": str(
-                data.get('phone1', '')
-            ),
-
-            "device": str(
-                data.get('device', '')
-            ),
-
-            "imei": str(
-                data.get('imei', '')
-            ),
-
-            "password": str(
-                data.get('password', '')
-            ),
-
-            "problem": str(
-                data.get('problem', '')
-            ),
-
-            "estimate": estimate,
-
-            "advance": advance,
-
-            "extra_cost": 0.0,
-
-            "discount": 0.0,
-
-            "spare_part_cost": 0.0,
-
-            "created_date": today_str,
-
+            "category": data.get("category"),
+            "name": data.get("name"),
+            "phone1": data.get("phone1"),
+            "device": data.get("device"),
+            "imei": data.get("imei"),
+            "password": data.get("password"),
+            "problem": data.get("problem"),
+            "estimate": float(data.get("estimate", 0)),
+            "advance": float(data.get("advance", 0)),
+            "extra_cost": 0,
+            "discount": 0,
+            "spare_part_cost": 0,
             "status": "Pending",
-
-            "created_by": str(
-                session.get('emp_name', 'Staff')
-            )
+            "created_by": session.get("emp_name"),
+            "created_date": datetime.now().strftime("%Y-%m-%d %H:%M")
         }]
 
-        url = f"{SUPABASE_URL}/rest/v1/fixify_jobs"
+        insert_url = f"{SUPABASE_URL}/rest/v1/fixify_jobs"
 
         result = make_supabase_request(
-            url,
+            insert_url,
             method="POST",
             data=payload
         )
 
         if result is None:
-
             return jsonify({
                 "success": False,
                 "message": "Database insert failed"
-            }), 500
+            })
 
         return jsonify({
             "success": True,
             "id": job_id
         })
 
-    # ================= GET JOBS =================
-    fetch_url = (
-        f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*"
-    )
+    # FETCH JOBS
+    fetch_url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*"
 
-    rows = make_supabase_request(
-        fetch_url,
-        method="GET"
-    )
+    jobs_data = make_supabase_request(fetch_url)
 
-    jobs = []
-
-    if isinstance(rows, list):
-
-        for r in rows:
-
-            try:
-                estimate = float(
-                    r.get('estimate', 0) or 0
-                )
-            except:
-                estimate = 0.0
-
-            try:
-                advance = float(
-                    r.get('advance', 0) or 0
-                )
-            except:
-                advance = 0.0
-
-            try:
-                extra_cost = float(
-                    r.get('extra_cost', 0) or 0
-                )
-            except:
-                extra_cost = 0.0
-
-            try:
-                discount = float(
-                    r.get('discount', 0) or 0
-                )
-            except:
-                discount = 0.0
-
-            try:
-                spare_part_cost = float(
-                    r.get('spare_part_cost', 0) or 0
-                )
-            except:
-                spare_part_cost = 0.0
-
-            jobs.append({
-
-                "id": str(r.get('id', '')),
-
-                "category": str(
-                    r.get('category', 'Mobile')
-                ),
-
-                "name": str(
-                    r.get('name', '')
-                ),
-
-                "phone1": str(
-                    r.get('phone1', '')
-                ),
-
-                "device": str(
-                    r.get('device', '')
-                ),
-
-                "problem": str(
-                    r.get('problem', '')
-                ),
-
-                "estimate": estimate,
-
-                "advance": advance,
-
-                "extra_cost": extra_cost,
-
-                "discount": discount,
-
-                "spare_part_cost": spare_part_cost,
-
-                "date": str(
-                    r.get('created_date', '')
-                ),
-
-                "status": str(
-                    r.get('status', 'Pending')
-                ),
-
-                "created_by": str(
-                    r.get('created_by', 'Staff')
-                )
-            })
-
-    jobs.sort(
-        key=lambda x: x['date'],
-        reverse=True
-    )
-
-    return jsonify(jobs)
+    return jsonify(jobs_data if isinstance(jobs_data, list) else [])
 
 
 # =========================
 # UPDATE STATUS
 # =========================
+
 @app.route('/api/jobs/update_status', methods=['POST'])
 def update_status():
 
-    if not session.get('logged_in'):
-
-        return jsonify({
-            "error": "Unauthorized"
-        }), 401
+    if not session.get("logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
 
     data = request.json or {}
 
-    safe_id = urllib.parse.quote(
-        str(data.get('id'))
-    )
+    job_id = data.get("id")
+    status = data.get("status")
 
-    url = (
-        f"{SUPABASE_URL}/rest/v1/fixify_jobs"
-        f"?id=eq.{safe_id}"
-    )
-
-    payload = {
-        "status": str(
-            data.get('status', 'Pending')
-        )
-    }
+    url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{job_id}"
 
     make_supabase_request(
         url,
         method="PATCH",
-        data=payload
+        data={"status": status}
     )
 
-    return jsonify({
-        "success": True
-    })
+    return jsonify({"success": True})
 
 
 # =========================
-# UPDATE PRICING
+# START APP
 # =========================
-@app.route('/api/jobs/update_pricing', methods=['POST'])
-def update_pricing():
 
-    if not session.get('logged_in'):
-
-        return jsonify({
-            "error": "Unauthorized"
-        }), 401
-
-    data = request.json or {}
-
-    safe_id = urllib.parse.quote(
-        str(data.get('id'))
-    )
-
-    url = (
-        f"{SUPABASE_URL}/rest/v1/fixify_jobs"
-        f"?id=eq.{safe_id}"
-    )
-
-    try:
-        extra_cost = float(
-            data.get('extra_cost', 0) or 0
-        )
-    except:
-        extra_cost = 0.0
-
-    try:
-        discount = float(
-            data.get('discount', 0) or 0
-        )
-    except:
-        discount = 0.0
-
-    try:
-        spare_part_cost = float(
-            data.get('spare_part_cost', 0) or 0
-        )
-    except:
-        spare_part_cost = 0.0
-
-    payload = {
-        "extra_cost": extra_cost,
-        "discount": discount,
-        "spare_part_cost": spare_part_cost
-    }
-
-    make_supabase_request(
-        url,
-        method="PATCH",
-        data=payload
-    )
-
-    return jsonify({
-        "success": True
-    })
-
-
-# =========================
-# MAIN
-# =========================
-if __name__ == '__main__':
-
-    app.run(
-        host='0.0.0.0',
-        port=int(
-            os.environ.get("PORT", 5000)
-        )
-    )
-```
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
