@@ -8,14 +8,12 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #cbd5e1; display: flex; height: 100vh; overflow: hidden; }
 
-        /* MULTI-USER LOGIN GATEWAY */
         .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070a12; display: flex; justify-content: center; align-items: center; z-index: 99999; }
         .login-box { background: #111827; border: 2px solid #1f2937; padding: 40px; border-radius: 16px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
         .login-box h2 { color: #f97316; margin-bottom: 5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .login-btn { background-color: #f97316; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 15px; font-size: 13px; }
         .login-btn:hover { background-color: #ea580c; }
 
-        /* Left Sidebar Layout Navigation Drawer */
         .sidebar { width: 265px; background-color: #111827; border-right: 1px solid #1f2937; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
         .brand-title { color: #f97316; font-size: 21px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #1f2937; padding-bottom: 15px; text-align: center; }
         .nav-section-title { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; margin-bottom: 5px; }
@@ -26,13 +24,11 @@
 
         .main-content { flex: 1; display: flex; flex-direction: column; background-color: #0b0f19; overflow: hidden; }
         
-        /* Top Navigation Header bar Ribbon */
         .navbar { height: 75px; background-color: #111827; border-bottom: 1px solid #1f2937; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; flex-shrink: 0; }
         .user-tag-badge { padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; }
         .role-chairman { background-color: rgba(249,115,22,0.15); border: 1px solid #f97316; color: #f97316; }
         .role-employee { background-color: rgba(59,130,246,0.15); border: 1px solid #3b82f6; color: #3b82f6; }
         
-        /* Dynamic Split Financial Board */
         .finance-badge-group { display: flex; gap: 12px; }
         .fbadge { padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 14px; border: 1px solid #1f2937; background: #0f172a; }
         .sales-badge { background-color: #0f172a; border: 1px solid #10b981; color: #10b981; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 15px; }
@@ -41,7 +37,6 @@
         .view-panel { display: none; }
         .view-panel.active { display: block; }
 
-        /* Top Analytical Counters Grid boxes */
         .counters-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
         .counter-card { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
         .counter-card.blue-card { border-left: 4px solid #3b82f6; }
@@ -87,7 +82,6 @@
 
         #print-deck { display: none; }
 
-        /* ==================== A4 PORTRAIT PRINT LAYOUT CUSTOM CORES ==================== */
         @media print {
             @page { size: A4 portrait; margin: 8mm 12mm; }
             body * { display: none !important; }
@@ -124,7 +118,8 @@
 </head>
 <body>
 
-    <div class="login-overlay" id="login-screen" style="display: {% if show_login %}flex{% else %}none{% endif %};">
+    <!-- SYSTEM LOGIN OVERLAY -->
+    <div class="login-overlay" id="login-screen" style="display: none;">
         <div class="login-box">
             <h2>Fixify Core Gateway</h2>
             <p style="text-transform: uppercase; font-size:11px; letter-spacing:0.5px; margin-top:3px;">Premium Multi-User Cloud Terminal Security</p>
@@ -140,6 +135,7 @@
         </div>
     </div>
 
+    <!-- Sidebar Navigation Menu Left side -->
     <div class="sidebar">
         <div>
             <div class="brand-title">Fixify Cloud</div>
@@ -157,6 +153,7 @@
         <div><button class="logout-btn" onclick="triggerSystemLogout()">🚪 Lock Terminal Account</button></div>
     </div>
 
+    <!-- Right Container Workspace -->
     <div class="main-content">
         <div class="navbar">
             <div id="navbar-user-display" class="user-tag-badge role-employee">💼 Loading session...</div>
@@ -170,6 +167,7 @@
         </div>
 
         <div class="view-body">
+            <!-- VIEW 1 -->
             <div id="counter-view" class="view-panel active">
                 <div class="counters-grid">
                     <div class="counter-card blue-card">
@@ -187,6 +185,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 2 -->
             <div id="form-view" class="view-panel">
                 <div class="panel-card">
                     <h3>📝 New Device Repairing Entry (Mobile / Laptop Counter)</h3>
@@ -213,6 +212,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 3 -->
             <div id="summary-view" class="view-panel">
                 <div class="panel-card">
                     <h3>Live Central Repairing Records Counter</h3>
@@ -234,6 +234,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 4 -->
             <div id="parts-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -258,6 +259,7 @@
                 </div>
             </div>
 
+            <!-- VIEW 5 -->
             <div id="employee-view" class="view-panel">
                 <div class="split-grid-2">
                     <div class="panel-card">
@@ -290,8 +292,8 @@
         let globalDatabase = [];
         let globalPartsList = [];
         let statusHistoryCache = {}; 
-        let CURRENT_USER_ROLE = "{{ user_role }}";
-        let CURRENT_USER_NAME = "{{ emp_name }}";
+        let CURRENT_USER_ROLE = "Employee";
+        let CURRENT_USER_NAME = "Staff";
 
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
@@ -322,6 +324,19 @@
             window.location.reload();
         }
 
+        async function checkActiveSession() {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if(data.logged_in) {
+                document.getElementById('login-screen').style.display = 'none';
+                CURRENT_USER_ROLE = data.role;
+                CURRENT_USER_NAME = data.emp_name;
+                bootstrapPortalEnvironment();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+            }
+        }
+
         function bootstrapPortalEnvironment() {
             const navBadge = document.getElementById('navbar-user-display');
             if(CURRENT_USER_ROLE === "Chairman") {
@@ -344,10 +359,6 @@
 
         async function reloadSystemData() {
             const res = await fetch('/api/jobs');
-            if(res.status === 401) {
-                document.getElementById('login-screen').style.display = 'flex';
-                return;
-            }
             globalDatabase = await res.json();
             populateSummaryTable(globalDatabase);
             computeStatsAndSales();
@@ -381,7 +392,7 @@
                         <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
                         <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
                         <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
-                        <td><strong>${job.device}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
+                        <td>mathbf{${job.device}}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
                         <td>
                             <div style="font-size:12px; line-height:1.4; min-width:160px;">
                                 <span style="font-weight:bold; color:#fff;">Bill: ₹${finalCustomerBill}</span> 
@@ -516,4 +527,71 @@
             if(confirm(`Delete ${username}?`)) { await fetch(`/api/employees?username=${username}`, { method: 'DELETE' }); fetchEmployeeList(); }
         }
 
-        document.getElementById('jobsheet-
+        document.getElementById('jobsheet-entry-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = { category: document.getElementById('ins-category').value, device: document.getElementById('ins-device').value, imei: document.getElementById('ins-imei').value, name: document.getElementById('ins-name').value, phone1: document.getElementById('ins-phone').value, password: document.getElementById('ins-password').value, problem: document.getElementById('ins-problem').value, estimate: parseFloat(document.getElementById('ins-estimate').value || 0), advance: parseFloat(document.getElementById('ins-advance').value || 0) };
+            
+            const res = await fetch('/api/jobs', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
+            const out = await res.json();
+            if(out.success) { 
+                await reloadSystemData(); 
+                document.getElementById('jobsheet-entry-form').reset(); 
+                switchView('summary-view', document.querySelectorAll('.nav-btn')[2]); 
+                setTimeout(() => { executePortraitPrint(out.id); }, 600); 
+            }
+        });
+
+        function executePortraitPrint(id) {
+            const job = globalDatabase.find(j => j.id === id); if (!job) return;
+            const printCanvas = document.getElementById('print-deck'); printCanvas.innerHTML = '';
+            const copies = ["Customer Copy", "Office Copy"];
+            const est = parseFloat(job.estimate || 0); const adv = parseFloat(job.advance || 0);
+            const ext = parseFloat(job.extra_cost || 0); const dsc = parseFloat(job.discount || 0);
+            const totalAmt = est + ext; const balance = totalAmt - adv - dsc;
+
+            copies.forEach((copyName) => {
+                printCanvas.innerHTML += `
+                    <div class="print-invoice-block">
+                        <div class="print-header-row">
+                            <div><div class="print-title-main">FIXIFY® PREMIUM DIGITAL LAB</div><div class="print-sub-main">Nagpur's Leading Smartphone Core Lab<br>Pipla Road, Nagpur | Phone: +91 9890XXXXXX</div></div>
+                            <div class="copy-tag-badge">${copyName}</div>
+                        </div>
+                        <div class="print-info-grid">
+                            <div><strong>Order Tracking ID:</strong> ${job.id}</div><div><strong>Inward Date/Time:</strong> ${job.date}</div>
+                            <div><strong>Customer Name:</strong> ${job.name}</div><div><strong>Registered Mobile:</strong> +91 ${job.phone1}</div>
+                            <div><strong>Device Model:</strong> [${job.category.toUpperCase()}] ${job.device}</div><div><strong>Device Lock Pass:</strong> ${job.password || 'None'}</div>
+                        </div>
+                        <table class="ptable">
+                            <thead><tr><th>Job Work Description / Fault Problem</th><th style="width: 150px; text-align: right;">Amount Charges</th></tr></thead>
+                            <tbody>
+                                <tr><td style="font-weight: bold;">${job.problem}</td><td style="text-align: right; font-weight: bold;">₹${est.toFixed(2)}</td></tr>
+                                ${ext > 0 ? `<tr><td style="text-align: right; font-size:11px;">Additional Cost:</td><td style="text-align: right; font-weight:bold;">+ ₹${ext.toFixed(2)}</td></tr>` : ''}
+                                ${dsc > 0 ? `<tr><td style="text-align: right; font-size:11px; color:red;">Discount:</td><td style="text-align: right; font-weight:bold; color:red;">- ₹${dsc.toFixed(2)}</td></tr>` : ''}
+                            </tbody>
+                        </table>
+                        <div class="box-3line">
+                            <div class="cell-3line"><div>Gross Total</div><div>₹${totalAmt.toFixed(2)}</div></div>
+                            <div class="cell-3line"><div>Advance Paid</div><div style="color: green;">₹${adv.toFixed(2)}</div></div>
+                            <div class="cell-3line"><div>Net Balance Cash Due</div><div style="font-size:18px; font-weight:900;">₹${balance.toFixed(2)}</div></div>
+                        </div>
+                        <div class="print-footer-terms">
+                            <div class="terms-p"><strong>Terms:</strong> 1. No warranty on parts. 2. Items left over 30 days are subject to scrap disposal.</div>
+                            <div class="matrix-9box"><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div><div class="box-unit"></div></div>
+                        </div>
+                        <div class="print-signatures"><div class="sig-line">Customer Signature</div><div class="sig-line" style="font-size:10px; font-style:italic;">Staff: ${job.created_by}</div><div class="sig-line">Authorized Sign (Chairman)</div></div>
+                    </div>`;
+            });
+            window.print();
+        }
+
+        document.getElementById('search-box').addEventListener('input', () => populateSummaryTable(globalDatabase));
+        document.getElementById('filter-status-box').addEventListener('change', () => populateSummaryTable(globalDatabase));
+        
+        window.onload = checkActiveSession;
+    </script>
+</body>
+</html>
