@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIXIFY TECH REPAIR v15.5</title>
+    <title>FIXIFY TECH REPAIR v15.0</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0f19; color: #cbd5e1; display: flex; height: 100vh; overflow: hidden; }
@@ -363,64 +363,67 @@
             const filter = document.getElementById('filter-status-box').value;
             const isChairman = (CURRENT_USER_ROLE === "Chairman");
 
-            jobs.forEach(job => {
-                const matchSearch = job.id.toLowerCase().includes(txt) || job.name.toLowerCase().includes(txt) || job.phone1.includes(txt);
-                const matchStatus = filter === 'ALL' || job.status === filter;
+            if (Array.isArray(jobs)) {
+                jobs.forEach(job => {
+                    const matchSearch = job.id.toLowerCase().includes(txt) || job.name.toLowerCase().includes(txt) || job.phone1.includes(txt);
+                    const matchStatus = filter === 'ALL' || job.status === filter;
 
-                if (matchSearch && matchStatus) {
-                    const tr = document.createElement('tr');
-                    const cStyle = job.status.replace(" ", "-");
-                    const finalCustomerBill = job.estimate + job.extra_cost - job.discount;
-                    const spareCost = job.spare_part_cost || 0;
-                    const entryProfit = finalCustomerBill - spareCost;
+                    if (matchSearch && matchStatus) {
+                        const tr = document.createElement('tr');
+                        const cStyle = job.status.replace(" ", "-");
+                        const finalCustomerBill = job.estimate + job.extra_cost - job.discount;
+                        const spareCost = job.spare_part_cost || 0;
+                        const entryProfit = finalCustomerBill - spareCost;
 
-                    let historyLabel = '';
-                    if(statusHistoryCache[job.id] === 'TriggeredAlert') {
-                        historyLabel = `<br><span style="background:#ef4444; color:white; padding:2px 4px; font-size:10px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:4px;">⚠️ History: Delivered -> Undelivered</span>`;
-                    }
+                        let historyLabel = '';
+                        if(statusHistoryCache[job.id] === 'TriggeredAlert') {
+                            historyLabel = `<br><span style="background:#ef4444; color:white; padding:2px 4px; font-size:10px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:4px;">⚠️ History: Delivered -> Undelivered</span>`;
+                        }
 
-                    tr.innerHTML = `
-                        <td style="font-weight:bold; color:#f97316; font-size:14px;">${job.id}</td>
-                        <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
-                        <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
-                        <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
-                        <td><strong>${job.device}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
-                        <td>
-                            <div style="font-size:12px; line-height:1.4; min-width:160px;">
-                                <span style="font-weight:bold; color:#fff;">Bill: ₹${finalCustomerBill}</span> 
-                                ${isChairman ? `<br><span style="color:#ef4444; font-size:11px;">Cost (Saman): </span><input type="number" style="width:55px; background:#0b0f19; border:1px solid #1f2937; color:#ef4444; font-weight:bold;" value="${spareCost}" id="tx-scost-${job.id}">` : ''}
-                                ${isChairman && job.status === 'Delivered' ? `<br><span style="color:#10b981; font-weight:bold;">Profit: ₹${entryProfit}</span>` : ''}
-                                <div style="margin-top:4px; font-size:10px; color:#6b7280; display: ${isChairman ? 'block' : 'none'};">
-                                    Est: ${job.estimate} | Ext: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.extra_cost}" id="tx-ext-${job.id}"> | Disc: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.discount}" id="tx-disc-${job.id}">
+                        tr.innerHTML = `
+                            <td style="font-weight:bold; color:#f97316; font-size:14px;">${job.id}</td>
+                            <td style="font-size:11px; color:#9ca3af;">${job.date}</td>
+                            <td><strong>${job.name}</strong><br><small style="color:#6b7280;">${job.phone1}</small></td>
+                            <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category}</span></td>
+                            <td><strong>${job.device}</strong><br><small style="color:#9ca3af;">${job.problem}</small></td>
+                            <td>
+                                <div style="font-size:12px; line-height:1.4; min-width:160px;">
+                                    <span style="font-weight:bold; color:#fff;">Bill: ₹${finalCustomerBill}</span> 
+                                    ${isChairman ? `<br><span style="color:#ef4444; font-size:11px;">Cost (Saman): </span><input type="number" style="width:55px; background:#0b0f19; border:1px solid #1f2937; color:#ef4444; font-weight:bold;" value="${spareCost}" id="tx-scost-${job.id}">` : ''}
+                                    ${isChairman && job.status === 'Delivered' ? `<br><span style="color:#10b981; font-weight:bold;">Profit: ₹${entryProfit}</span>` : ''}
+                                    <div style="margin-top:4px; font-size:10px; color:#6b7280; display: ${isChairman ? 'block' : 'none'};">
+                                        Est: ${job.estimate} | Ext: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.extra_cost}" id="tx-ext-${job.id}"> | Disc: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.discount}" id="tx-disc-${job.id}">
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td style="font-weight:600; font-size:11px; color:#9ca3af;">👤 ${job.created_by || 'Staff'}</td>
-                        <td>
-                            <select class="status-dropdown status-${cStyle}" onchange="modifyStatus('${job.id}', this.value, '${job.status}')">
-                                <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
-                                <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
-                                <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
-                                <option value="Ready" ${job.status==='Ready'?'selected':''}>Ready</option>
-                                <option value="Delivered" ${job.status==='Delivered'?'selected':''}>Delivered</option>
-                                <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
-                                <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
-                            </select>
-                            ${historyLabel}
-                        </td>
-                        <td>
-                            <div class="action-flex">
-                                ${isChairman ? `<button class="tbl-btn-save" onclick="triggerPricingSave('${job.id}')">💾 Save</button>` : ''}
-                                <button class="tbl-btn-print" onclick="executePortraitPrint('${job.id}')">🖨️ Bill</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            });
+                            </td>
+                            <td style="font-weight:600; font-size:11px; color:#9ca3af;">👤 ${job.created_by || 'Staff'}</td>
+                            <td>
+                                <select class="status-dropdown status-${cStyle}" onchange="modifyStatus('${job.id}', this.value, '${job.status}')">
+                                    <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
+                                    <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
+                                    <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
+                                    <option value="Ready" ${job.status==='Ready'?'selected':''}>Ready</option>
+                                    <option value="Delivered" ${job.status==='Delivered'?'selected':''}>Delivered</option>
+                                    <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
+                                    <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
+                                </select>
+                                ${historyLabel}
+                            </td>
+                            <td>
+                                <div class="action-flex">
+                                    ${isChairman ? `<button class="tbl-btn-save" onclick="triggerPricingSave('${job.id}')">💾 Save</button>` : ''}
+                                    <button class="tbl-btn-print" onclick="executePortraitPrint('${job.id}')">🖨️ Bill</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                });
+            }
         }
 
         function computeStatsAndSales() {
+            if (!Array.isArray(globalDatabase)) return;
             document.getElementById('cnt-m-ready').innerText = globalDatabase.filter(j => j.category === 'Mobile' && j.status === 'Ready').length;
             document.getElementById('cnt-l-pending').innerText = globalDatabase.filter(j => j.category === 'Laptop' && j.status === 'Pending').length;
             document.getElementById('cnt-total-delv').innerText = globalDatabase.filter(j => j.status === 'Delivered').length;
@@ -487,24 +490,17 @@
                 model_compatibility: document.getElementById('part-model').value.trim(), 
                 wholesale_cost: parseFloat(document.getElementById('part-cost').value || 0) 
             };
-            
-            const res = await fetch('/api/parts', { 
+            await fetch('/api/parts', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify(payload) 
             });
-            
-            if(res.ok) {
-                document.getElementById('spare-part-form').reset(); 
-                await fetchPartsList();
-            }
+            document.getElementById('spare-part-form').reset(); 
+            fetchPartsList();
         }
 
         async function deleteSparePartRecord(id) {
-            if(confirm("Delete part record?")) { 
-                await fetch(`/api/parts?id=${id}`, { method: 'DELETE' }); 
-                fetchPartsList(); 
-            }
+            if(confirm("Delete part record?")) { await fetch(`/api/parts?id=${id}`, { method: 'DELETE' }); fetchPartsList(); }
         }
 
         async function fetchEmployeeList() {
@@ -559,6 +555,7 @@
         }
 
         function executePortraitPrint(id) {
+            if (!Array.isArray(globalDatabase)) return;
             const job = globalDatabase.find(j => j.id === id); if (!job) return;
             const printCanvas = document.getElementById('print-deck'); printCanvas.innerHTML = '';
             const copies = ["Customer Copy", "Office Copy"];
