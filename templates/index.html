@@ -261,17 +261,16 @@
             
             if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
-            // AUTO-ALIGNED DATA SCHEMAS:
             const payload={
-                category:document.getElementById("deviceType").value, 
-                device:c_model,
-                imei:document.getElementById("deviceIMEI").value, 
-                password:document.getElementById("devicePassword").value, # Fixed target mapping to DB
-                problem:c_prob, 
-                estimate:parseFloat(document.getElementById("estimate").value || 0),
-                advance:parseFloat(document.getElementById("advance").value || 0), 
-                name:c_name, 
-                phone1:c_phone
+                category: document.getElementById("deviceType").value, 
+                device: c_model,
+                imei: document.getElementById("deviceIMEI").value, 
+                password: document.getElementById("devicePassword").value,
+                problem: c_prob, 
+                estimate: parseFloat(document.getElementById("estimate").value || 0),
+                advance: parseFloat(document.getElementById("advance").value || 0), 
+                name: c_name, 
+                phone1: c_phone
             };
             
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
