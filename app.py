@@ -6,9 +6,6 @@ import os
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "fixify_secure_key_2026"
 
-# =========================
-# SUPABASE SETTINGS
-# =========================
 SUPABASE_URL = "https://wgkdrknsynjzipoynjof.supabase.co"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
@@ -19,29 +16,29 @@ HEADERS = {
 }
 
 ADMIN_USER = "admin"
-ADMIN_PASS = "fixify#0821"
 
-# =========================
-# HOME ROUTES
-# =========================
+def get_admin_pass():
+    # Pehle DB se password check karega, agar nahi mila toh default "fixify#0821" rakhega
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
+        res = requests.get(url, headers=HEADERS)
+        if res.status_code == 200 and len(res.json()) > 0:
+            return res.json()[0]["password"]
+    except:
+        pass
+    return "fixify#0821"
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/health")
-def health():
-    return "Fixify Server Running"
-
-# =========================
-# LOGIN ENGINE
-# =========================
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
-    if username == ADMIN_USER and password == ADMIN_PASS:
+    if username == ADMIN_USER and password == get_admin_pass():
         session.update({"logged_in": True, "role": "Chairman", "name": "Chairman"})
         return jsonify({"success": True, "role": "Chairman", "name": "Chairman"})
 
@@ -50,11 +47,11 @@ def login():
         res = requests.get(url, headers=HEADERS)
         if res.status_code == 200:
             users = res.json()
-            if len(users) > 0 and users[0]["password"] == password:
+            if len(users) > 0 and users[0]["password"] == password and users[0]["role"] != "Chairman":
                 session.update({"logged_in": True, "role": "Employee", "name": users[0]["emp_name"]})
                 return jsonify({"success": True, "role": "Employee", "name": users[0]["emp_name"]})
     except Exception as e:
-        print("LOGIN DB ERROR:", str(e))
+        print("LOGIN ERROR:", str(e))
 
     return jsonify({"success": False, "message": "Wrong Username or Password"})
 
@@ -69,9 +66,26 @@ def logout():
     session.clear()
     return jsonify({"success": True})
 
-# =========================
-# EMPLOYEE MANAGEMENT
-# =========================
+@app.route("/api/update_chairman_pass", methods=["POST"])
+def update_chairman_pass():
+    if session.get("role") != "Chairman":
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.json
+    new_pass = data.get("new_password", "").strip()
+    
+    # DB me check karenge ki admin row h ya nahi, h toh patch nahi to post
+    check_url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
+    res = requests.get(check_url, headers=HEADERS)
+    
+    if res.status_code == 200 and len(res.json()) > 0:
+        url = f"{SUPABASE_URL}/rest/v1/fixify_users?username=eq.admin"
+        r = requests.patch(url, headers=HEADERS, json={"password": new_pass})
+    else:
+        url = f"{SUPABASE_URL}/rest/v1/fixify_users"
+        r = requests.post(url, headers=HEADERS, json={"username": "admin", "password": new_pass, "emp_name": "Chairman", "role": "Chairman"})
+        
+    return jsonify({"success": r.status_code in [200, 201, 204]})
+
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
 def employees():
     if session.get("role") != "Chairman":
@@ -89,11 +103,8 @@ def employees():
         return jsonify({"success": True})
 
     res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_users?select=*", headers=HEADERS)
-    return jsonify(res.json() if res.status_code == 200 else [])
+    return jsonify([u for u in res.json() if u['username'] != 'admin'] if res.status_code == 200 else [])
 
-# =========================
-# JOBS CARD ENGINE
-# =========================
 @app.route("/api/jobs", methods=["GET", "POST"])
 def jobs():
     if not session.get("logged_in"):
@@ -119,34 +130,23 @@ def jobs():
     res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=*", headers=HEADERS)
     return jsonify(res.json() if res.status_code == 200 else [])
 
-# =========================
-# OPERATIONAL STATUS UPDATES
-# =========================
 @app.route("/api/update_status", methods=["POST"])
 def update_status():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
-
     data = request.json
     res = requests.patch(f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{data['id']}", headers=HEADERS, json={"status": data["status"]})
     return jsonify({"success": res.status_code in [200, 204]})
 
-# =========================
-# PRICING MODERATION
-# =========================
 @app.route("/api/update_pricing", methods=["POST"])
 def update_pricing():
     if session.get("role") != "Chairman":
         return jsonify({"error": "Unauthorized"}), 401
-
     data = request.json
     payload = {"extra_charge": float(data["extra_charge"]), "discount": float(data["discount"]), "spare_cost": float(data["spare_cost"])}
     res = requests.patch(f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{data['id']}", headers=HEADERS, json=payload)
     return jsonify({"success": res.status_code in [200, 204]})
 
-# =========================
-# SPARE PARTS LEDGER
-# =========================
 @app.route("/api/parts", methods=["GET", "POST", "DELETE"])
 def parts():
     if not session.get("logged_in"):
