@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify, session
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# SUPABASE CENTRAL CREDENTIALS
+# SUPABASE GATEWAY CREDENTIALS
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
@@ -148,8 +148,6 @@ def handle_jobs():
         
     if request.method == 'POST':
         data = request.json or {}
-        
-        # Safe count handling block
         next_num = 1
         try:
             count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
@@ -185,28 +183,21 @@ def handle_jobs():
         make_supabase_request(insert_url, method="POST", data=payload)
         return jsonify({"success": True, "id": next_id})
         
-    # GET Method Engine
     fetch_url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
     rows = make_supabase_request(fetch_url, method="GET")
     jobs = []
     if isinstance(rows, list):
         for r in rows:
             jobs.append({
-                "id": str(r.get('id', '')),
-                "category": str(r.get('category', 'Mobile')),
-                "name": str(r.get('name', '')),
-                "phone1": str(r.get('phone1', '')),
-                "device": str(r.get('device', '')),
-                "problem": str(r.get('problem', '')),
-                "estimate": float(r.get('estimate', 0) or 0),
-                "advance": float(r.get('advance', 0) or 0),
-                "extra_cost": float(r.get('extra_cost', 0) or 0),
-                "discount": float(r.get('discount', 0) or 0),
+                "id": str(r.get('id', '')), "category": str(r.get('category', 'Mobile')), "name": str(r.get('name', '')),
+                "phone1": str(r.get('phone1', '')), "device": str(r.get('device', '')), "problem": str(r.get('problem', '')),
+                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0),
+                "extra_cost": float(r.get('extra_cost', 0) or 0), "discount": float(r.get('discount', 0) or 0),
                 "spare_part_cost": float(r.get('spare_part_cost', 0) or 0),
-                "date": str(r.get('created_date', '')),
-                "status": str(r.get('status', 'Pending')),
+                "date": str(r.get('created_date', '')), "status": str(r.get('status', 'Pending')),
                 "created_by": str(r.get('created_by', 'Staff'))
             })
+    jobs.sort(key=lambda x: x['id'], reverse=True)
     return jsonify(jobs)
 
 @app.route('/api/jobs/update_status', methods=['POST'])
