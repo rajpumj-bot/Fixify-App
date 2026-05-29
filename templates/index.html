@@ -1,446 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIXIFY TECH REPAIR</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+        body { background:#0b1120; color:white; display:flex; height:100vh; overflow:hidden; }
+        
+        /* LOGIN SCREEN */
+        #loginScreen { position:fixed; top:0; left:0; width:100%; height:100%; background:#000000ee; display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .login-box { width:350px; background:#111827; padding:30px; border-radius:15px; border:2px solid #f97316; }
+        .login-box h1 { text-align:center; color:#f97316; margin-bottom:20px; }
+        
+        .input { width:100%; padding:12px; margin-bottom:12px; background:#1f2937; border:1px solid #374151; border-radius:8px; color:white; }
+        .input:focus { outline:1px solid #f97316; }
+        .btn { width:100%; padding:12px; background:#f97316; border:none; border-radius:8px; font-weight:bold; color:white; cursor:pointer; text-transform:uppercase; }
+        .btn:hover { background:#ea580c; }
+        .tbl-btn { padding:6px 12px; background:#10b981; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; }
+        .tbl-btn:hover { background:#059669; }
 
-<title>FIXIFY TECH REPAIR</title>
+        /* SIDEBAR */
+        .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
+        .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
+        .menu-btn { width:100%; padding:14px; margin-bottom:10px; background:#1f2937; border:none; border-radius:8px; color:white; text-align:left; cursor:pointer; font-size:15px; display:flex; align-items:center; gap:10px; }
+        .menu-btn:hover, .menu-btn.active { background:#f97316; color:white; }
+        .logout-btn { background:#27272a; color:#f43f5e; border:1px solid #3f3f46; }
+        .logout-btn:hover { background:#e11d48; color:white; }
 
-<style>
+        /* MAIN CONTENT */
+        .main { flex:1; padding:20px; overflow-y:auto; }
+        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #1e293b; }
+        .user-role { background:rgba(249,115,22,0.2); border:1px solid #f97316; color:#f97316; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:14px; }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
+        /* PANELS */
+        .view-panel { display:none; }
+        .view-panel.active { display:block; }
+        .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:25px; }
+        .stat-box { background:#111827; padding:20px; border-radius:12px; border-left:5px solid #f97316; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.3); }
+        .stat-box h2 { font-size:32px; margin-top:10px; color:#f97316; }
+        .card { background:#111827; padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid #1e293b; }
+        .card h2 { color:#f97316; margin-bottom:20px; font-size:20px; }
 
-body{
-background:#0f172a;
-color:white;
-display:flex;
-height:100vh;
-overflow:hidden;
-}
-
-.sidebar{
-width:250px;
-background:#111827;
-padding:20px;
-border-right:2px solid #f97316;
-}
-
-.logo{
-font-size:28px;
-font-weight:bold;
-color:#f97316;
-margin-bottom:30px;
-text-align:center;
-}
-
-.menu-btn{
-width:100%;
-padding:14px;
-margin-bottom:10px;
-background:#1f2937;
-border:none;
-border-radius:8px;
-color:white;
-font-size:15px;
-cursor:pointer;
-text-align:left;
-}
-
-.menu-btn:hover{
-background:#f97316;
-}
-
-.main{
-flex:1;
-padding:20px;
-overflow:auto;
-}
-
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.card{
-background:#111827;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-border:1px solid #374151;
-}
-
-.card h2{
-margin-bottom:15px;
-color:#f97316;
-}
-
-.input{
-width:100%;
-padding:12px;
-margin-bottom:12px;
-background:#1f2937;
-border:none;
-border-radius:8px;
-color:white;
-}
-
-.btn{
-background:#f97316;
-color:white;
-padding:12px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-width:100%;
-}
-
-.btn:hover{
-background:#ea580c;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-table th{
-background:#f97316;
-padding:12px;
-text-align:left;
-}
-
-table td{
-padding:12px;
-border-bottom:1px solid #374151;
-}
-
-.login-screen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#000000dd;
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:999;
-}
-
-.login-box{
-width:350px;
-background:#111827;
-padding:30px;
-border-radius:15px;
-border:2px solid #f97316;
-}
-
-.login-title{
-text-align:center;
-font-size:28px;
-margin-bottom:20px;
-color:#f97316;
-font-weight:bold;
-}
-
-.stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-margin-bottom:20px;
-}
-
-.stat-box{
-background:#111827;
-padding:20px;
-border-radius:12px;
-text-align:center;
-border-left:5px solid #f97316;
-}
-
-.stat-box h3{
-font-size:30px;
-margin-top:10px;
-}
-
-@media(max-width:900px){
-
-body{
-flex-direction:column;
-}
-
-.sidebar{
-width:100%;
-display:flex;
-overflow:auto;
-gap:10px;
-}
-
-.menu-btn{
-min-width:200px;
-}
-
-.stats{
-grid-template-columns:1fr;
-}
-
-}
-
-</style>
-
+        /* TABLE GRID */
+        .table-container { overflow-x:auto; background:#111827; border-radius:8px; border:1px solid #1e293b; margin-top:15px; }
+        table { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+        th { background:#f97316; color:white; padding:12px; font-weight:bold; }
+        td { padding:12px; border-bottom:1px solid #1e293b; vertical-align:middle; }
+        .search-bar { display:flex; gap:15px; margin-bottom:20px; }
+        
+        /* STATUS COLOR TAGS */
+        .status-dropdown { padding:6px 10px; border-radius:6px; font-size:12px; font-weight:bold; color:white; border:none; cursor:pointer; }
+        .st-Pending { background:#991b1b; } .st-Repairing { background:#92400e; }
+        .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
+        .st-Delivered { background:#166534; } .st-Not-Repair { background:#7f1d1d; }
+        .st-Undelivered { background:#6b21a8; }
+    </style>
 </head>
-
 <body>
 
-<!-- LOGIN SCREEN -->
-
-<div class="login-screen" id="loginScreen">
-
-<div class="login-box">
-
-<div class="login-title">
-FIXIFY LOGIN
-</div>
-
-<input 
-type="text" 
-id="username" 
-class="input" 
-placeholder="Username">
-
-<input 
-type="password" 
-id="password" 
-class="input" 
-placeholder="Password">
-
-<button class="btn" onclick="login()">
-LOGIN
-</button>
-
-</div>
-
-</div>
-
-<!-- SIDEBAR -->
-
-<div class="sidebar">
-
-<div class="logo">
-FIXIFY
-</div>
-
-<button class="menu-btn">
-📋 Dashboard
-</button>
-
-<button class="menu-btn">
-🛠️ Create Jobcard
-</button>
-
-<button class="menu-btn">
-📦 Spare Parts
-</button>
-
-<button class="menu-btn">
-👨‍💼 Employees
-</button>
-
-<button class="menu-btn">
-💰 Profit Report
-</button>
-
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
-
-<div class="topbar">
-
-<h1>
-Mobile & Laptop Repair System
-</h1>
-
-<div style="color:#f97316;font-weight:bold;">
-Chairman Panel
-</div>
-
-</div>
-
-<!-- STATS -->
-
-<div class="stats">
-
-<div class="stat-box">
-Pending
-<h3>0</h3>
-</div>
-
-<div class="stat-box">
-Ready
-<h3>0</h3>
-</div>
-
-<div class="stat-box">
-Delivered
-<h3>0</h3>
-</div>
-
-</div>
-
-<!-- CREATE JOBCARD -->
-
-<div class="card">
-
-<h2>Create Repair Jobcard</h2>
-
-<input 
-type="text" 
-class="input" 
-placeholder="Customer Name">
-
-<input 
-type="text" 
-class="input" 
-placeholder="Phone Number">
-
-<select class="input">
-<option>Mobile</option>
-<option>Laptop</option>
-</select>
-
-<input 
-type="text" 
-class="input" 
-placeholder="Device Model">
-
-<input 
-type="text" 
-class="input" 
-placeholder="IMEI / Serial Number">
-
-<input 
-type="text" 
-class="input" 
-placeholder="PIN / Pattern Lock">
-
-<input 
-type="text" 
-class="input" 
-placeholder="Problem">
-
-<input 
-type="number" 
-class="input" 
-placeholder="Estimate Amount">
-
-<input 
-type="number" 
-class="input" 
-placeholder="Advance Payment">
-
-<button class="btn">
-SAVE JOBCARD
-</button>
-
-</div>
-
-<!-- TABLE -->
-
-<div class="card">
-
-<h2>Repair Records</h2>
-
-<table>
-
-<thead>
-
-<tr>
-<th>ID</th>
-<th>Customer</th>
-<th>Device</th>
-<th>Status</th>
-<th>Amount</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-<td>FIX001</td>
-<td>Rahul</td>
-<td>iPhone 13</td>
-<td>Pending</td>
-<td>₹2500</td>
-</tr>
-
-<tr>
-<td>FIX002</td>
-<td>Aman</td>
-<td>HP Laptop</td>
-<td>Ready</td>
-<td>₹4500</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<script>
-
-async function login(){
-
-let user = document.getElementById("username").value;
-let pass = document.getElementById("password").value;
-
-const res = await fetch("/api/login",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-username:user,
-password:pass
-})
-
-});
-
-const data = await res.json();
-
-if(data.success){
-
-document.getElementById("loginScreen").style.display="none";
-
-alert("Login Success");
-
-}else{
-
-alert(data.message || "Wrong Username Password");
-
-}
-
-}
-
-</script>
-
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>FIXIFY LOGIN</h1>
+            <input type="text" id="username" class="input" placeholder="Username">
+            <input type="password" id="password" class="input" placeholder="Password">
+            <button class="btn" onclick="login()">Sign In</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div>
+            <div class="logo">FIXIFY</div>
+            <button class="menu-btn active" onclick="showSection('dashboard', this)">📋 Dashboard</button>
+            <button class="menu-btn" onclick="showSection('jobcard', this)">🛠️ Create Jobcard</button>
+            <button class="menu-btn" onclick="showSection('repairs', this)">📱 Total Repairing</button>
+            <button class="menu-btn" id="parts-menu" onclick="showSection('parts', this)">📦 Spare Parts</button>
+            <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">👨‍💼 Employees</button>
+        </div>
+        <button class="menu-btn logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <h1 id="mainTitle">Mobile & Laptop Repair System</h1>
+            <div class="user-role" id="roleBox">Session Terminal</div>
+        </div>
+
+        <div id="dashboardSection" class="view-panel active">
+            <div class="stats">
+                <div class="stat-box">Pending<h2 id="pendingCount">0</h2></div>
+                <div class="stat-box">Repairing<h2 id="repairingCount">0</h2></div>
+                <div class="stat-box">Testing<h2 id="testingCount">0</h2></div>
+                <div class="stat-box">Ready<h2 id="readyCount">0</h2></div>
+                <div class="stat-box">Delivered<h2 id="deliveredCount">0</h2></div>
+            </div>
+            
+            <div class="card" id="profitCard" style="display:none;">
+                <h2>📈 Financial Status Ledger (Net Profit Engine)</h2>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; text-align:center;">
+                    <div style="background:#1e293b; padding:15px; border-radius:8px;"><p style="color:#9ca3af; font-size:12px;">GROSS REVENUE</p><h3 id="lbl-revenue" style="color:#10b981; font-size:24px; margin-top:5px;">₹0</h3></div>
+                    <div style="background:#1e293b; padding:15px; border-radius:8px;"><p style="color:#9ca3af; font-size:12px;">SPARE PARTS COST</p><h3 id="lbl-expenses" style="color:#ef4444; font-size:24px; margin-top:5px;">₹0</h3></div>
+                    <div style="background:#1e293b; padding:15px; border-radius:8px; border:1px solid #10b981;"><p style="color:#9ca3af; font-size:12px;">NET PURE PROFIT</p><h3 id="lbl-profit" style="color:#0ae093; font-size:24px; font-weight:bold; margin-top:5px;">₹0</h3></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card view-panel" id="jobcardSection">
+            <h2>Create Repair Jobcard Entry</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <input type="text" id="customerName" class="input" placeholder="Customer Name *">
+                <input type="text" id="customerPhone" class="input" placeholder="10-Digit Phone Number *">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">
+                <select id="deviceType" class="input"><option value="Mobile">Mobile Phone</option><option value="Laptop">Laptop Core</option></select>
+                <input type="text" id="deviceModel" class="input" placeholder="Device Model Name *">
+                <input type="text" id="deviceIMEI" class="input" placeholder="IMEI / Serial Specs">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">
+                <input type="text" id="devicePassword" class="input" placeholder="PIN / Pattern Screen Lock">
+                <input type="number" id="estimate" class="input" placeholder="Estimate Fixing Cost (₹) *">
+                <input type="number" id="advance" class="input" placeholder="Advance Cash Paid (₹) *">
+            </div>
+            <input type="text" id="problem" class="input" placeholder="Problem Details / Fault Summary *">
+            <button class="btn" style="margin-top:10px;" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
+        </div>
+
+        <div class="card view-panel" id="repairsSection">
+            <h2>Live Repair Tracking Ledger</h2>
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="input" oninput="renderJobs()" placeholder="Search by Client Name, Phone, Job ID, or Date...">
+                <select id="statusFilter" class="input" style="max-width:200px;" onchange="renderJobs()"><option value="">All Active Status</option><option>Pending</option><option>Repairing</option><option>Testing</option><option>Ready</option><option>Delivered</option><option>Not Repair</option><option>Undelivered</option></select>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Job ID</th><th>Client Data</th><th>Device Configuration</th><th>Operation Status</th><th>Gross Quote</th><th>Deposit</th><th>Discount</th><th>Markup/Extra</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="repairTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="partsSection" class="view-panel">
+            <div style="display:grid; grid-template-columns:320px 1fr; gap:20px;">
+                <div class="card" style="height:fit-content;">
+                    <h2>📦 Append Spare stock</h2>
+                    <input type="text" id="p-name" class="input" placeholder="Part Specification">
+                    <input type="text" id="p-model" class="input" placeholder="Compatible Models">
+                    <input type="number" id="p-price" class="input" placeholder="Wholesale Base Price (₹)">
+                    <button class="btn" onclick="savePart()">Add To Ledger</button>
+                </div>
+                <div class="card">
+                    <h2>Current Component Rate Sheets</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Part Details</th><th>Compatibility</th><th>Rate Cost</th><th>Timestamp</th><th>Remove</th></tr></thead>
+                            <tbody id="partsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="employeesSection" class="view-panel">
+            <div style="display:grid; grid-template-columns:320px 1fr; gap:20px;">
+                <div class="card" style="height:fit-content;">
+                    <h2>👥 Create Staff Token</h2>
+                    <input type="text" id="e-name" class="input" placeholder="Staff Name">
+                    <input type="text" id="e-user" class="input" placeholder="Login Username Unique">
+                    <input type="password" id="e-pass" class="input" placeholder="System Security Token">
+                    <button class="btn" onclick="saveEmployee()">Generate Account</button>
+                </div>
+                <div class="card">
+                    <h2>Active Workshop Operators</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Full Name</th><th>Login ID</th><th>Authorization Role</th><th>Revoke Access</th></tr></thead>
+                            <tbody id="empTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let jobs = []; let parts = []; let employees = []; let CURRENT_ROLE = "Employee";
+
+        function showSection(section, btn){
+            document.querySelectorAll(".view-panel").forEach(p=>p.classList.remove("active"));
+            document.querySelectorAll(".menu-btn").forEach(b=>b.classList.remove("active"));
+            document.getElementById(section+"Section").style.display="block";
+            document.getElementById(section+"Section").classList.add("active");
+            if(btn) btn.classList.add("active");
+        }
+
+        async function login(){
+            let u=document.getElementById("username").value; let p=document.getElementById("password").value;
+            const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+            const data=await res.json();
+            if(data.success){
+                document.getElementById("loginScreen").style.display="none";
+                document.getElementById("roleBox").innerText=data.role;
+                CURRENT_ROLE = data.role;
+                if(CURRENT_ROLE === "Chairman"){
+                    document.getElementById("profitCard").style.display="block";
+                    document.getElementById("parts-menu").style.display="block";
+                    document.getElementById("emp-menu").style.display="block";
+                    loadEmployees();
+                } else {
+                    document.getElementById("profitCard").style.display="none";
+                    document.getElementById("parts-menu").style.display="none";
+                    document.getElementById("emp-menu").style.display="none";
+                }
+                loadJobs(); loadParts();
+            } else { alert(data.message || "Invalid Authentication Security Tokens."); }
+        }
+
+        async function checkSession(){
+            const res=await fetch("/api/session"); const data=await res.json();
+            if(data.logged_in){
+                document.getElementById("loginScreen").style.display="none";
+                document.getElementById("roleBox").innerText=data.role;
+                CURRENT_ROLE = data.role;
+                if(CURRENT_ROLE === "Chairman"){
+                    document.getElementById("profitCard").style.display="block";
+                    document.getElementById("parts-menu").style.display="block";
+                    document.getElementById("emp-menu").style.display="block";
+                    loadEmployees();
+                } else {
+                    document.getElementById("profitCard").style.display="none";
+                    document.getElementById("parts-menu").style.display="none";
+                    document.getElementById("emp-menu").style.display="none";
+                }
+                loadJobs(); loadParts();
+            }
+        }
+
+        async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
+
+        async function loadJobs(){ const res=await fetch("/api/jobs"); jobs=await res.json(); renderJobs(); }
+        async function loadParts(){ const res=await fetch("/api/parts"); parts=await res.json(); renderParts(); }
+        async function loadEmployees(){ const res=await fetch("/api/employees"); employees=await res.json(); renderEmployees(); }
+
+        async function saveJob(){
+            const payload={
+                category:document.getElementById("deviceType").value, device:document.getElementById("deviceModel").value,
+                imei:document.getElementById("deviceIMEI").value, password:document.getElementById("devicePassword").value,
+                problem:document.getElementById("problem").value, estimate:parseFloat(document.getElementById("estimate").value || 0),
+                advance:parseFloat(document.getElementById("advance").value || 0), customer_name:document.getElementById("customerName").value,
+                phone:document.getElementById("customerPhone").value
+            };
+            const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+            if((await res.json()).success){ alert("Jobcard Registry Generated Successfully."); loadJobs(); showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); }
+        }
+
+        function renderJobs(){
+            let tbody=document.getElementById("repairTable"); tbody.innerHTML="";
+            let search=document.getElementById("searchInput").value.toLowerCase();
+            let filter=document.getElementById("statusFilter").value;
+            let p=0; let r=0; let t=0; let ry=0; let d=0; let rev=0; let exp=0;
+
+            jobs.forEach(job=>{
+                if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Delivered") d++;
+                if(job.status==="Delivered"){ rev += (job.estimate + (job.extra_charge || 0) - (job.discount || 0)); exp += (job.spare_cost || 0); }
+
+                let match = !filter || job.status === filter;
+                let sMatch = !search || job.id.toLowerCase().includes(search) || job.customer_name.toLowerCase().includes(search) || job.phone.includes(search) || (job.date && job.date.includes(search));
+                if(!match || !sMatch) return;
+
+                tbody.innerHTML += `<tr>
+                    <td style="color:#f97316; font-weight:bold;">${job.id}</td>
+                    <td><strong>${job.customer_name}</strong><br><small style="color:#9ca3af;">${job.phone}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small></td>
+                    <td>
+                        <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
+                            <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
+                            <option ${job.status==="Testing"?"selected":""}>Testing</option><option ${job.status==="Ready"?"selected":""}>Ready</option>
+                            <option ${job.status==="Delivered"?"selected":""}>Delivered</option><option ${job.status==="Not Repair"?"selected":""}>Not Repair</option>
+                            <option ${job.status==="Undelivered"?"selected":""}>Undelivered</option>
+                        </select>
+                    </td>
+                    <td>₹${job.estimate}</td><td>₹${job.advance}</td>
+                    <td><input type="number" id="disc-${job.id}" value="${job.discount || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
+                    <td><input type="number" id="ext-${job.id}" value="${job.extra_charge || 0}" class="input" style="width:70px; margin:0;" ${CURRENT_ROLE!=='Chairman'?'disabled':''}></td>
+                    <td>
+                        ${CURRENT_ROLE==='Chairman' ? `
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <span style="font-size:10px; color:#ef4444;">Part Cost:</span>
+                            <input type="number" id="sp-${job.id}" value="${job.spare_cost || 0}" class="input" style="width:80px; margin:0; color:#ef4444; font-weight:bold;">
+                            <button class="tbl-btn" onclick="savePricing('${job.id}')">Save</button>
+                        </div>` : '<span style="color:#6b7280; font-size:11px;">Restricted</span>'}
+                    </td>
+                </tr>`;
+            });
+            document.getElementById("pendingCount").innerText=p; document.getElementById("repairingCount").innerText=r;
+            document.getElementById("testingCount").innerText=t; document.getElementById("readyCount").innerText=ry;
+            document.getElementById("deliveredCount").innerText=d;
+            if(CURRENT_ROLE==="Chairman"){ document.getElementById("lbl-revenue").innerText="₹"+rev; document.getElementById("lbl-expenses").innerText="₹"+exp; document.getElementById("lbl-profit").innerText="₹"+(rev-exp); }
+        }
+
+        async function updateStatus(id,status){ await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})}); loadJobs(); }
+        async function savePricing(id){
+            let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
+            let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
+            let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
+            await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
+            loadJobs();
+        }
+
+        async function savePart(){
+            let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
+            await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
+            document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts();
+        }
+        function renderParts(){
+            let t=document.getElementById("partsTable"); t.innerHTML="";
+            parts.forEach(p=>{ t.innerHTML+=`<tr><td><strong>${p.part_name}</strong></td><td>${p.model}</td><td style="color:#10b981; font-weight:bold;">₹${p.price}</td><td>${p.date || ''}</td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deletePart('${p.id}')">❌</button></td></tr>`; });
+        }
+        async function deletePart(id){ if(confirm("Delete record?")){ await fetch("/api/parts?id="+id,{method:"DELETE"}); loadParts(); } }
+
+        async function saveEmployee(){
+            let n=document.getElementById("e-name").value; let u=document.getElementById("e-user").value; let p=document.getElementById("e-pass").value;
+            await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p})});
+            document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees();
+        }
+        function renderEmployees(){
+            let t=document.getElementById("empTable"); t.innerHTML="";
+            employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
+        }
+        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
+
+        window.onload=checkSession;
+        showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
+    </script>
 </body>
 </html>
