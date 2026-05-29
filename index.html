@@ -1,112 +1,564 @@
-<style>
-.btn-del-user {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    font-weight: bold;
-}
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIXIFY TECH REPAIR</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,sans-serif;
+        }
+
+        body{
+            background:#0f172a;
+            color:white;
+        }
+
+        .topbar{
+            background:#111827;
+            padding:15px 20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            border-bottom:1px solid #1f2937;
+        }
+
+        .logo{
+            font-size:24px;
+            font-weight:bold;
+            color:#f97316;
+        }
+
+        .container{
+            padding:20px;
+        }
+
+        .card{
+            background:#111827;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            border:1px solid #1f2937;
+        }
+
+        h2{
+            margin-bottom:15px;
+            color:#f97316;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+            gap:15px;
+        }
+
+        input,
+        textarea,
+        select{
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:6px;
+            background:#1e293b;
+            color:white;
+            margin-top:5px;
+        }
+
+        label{
+            font-size:14px;
+        }
+
+        button{
+            background:#f97316;
+            border:none;
+            color:white;
+            padding:12px 20px;
+            border-radius:6px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        button:hover{
+            background:#ea580c;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:15px;
+        }
+
+        th,td{
+            border:1px solid #1f2937;
+            padding:10px;
+            text-align:left;
+            font-size:14px;
+        }
+
+        th{
+            background:#1e293b;
+        }
+
+        .status{
+            padding:5px 10px;
+            border-radius:5px;
+            font-size:12px;
+            font-weight:bold;
+        }
+
+        .Pending{
+            background:#ef4444;
+        }
+
+        .Repairing{
+            background:#f59e0b;
+        }
+
+        .Ready{
+            background:#10b981;
+        }
+
+        .Delivered{
+            background:#3b82f6;
+        }
+
+        .login-box{
+            width:350px;
+            margin:100px auto;
+            background:#111827;
+            padding:30px;
+            border-radius:10px;
+            border:1px solid #1f2937;
+        }
+
+        .hidden{
+            display:none;
+        }
+
+        .logout-btn{
+            background:#dc2626;
+        }
+
+        .stats{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:15px;
+            margin-bottom:20px;
+        }
+
+        .stat-card{
+            background:#111827;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+            border:1px solid #1f2937;
+        }
+
+        .stat-card h3{
+            font-size:30px;
+            margin-top:10px;
+            color:#f97316;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginPage">
+
+    <div class="login-box">
+
+        <h2>Fixify Login</h2>
+
+        <div style="margin-bottom:15px;">
+            <label>Username</label>
+            <input type="text" id="username">
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label>Password</label>
+            <input type="password" id="password">
+        </div>
+
+        <button onclick="login()">Login</button>
+
+    </div>
+
+</div>
+
+<!-- MAIN APP -->
+
+<div id="appPage" class="hidden">
+
+    <div class="topbar">
+
+        <div class="logo">
+            FIXIFY TECH REPAIR
+        </div>
+
+        <div>
+            <span id="userInfo"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+    </div>
+
+    <div class="container">
+
+        <!-- STATS -->
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <p>Total Jobs</p>
+                <h3 id="totalJobs">0</h3>
+            </div>
+
+            <div class="stat-card">
+                <p>Ready Jobs</p>
+                <h3 id="readyJobs">0</h3>
+            </div>
+
+            <div class="stat-card">
+                <p>Delivered</p>
+                <h3 id="deliveredJobs">0</h3>
+            </div>
+
+        </div>
+
+        <!-- JOB FORM -->
+
+        <div class="card">
+
+            <h2>Create Repair Job</h2>
+
+            <form onsubmit="createJob(event)">
+
+                <div class="grid">
+
+                    <div>
+                        <label>Customer Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+
+                    <div>
+                        <label>Phone Number</label>
+                        <input type="text" id="phone1" required>
+                    </div>
+
+                    <div>
+                        <label>Device</label>
+                        <input type="text" id="device" required>
+                    </div>
+
+                    <div>
+                        <label>Category</label>
+
+                        <select id="category">
+                            <option value="Mobile">Mobile</option>
+                            <option value="Laptop">Laptop</option>
+                        </select>
+
+                    </div>
+
+                    <div>
+                        <label>IMEI / Serial</label>
+                        <input type="text" id="imei">
+                    </div>
+
+                    <div>
+                        <label>Password</label>
+                        <input type="text" id="devicePassword">
+                    </div>
+
+                    <div>
+                        <label>Estimate</label>
+                        <input type="number" id="estimate" value="0">
+                    </div>
+
+                    <div>
+                        <label>Advance</label>
+                        <input type="number" id="advance" value="0">
+                    </div>
+
+                </div>
+
+                <div style="margin-top:15px;">
+
+                    <label>Problem</label>
+
+                    <textarea id="problem" rows="3"></textarea>
+
+                </div>
+
+                <div style="margin-top:20px;">
+                    <button type="submit">Save Job</button>
+                </div>
+
+            </form>
+
+        </div>
+
+        <!-- JOB TABLE -->
+
+        <div class="card">
+
+            <h2>Repair Jobs</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Device</th>
+                        <th>Status</th>
+                        <th>Estimate</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="jobTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
 
 <script>
-// YE SAFE FETCH FUNCTION DUKAN KE NETWORK KO RE-TRY KI MEMORY DEGA
-async function safeFetch(url, options = {}) {
-    try {
-        const res = await fetch(url, options);
-        if (!res.ok) {
-            throw new Error("Server Error");
-        }
-        return await res.json();
-    } catch(err) {
-        console.error(err);
-        alert("Network / Server Error: Dukan ka server response nahi de raha.");
-        return null;
+
+let allJobs = [];
+
+async function checkSession(){
+
+    const res = await fetch('/api/session');
+    const data = await res.json();
+
+    if(data.logged_in){
+
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('appPage').classList.remove('hidden');
+
+        document.getElementById('userInfo').innerHTML =
+            `${data.emp_name} (${data.role})`;
+
+        loadJobs();
+
+    }else{
+
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('appPage').classList.add('hidden');
+
     }
 }
 
-// AAPKA REPLACED PERFECT SUMMARY TABLE HANDLER
-function populateSummaryTable(jobs) {
-    const tbody = document.getElementById('live-table-rows');
+async function login(){
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    const res = await fetch('/api/login',{
+
+        method:'POST',
+
+        headers:{
+            'Content-Type':'application/json'
+        },
+
+        body:JSON.stringify({
+            username,
+            password
+        })
+
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+
+        checkSession();
+
+    }else{
+
+        alert(data.message);
+
+    }
+}
+
+async function logout(){
+
+    await fetch('/api/logout',{
+        method:'POST'
+    });
+
+    location.reload();
+}
+
+async function createJob(e){
+
+    e.preventDefault();
+
+    const payload = {
+
+        category:document.getElementById('category').value,
+        name:document.getElementById('name').value,
+        phone1:document.getElementById('phone1').value,
+        device:document.getElementById('device').value,
+        imei:document.getElementById('imei').value,
+        password:document.getElementById('devicePassword').value,
+        problem:document.getElementById('problem').value,
+        estimate:document.getElementById('estimate').value,
+        advance:document.getElementById('advance').value
+
+    };
+
+    const res = await fetch('/api/jobs',{
+
+        method:'POST',
+
+        headers:{
+            'Content-Type':'application/json'
+        },
+
+        body:JSON.stringify(payload)
+
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+
+        alert('Job Created Successfully');
+
+        loadJobs();
+
+        e.target.reset();
+
+    }else{
+
+        alert(data.message);
+
+    }
+}
+
+async function loadJobs(){
+
+    const res = await fetch('/api/jobs');
+    const jobs = await res.json();
+
+    allJobs = jobs;
+
+    const tbody = document.getElementById('jobTable');
+
     tbody.innerHTML = '';
 
-    const txt = (document.getElementById('search-box').value || '').toLowerCase();
-    const filter = document.getElementById('filter-status-box').value;
-    const isChairman = (CURRENT_USER_ROLE === "Chairman");
+    let ready = 0;
+    let delivered = 0;
 
-    if (!Array.isArray(jobs)) return;
+    jobs.forEach(job=>{
 
-    jobs.forEach(job => {
-        const jid = String(job.id || '').toLowerCase();
-        const jname = String(job.name || '').toLowerCase();
-        const jphone = String(job.phone1 || '');
-
-        const matchSearch = jid.includes(txt) || jname.includes(txt) || jphone.includes(txt);
-        const matchStatus = filter === 'ALL' || job.status === filter;
-
-        if (!matchSearch || !matchStatus) return;
-
-        const tr = document.createElement('tr');
-        const cStyle = String(job.status || 'Pending').replace(" ", "-");
-
-        const finalCustomerBill = parseFloat(job.estimate || 0) + parseFloat(job.extra_cost || 0) - parseFloat(job.discount || 0);
-        const spareCost = parseFloat(job.spare_part_cost || 0);
-        const entryProfit = finalCustomerBill - spareCost;
-
-        let historyLabel = '';
-        if (statusHistoryCache[job.id] === 'TriggeredAlert') {
-            historyLabel = `<br><span style="background:#ef4444; color:white; padding:2px 4px; font-size:10px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:4px;">⚠️ Delivered → Undelivered</span>`;
+        if(job.status === 'Ready'){
+            ready++;
         }
 
+        if(job.status === 'Delivered'){
+            delivered++;
+        }
+
+        const tr = document.createElement('tr');
+
         tr.innerHTML = `
-            <td style="font-weight:bold; color:#f97316;">${job.id}</td>
-            <td style="font-size:11px; color:#9ca3af;">${job.date || ''}</td>
-            <td><strong>${job.name || ''}</strong><br><small style="color:#6b7280;">${job.phone1 || ''}</small></td>
-            <td><span style="background:#1f2937; padding:2px 5px; border-radius:4px; color:#f97316; font-weight:bold;">${job.category || ''}</span></td>
-            <td><strong>${job.device || ''}</strong><br><small style="color:#9ca3af;">${job.problem || ''}</small></td>
+
+            <td>${job.id}</td>
+
+            <td>${job.name}</td>
+
+            <td>${job.phone1}</td>
+
+            <td>${job.device}</td>
+
             <td>
-                <div style="font-size:12px; line-height:1.4; min-width:170px;">
-                    <span style="font-weight:bold; color:#fff;">Bill: ₹${finalCustomerBill}</span> 
-                    
-                    ${isChairman ? `
-                        <br>
-                        <span style="color:#ef4444; font-size:11px;">Cost: </span>
-                        <input type="number" style="width:60px; background:#0b0f19; border:1px solid #1f2937; color:#ef4444; font-weight:bold;" value="${spareCost}" id="tx-scost-${job.id}">
-                    ` : ''}
-
-                    ${isChairman && job.status === 'Delivered' ? `
-                        <br>
-                        <span style="color:#10b981; font-weight:bold;">Profit: ₹${entryProfit}</span>
-                    ` : ''}
-
-                    <div style="margin-top:4px; font-size:10px; color:#6b7280; display: ${isChairman ? 'block' : 'none'};">
-                        Est: ${job.estimate} | Ext: <input type="number" style="width:55px; background:none; border:1px solid #1f2937; color:white;" value="${job.extra_cost}" id="tx-ext-${job.id}"> | Disc: <input type="number" style="width:35px; background:none; border:1px solid #1f2937; color:white;" value="${job.discount || 0}" id="tx-disc-${job.id}">
-                    </div>
-                </div>
+                <span class="status ${job.status}">
+                    ${job.status}
+                </span>
             </td>
-            <td style="font-weight:600; font-size:11px; color:#9ca3af;">👤 ${job.created_by || 'Staff'}</td>
+
+            <td>₹${job.estimate}</td>
+
             <td>
-                <select class="status-dropdown status-${cStyle}" onchange="modifyStatus('${job.id}', this.value, '${job.status}')">
-                    <option value="Pending" ${job.status==='Pending'?'selected':''}>Pending</option>
-                    <option value="Repairing" ${job.status==='Repairing'?'selected':''}>Repairing</option>
-                    <option value="Testing" ${job.status==='Testing'?'selected':''}>Testing</option>
-                    <option value="Ready" ${job.status==='Ready'?'selected':''}>Ready</option>
-                    <option value="Delivered" ${job.status==='Delivered'?'selected':''}>Delivered</option>
-                    <option value="Not Repair" ${job.status==='Not Repair'?'selected':''}>Not Repair</option>
-                    <option value="Undelivered" ${job.status==='Undelivered'?'selected':''}>Undelivered</option>
+
+                <select onchange="updateStatus('${job.id}',this.value)">
+
+                    <option value="Pending"
+                        ${job.status === 'Pending' ? 'selected' : ''}>
+                        Pending
+                    </option>
+
+                    <option value="Repairing"
+                        ${job.status === 'Repairing' ? 'selected' : ''}>
+                        Repairing
+                    </option>
+
+                    <option value="Ready"
+                        ${job.status === 'Ready' ? 'selected' : ''}>
+                        Ready
+                    </option>
+
+                    <option value="Delivered"
+                        ${job.status === 'Delivered' ? 'selected' : ''}>
+                        Delivered
+                    </option>
+
                 </select>
-                ${historyLabel}
+
             </td>
-            <td>
-                <div class="action-flex">
-                    ${isChairman ? `<button class="tbl-btn-save" onclick="triggerPricingSave('${job.id}')">💾 Save</button>` : ''}
-                    <button class="tbl-btn-print" onclick="executePortraitPrint('${job.id}')">🖨️ Bill</button>
-                </div>
-            </td>
+
         `;
+
         tbody.appendChild(tr);
+
     });
+
+    document.getElementById('totalJobs').innerText = jobs.length;
+    document.getElementById('readyJobs').innerText = ready;
+    document.getElementById('deliveredJobs').innerText = delivered;
 }
+
+async function updateStatus(id,status){
+
+    await fetch('/api/jobs/update_status',{
+
+        method:'POST',
+
+        headers:{
+            'Content-Type':'application/json'
+        },
+
+        body:JSON.stringify({
+            id,
+            status
+        })
+
+    });
+
+    loadJobs();
+}
+
+checkSession();
+
 </script>
+
+</body>
+</html>
