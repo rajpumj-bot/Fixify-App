@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify, session
 app = Flask(__name__, template_folder='.')
 app.secret_key = "fixify_super_cloud_secure_key_99"
 
-# SUPABASE CLOUD CONNECTION CENTRAL CREDENTIALS
+# SUPABASE CLOUD LIVE CREDENTIALS
 SUPABASE_URL = "https://wgkdrknsynjipoynjof.supabase.co"
 SUPABASE_KEY = "sb_publishable_3i7z0XcrCNuCgL8C3KTP3g_TnrCEz4i64vKms9vVj9BWh3v9W"
 
@@ -35,9 +35,11 @@ def make_supabase_request(url, method="GET", data=None):
     try:
         with urllib.request.urlopen(req) as response:
             res_read = response.read().decode("utf-8")
-            return json.loads(res_read) if res_read else []
+            if res_read:
+                return json.loads(res_read)
+            return []
     except Exception as e:
-        print("Supabase Engine Runtime Log:", e)
+        print("Supabase Engine Internal Exception:", e)
         return []
 
 @app.route('/')
@@ -86,7 +88,6 @@ def do_logout():
     session.clear()
     return jsonify({"success": True})
 
-# --- FIXED SPARE PARTS RATES API WRAPPER ---
 @app.route('/api/parts', methods=['GET', 'POST', 'DELETE'])
 def handle_parts():
     if not session.get('logged_in'):
@@ -96,10 +97,13 @@ def handle_parts():
         data = request.json or {}
         today_str = datetime.now().strftime("%Y-%m-%d")
         
+        try: cost_val = float(data.get('wholesale_cost', 0) or 0)
+        except: cost_val = 0.0
+            
         payload = {
             "part_name": str(data.get('part_name', 'Part')),
             "model_compatibility": str(data.get('model_compatibility', '')),
-            "wholesale_cost": float(data.get('wholesale_cost', 0) or 0),
+            "wholesale_cost": cost_val,
             "updated_at": today_str
         }
         url = f"{SUPABASE_URL}/rest/v1/fixify_parts"
@@ -116,7 +120,6 @@ def handle_parts():
     rows = make_supabase_request(url, method="GET")
     return jsonify(rows if isinstance(rows, list) else [])
 
-# --- ADMINISTRATIVE EMPLOYEE SYSTEM ---
 @app.route('/api/employees', methods=['GET', 'POST', 'DELETE'])
 def handle_employees():
     if not session.get('logged_in') or session.get('role') != 'Chairman':
@@ -144,7 +147,6 @@ def handle_employees():
     rows = make_supabase_request(url, method="GET")
     return jsonify(rows if isinstance(rows, list) else [])
 
-# --- MAIN JOBSHEET ENGINE PANEL ---
 @app.route('/api/jobs', methods=['GET', 'POST'])
 def handle_jobs():
     if not session.get('logged_in'):
@@ -152,8 +154,6 @@ def handle_jobs():
         
     if request.method == 'POST':
         data = request.json or {}
-        
-        # Fixed Exception Counting handling if table is totally null
         next_num = 1
         try:
             count_url = f"{SUPABASE_URL}/rest/v1/jobs?select=id"
@@ -166,6 +166,11 @@ def handle_jobs():
         next_id = f"FIX{next_num:04d}"
         today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         
+        try: est_val = float(data.get('estimate', 0) or 0)
+        except: est_val = 0.0
+        try: adv_val = float(data.get('advance', 0) or 0)
+        except: adv_val = 0.0
+        
         payload = {
             "id": str(next_id),
             "category": str(data.get('category', 'Mobile')),
@@ -175,8 +180,8 @@ def handle_jobs():
             "imei": str(data.get('imei', '')),
             "password": str(data.get('password', '')),
             "problem": str(data.get('problem', '')),
-            "estimate": float(data.get('estimate', 0) or 0),
-            "advance": float(data.get('advance', 0) or 0),
+            "estimate": est_val,
+            "advance": adv_val,
             "extra_cost": 0.0,
             "discount": 0.0,
             "spare_part_cost": 0.0,
@@ -189,18 +194,37 @@ def handle_jobs():
         make_supabase_request(insert_url, method="POST", data=payload)
         return jsonify({"success": True, "id": next_id})
         
+    # GET METHOD RE-CHECK PIPELINE
     fetch_url = f"{SUPABASE_URL}/rest/v1/jobs?select=*"
     rows = make_supabase_request(fetch_url, method="GET")
     jobs = []
     if isinstance(rows, list):
         for r in rows:
+            try: est = float(r.get('estimate', 0) or 0)
+            except: est = 0.0
+            try: adv = float(r.get('advance', 0) or 0)
+            except: adv = 0.0
+            try: ext = float(r.get('extra_cost', 0) or 0)
+            except: ext = 0.0
+            try: dsc = float(r.get('discount', 0) or 0)
+            except: dsc = 0.0
+            try: spc = float(r.get('spare_part_cost', 0) or 0)
+            except: spc = 0.0
+                
             jobs.append({
-                "id": str(r.get('id', '')), "category": str(r.get('category', 'Mobile')), "name": str(r.get('name', '')),
-                "phone1": str(r.get('phone1', '')), "device": str(r.get('device', '')), "problem": str(r.get('problem', '')),
-                "estimate": float(r.get('estimate', 0) or 0), "advance": float(r.get('advance', 0) or 0), 
-                "extra_cost": float(r.get('extra_cost', 0) or 0), "discount": float(r.get('discount', 0) or 0),
-                "spare_part_cost": float(r.get('spare_part_cost', 0) or 0),
-                "date": str(r.get('created_date', '')), "status": str(r.get('status', 'Pending')),
+                "id": str(r.get('id', '')),
+                "category": str(r.get('category', 'Mobile')),
+                "name": str(r.get('name', '')),
+                "phone1": str(r.get('phone1', '')),
+                "device": str(r.get('device', '')),
+                "problem": str(r.get('problem', '')),
+                "estimate": est,
+                "advance": adv, 
+                "extra_cost": ext,
+                "discount": dsc,
+                "spare_part_cost": spc,
+                "date": str(r.get('created_date', '')),
+                "status": str(r.get('status', 'Pending')),
                 "created_by": str(r.get('created_by', 'Staff'))
             })
     jobs.sort(key=lambda x: x['id'], reverse=True)
@@ -222,10 +246,17 @@ def update_pricing():
     data = request.json or {}
     url = f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{data.get('id')}"
     
+    try: ext = float(data.get('extra_cost', 0) or 0)
+    except: ext = 0.0
+    try: dsc = float(data.get('discount', 0) or 0)
+    except: dsc = 0.0
+    try: spc = float(data.get('spare_part_cost', 0) or 0)
+    except: spc = 0.0
+        
     payload = {
-        "extra_cost": float(data.get('extra_cost', 0) or 0), 
-        "discount": float(data.get('discount', 0) or 0),
-        "spare_part_cost": float(data.get('spare_part_cost', 0) or 0)
+        "extra_cost": ext, 
+        "discount": dsc, 
+        "spare_part_cost": spc
     }
     make_supabase_request(url, method="PATCH", data=payload)
     return jsonify({"success": True})
