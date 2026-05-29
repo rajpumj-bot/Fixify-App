@@ -3,211 +3,311 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fixify Tech Repair</title>
+<title>FIXIFY TECH REPAIR</title>
 
 <style>
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial,sans-serif;
+font-family:Arial, sans-serif;
 }
 
 body{
 background:#0f172a;
 color:white;
+display:flex;
+height:100vh;
+overflow:hidden;
 }
 
-.header{
+.sidebar{
+width:250px;
 background:#111827;
 padding:20px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:2px solid #1e293b;
+border-right:2px solid #f97316;
 }
 
 .logo{
 font-size:28px;
 font-weight:bold;
-color:#38bdf8;
-}
-
-.status{
-background:#16a34a;
-padding:8px 15px;
-border-radius:8px;
-font-size:14px;
-font-weight:bold;
-}
-
-.container{
-padding:20px;
-}
-
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
+color:#f97316;
 margin-bottom:30px;
+text-align:center;
+}
+
+.menu-btn{
+width:100%;
+padding:14px;
+margin-bottom:10px;
+background:#1f2937;
+border:none;
+border-radius:8px;
+color:white;
+font-size:15px;
+cursor:pointer;
+text-align:left;
+}
+
+.menu-btn:hover{
+background:#f97316;
+}
+
+.main{
+flex:1;
+padding:20px;
+overflow:auto;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
 }
 
 .card{
 background:#111827;
-padding:25px;
-border-radius:15px;
-border:1px solid #334155;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+border:1px solid #374151;
 }
 
 .card h2{
-font-size:18px;
-margin-bottom:10px;
-color:#38bdf8;
-}
-
-.card p{
-font-size:30px;
-font-weight:bold;
-}
-
-.form-box{
-background:#111827;
-padding:25px;
-border-radius:15px;
-border:1px solid #334155;
-margin-bottom:30px;
-}
-
-.form-box h2{
-margin-bottom:20px;
-color:#38bdf8;
-}
-
-.input-group{
 margin-bottom:15px;
+color:#f97316;
 }
 
-.input-group label{
-display:block;
-margin-bottom:5px;
-font-size:14px;
-}
-
-.input-group input,
-.input-group textarea,
-.input-group select{
+.input{
 width:100%;
 padding:12px;
+margin-bottom:12px;
+background:#1f2937;
 border:none;
 border-radius:8px;
-background:#1e293b;
 color:white;
 }
 
 .btn{
-background:#38bdf8;
-color:black;
-padding:12px 20px;
+background:#f97316;
+color:white;
+padding:12px;
 border:none;
 border-radius:8px;
-font-weight:bold;
 cursor:pointer;
+font-weight:bold;
+width:100%;
 }
 
 .btn:hover{
-background:white;
-}
-
-.table-box{
-background:#111827;
-padding:25px;
-border-radius:15px;
-border:1px solid #334155;
-overflow:auto;
+background:#ea580c;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:10px;
 }
 
-th,td{
+table th{
+background:#f97316;
 padding:12px;
-border-bottom:1px solid #334155;
 text-align:left;
 }
 
-th{
-color:#38bdf8;
+table td{
+padding:12px;
+border-bottom:1px solid #374151;
 }
 
-.footer{
+.login-screen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000000dd;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.login-box{
+width:350px;
+background:#111827;
+padding:30px;
+border-radius:15px;
+border:2px solid #f97316;
+}
+
+.login-title{
 text-align:center;
+font-size:28px;
+margin-bottom:20px;
+color:#f97316;
+font-weight:bold;
+}
+
+.hidden{
+display:none;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.stat-box{
+background:#111827;
 padding:20px;
-color:#94a3b8;
-font-size:14px;
+border-radius:12px;
+text-align:center;
+border-left:5px solid #f97316;
+}
+
+.stat-box h3{
+font-size:30px;
+margin-top:10px;
+}
+
+@media(max-width:900px){
+body{
+flex-direction:column;
+}
+
+.sidebar{
+width:100%;
+display:flex;
+overflow:auto;
+gap:10px;
+}
+
+.menu-btn{
+min-width:200px;
+}
+
+.stats{
+grid-template-columns:1fr;
+}
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<div class="logo">FIXIFY TECH REPAIR</div>
-<div class="status">SERVER ONLINE</div>
+<div class="login-screen" id="loginScreen">
+
+<div class="login-box">
+
+<div class="login-title">
+FIXIFY LOGIN
 </div>
 
-<div class="container">
+<input type="text" id="username" class="input" placeholder="Username">
 
-<div class="cards">
+<input type="password" id="password" class="input" placeholder="Password">
+
+<button class="btn" onclick="login()">
+LOGIN
+</button>
+
+</div>
+
+</div>
+
+<div class="sidebar">
+
+<div class="logo">
+FIXIFY
+</div>
+
+<button class="menu-btn">
+📋 Dashboard
+</button>
+
+<button class="menu-btn">
+🛠️ Create Jobcard
+</button>
+
+<button class="menu-btn">
+📦 Spare Parts
+</button>
+
+<button class="menu-btn">
+👨‍💼 Employees
+</button>
+
+<button class="menu-btn">
+💰 Profit Report
+</button>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
+<h1>Mobile & Laptop Repair System</h1>
+
+<div style="color:#f97316;font-weight:bold;">
+Chairman Panel
+</div>
+</div>
+
+<div class="stats">
+
+<div class="stat-box">
+Pending
+<h3 id="pendingCount">0</h3>
+</div>
+
+<div class="stat-box">
+Ready
+<h3 id="readyCount">0</h3>
+</div>
+
+<div class="stat-box">
+Delivered
+<h3 id="deliveredCount">0</h3>
+</div>
+
+</div>
 
 <div class="card">
-<h2>Total Jobs</h2>
-<p>0</p>
+
+<h2>Create Repair Jobcard</h2>
+
+<input type="text" class="input" placeholder="Customer Name">
+
+<input type="text" class="input" placeholder="Phone Number">
+
+<select class="input">
+<option>Mobile</option>
+<option>Laptop</option>
+</select>
+
+<input type="text" class="input" placeholder="Device Model">
+
+<input type="text" class="input" placeholder="IMEI / Serial Number">
+
+<input type="text" class="input" placeholder="PIN / Pattern Lock">
+
+<input type="text" class="input" placeholder="Problem">
+
+<input type="number" class="input" placeholder="Estimate Amount">
+
+<input type="number" class="input" placeholder="Advance Payment">
+
+<button class="btn">
+SAVE JOBCARD
+</button>
+
 </div>
 
 <div class="card">
-<h2>Pending Repair</h2>
-<p>0</p>
-</div>
-
-<div class="card">
-<h2>Delivered</h2>
-<p>0</p>
-</div>
-
-</div>
-
-<div class="form-box">
-
-<h2>Create Repair Job</h2>
-
-<div class="input-group">
-<label>Customer Name</label>
-<input type="text" placeholder="Enter customer name">
-</div>
-
-<div class="input-group">
-<label>Phone Number</label>
-<input type="text" placeholder="Enter phone number">
-</div>
-
-<div class="input-group">
-<label>Device Model</label>
-<input type="text" placeholder="Enter device model">
-</div>
-
-<div class="input-group">
-<label>Problem</label>
-<textarea rows="4" placeholder="Enter device problem"></textarea>
-</div>
-
-<button class="btn">Save Jobsheet</button>
-
-</div>
-
-<div class="table-box">
 
 <h2>Repair Records</h2>
 
@@ -215,11 +315,11 @@ font-size:14px;
 
 <thead>
 <tr>
-<th>Job ID</th>
+<th>ID</th>
 <th>Customer</th>
-<th>Phone</th>
 <th>Device</th>
 <th>Status</th>
+<th>Amount</th>
 </tr>
 </thead>
 
@@ -227,10 +327,18 @@ font-size:14px;
 
 <tr>
 <td>FIX001</td>
-<td>Demo User</td>
-<td>9999999999</td>
+<td>Rahul</td>
 <td>iPhone 13</td>
 <td>Pending</td>
+<td>₹2500</td>
+</tr>
+
+<tr>
+<td>FIX002</td>
+<td>Aman</td>
+<td>HP Laptop</td>
+<td>Ready</td>
+<td>₹4500</td>
 </tr>
 
 </tbody>
@@ -241,9 +349,26 @@ font-size:14px;
 
 </div>
 
-<div class="footer">
-Fixify Tech Repair © 2026
-</div>
+<script>
+
+function login(){
+
+let user=document.getElementById("username").value;
+let pass=document.getElementById("password").value;
+
+if(user==="admin" && pass==="123456"){
+
+document.getElementById("loginScreen").style.display="none";
+
+}else{
+
+alert("Wrong Username Password");
+
+}
+
+}
+
+</script>
 
 </body>
 </html>
