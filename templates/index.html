@@ -254,18 +254,24 @@
         async function loadEmployees(){ const res=await fetch("/api/employees"); employees=await res.json(); renderEmployees(); }
 
         async function saveJob(){
-            let name = document.getElementById("customerName").value;
-            let phone = document.getElementById("customerPhone").value;
-            let model = document.getElementById("deviceModel").value;
-            let prob = document.getElementById("problem").value;
+            let c_name = document.getElementById("customerName").value;
+            let c_phone = document.getElementById("customerPhone").value;
+            let c_model = document.getElementById("deviceModel").value;
+            let c_prob = document.getElementById("problem").value;
             
-            if(!name || !phone || !model || !prob){ alert("Please fill all mandatory (*) fields."); return; }
+            if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
+            // AUTO-ALIGNED DATA SCHEMAS:
             const payload={
-                category:document.getElementById("deviceType").value, device:model,
-                imei:document.getElementById("deviceIMEI").value, password:document.getElementById("devicePassword").value,
-                problem:prob, estimate:parseFloat(document.getElementById("estimate").value || 0),
-                advance:parseFloat(document.getElementById("advance").value || 0), customer_name:name, phone:phone
+                category:document.getElementById("deviceType").value, 
+                device:c_model,
+                imei:document.getElementById("deviceIMEI").value, 
+                password:document.getElementById("devicePassword").value, # Fixed target mapping to DB
+                problem:c_prob, 
+                estimate:parseFloat(document.getElementById("estimate").value || 0),
+                advance:parseFloat(document.getElementById("advance").value || 0), 
+                name:c_name, 
+                phone1:c_phone
             };
             
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -297,12 +303,12 @@
                 if(job.status==="Delivered"){ rev += (job.estimate + (job.extra_charge || 0) - (job.discount || 0)); exp += (job.spare_cost || 0); }
 
                 let match = !filter || job.status === filter;
-                let sMatch = !search || job.id.toLowerCase().includes(search) || job.customer_name.toLowerCase().includes(search) || job.phone.includes(search) || (job.date && job.date.includes(search));
+                let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
                 if(!match || !sMatch) return;
 
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
-                    <td><strong>${job.customer_name}</strong><br><small style="color:#9ca3af;">${job.phone}</small></td>
+                    <td><strong>${job.name}</strong><br><small style="color:#9ca3af;">${job.phone1}</small></td>
                     <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault/Solution: ${job.problem}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
