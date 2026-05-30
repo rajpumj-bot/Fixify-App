@@ -10,7 +10,6 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Ensure Static directories framework structure exists
 os.makedirs("static", exist_ok=True)
 
 @app.route("/")
@@ -119,7 +118,8 @@ def update_pricing():
     disc = float(data.get("discount", 0))
     
     try:
-        if list == -999 or disc == -999:
+        # 🔥 FIXED RESERVED KEYWORD ERROR FOR SECURE RECORD PURGING
+        if disc == -999:
             supabase.table("fixify_registry").delete().eq("id", job_id).execute()
             return jsonify({"success": True, "message": "Purged successfully"})
 
@@ -165,7 +165,6 @@ def handle_parts():
         return jsonify(res.data or [])
     except Exception: return jsonify([])
 
-# 🔥 FIXED INCORRECT PARAMETER METHOD MAPPING IN EMPLOYEE ROUTE
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
 def handle_employees():
     if "user" not in session or session.get("role") != "Chairman":
