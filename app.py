@@ -1,7 +1,7 @@
+import os
 from flask import Flask, render_template, request, jsonify, session
 import requests
-from datetime import datetime
-import os
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "fixify_secure_key_2026"
@@ -18,6 +18,13 @@ HEADERS = {
 
 ADMIN_USER = "admin"
 ADMIN_PASS = "fixify#0821"
+
+# 🔥 CORE FUNCTION TO EXTRACT EXACT ASLI INDIA TIME (IST +5:30) EVERYTIME
+def get_india_time_string():
+    utc_time = datetime.now(timezone.utc)
+    india_tz = timezone(timedelta(hours=5, minutes=30))
+    india_time = utc_time.astimezone(india_tz)
+    return india_time.strftime("%d-%m-%Y %H:%M")
 
 def send_status_sms(phone, customer_name, device, status):
     if not FAST2SMS_API_KEY:
@@ -89,13 +96,14 @@ def jobs():
 
     if request.method == "POST":
         data = request.json or {}
-        now = datetime.now().strftime("%d-%m-%Y %H:%M")
+        
+        # 🔥 SYNCHRONIZED INDIAN TIME ZONE RIGID TRIGGER
+        now = get_india_time_string()
 
         get_res = requests.get(f"{SUPABASE_URL}/rest/v1/fixify_jobs?select=id", headers=HEADERS)
         total = len(get_res.json()) + 1 if get_res.status_code == 200 else 1
         job_id = f"FIX{total:04d}"
 
-        # 🔥 FIXED PAYLOAD SCHEMA ALIGNMENT MAP (ROUTING CUSTOM SOLUTION INTO YOUR EXISTING COLUMN CACHE)
         payload = {
             "id": job_id,
             "category": str(data.get("category", "")),
@@ -104,7 +112,7 @@ def jobs():
             "phone1": str(data.get("phone1", "")),
             "problem": str(data.get("problem", "")),
             "password": str(data.get("password", "")),
-            "imei": str(data.get("solution") or "Standard Fix Required"), # Safely routes 'Folder Change' into existing schema
+            "imei": str(data.get("solution") or "Standard Fix Required"), 
             "estimate": float(data.get("estimate") or 0),
             "advance": float(data.get("advance") or 0),
             "extra_charge": "0", "discount": "0", "spare_cost": "0",
@@ -179,7 +187,7 @@ def parts():
             "part_name": str(data.get("part_name")), 
             "model_compatibility": str(data.get("model")),
             "wholesale_cost": float(data.get("price") or 0), 
-            "updated_at": datetime.now().strftime("%d-%m-%Y")
+            "updated_at": get_india_time_string().split(" ")[0] # Save date with IST clock
         }
         res = requests.post(f"{SUPABASE_URL}/rest/v1/fixify_parts", headers=HEADERS, json=payload)
         return jsonify({"success": res.status_code in [200, 201]})
