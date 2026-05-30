@@ -2,3 +2,4 @@ Flask
 gunicorn
 werkzeug
 requests
+supabase==2.4.0
