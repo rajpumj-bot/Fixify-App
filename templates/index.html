@@ -29,14 +29,9 @@
         .print-btn { padding:6px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .print-btn:hover { background:#2563eb; }
         
+        /* NEW DEDICATED SMS BUTTON STYLE */
         .sms-btn { padding:6px 12px; background:#8b5cf6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .sms-btn:hover { background:#7c3aed; }
-
-        .admin-edit-btn { padding: 4px 8px; background: #eab308; border: none; border-radius: 4px; color: black; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
-        .admin-edit-btn:hover { background: #ca8a04; }
-        .admin-del-btn { padding: 4px 8px; background: #ef4444; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; }
-        .admin-del-btn:hover { background: #dc2626; }
-        .inline-edit-box { width: 100%; padding: 6px; background: #374151; border: 1px solid #f97316; border-radius: 4px; color: white; margin-bottom: 4px; font-size: 13px; }
 
         .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
         .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
@@ -327,15 +322,16 @@
             }
         }
 
-        function togglePatternPadVisibility() {
-            let selectedType = document.getElementById("deviceType").value;
-            let block = document.getElementById("dynamicPatternBlock");
-            if(selectedType === "Mobile") {
-                block.style.display = "flex";
-                setTimeout(resizePatternCanvas, 50);
+        function toggleLedger() {
+            const content = document.getElementById("ledgerContent");
+            const arrow = document.getElementById("ledgerArrow");
+            if (content.classList.contains("open")) {
+                content.classList.remove("open");
+                arrow.innerText = "▼";
             } else {
-                block.style.display = "none";
-                document.getElementById("drawnPatternCode").value = "";
+                content.classList.add("open");
+                arrow.innerText = "▲";
+                calculateFinancials();
             }
         }
 
@@ -462,19 +458,6 @@
             if (canvas) { const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height); }
         }
 
-        function toggleLedger() {
-            const content = document.getElementById("ledgerContent");
-            const arrow = document.getElementById("ledgerArrow");
-            if (content.classList.contains("open")) {
-                content.classList.remove("open");
-                arrow.innerText = "▼";
-            } else {
-                content.classList.add("open");
-                arrow.innerText = "▲";
-                calculateFinancials();
-            }
-        }
-
         async function login(){
             let u=document.getElementById("username").value; let p=document.getElementById("password").value;
             const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
@@ -533,23 +516,19 @@
             let c_model = document.getElementById("deviceModel").value;
             let c_prob = document.getElementById("problem").value;
             let c_sol = document.getElementById("solution").value;
-            let d_type = document.getElementById("deviceType").value;
             
             if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
             let textPass = document.getElementById("devicePassword").value || "None";
             let patternCode = document.getElementById("drawnPatternCode").value;
             
-            // 🔥 FIXED STRICT DEVICE TYPE SECURITY LOCK ASSIGNMENTS
             let finalSecurityLockProfile = textPass;
-            if(d_type === "Mobile" && patternCode) {
+            if(patternCode && document.getElementById("deviceType").value === "Mobile") {
                 finalSecurityLockProfile = textPass !== "None" ? `${textPass} [Pattern: ${patternCode}]` : `Pattern: ${patternCode}`;
-            } else if (d_type === "Laptop") {
-                finalSecurityLockProfile = textPass; // Force text-only mapping for laptop core completely
             }
 
             const payload={
-                category: d_type, 
+                category: document.getElementById("deviceType").value, 
                 device: c_model,
                 imei: document.getElementById("deviceIMEI").value, 
                 password: finalSecurityLockProfile,
@@ -566,83 +545,35 @@
             
             if(output.success){ 
                 alert("Jobcard Registry Generated Successfully."); 
-                document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
-                document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
-                document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
-                document.getElementById("solution").value="";
-                document.getElementById("estimate").value=""; document.getElementById("advance").value="";
-                clearPatternPad(); await loadJobs(); 
+                loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
             } else { alert(output.message || "Database Error."); }
         }
 
+        // =======================================================
+        // 🔥 SAFE SMS TRIGGER INTERFACE (NO BROWSER FREEZING)
+        // =======================================================
         function triggerManualWhatsAppAlert(custName, custPhone, jobId, deviceModel, currentStatus) {
             if(!custPhone || custPhone.length < 10) { alert("Invalid phone number framework."); return; }
-            let msgText = `Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
+            
+            let msgText = "";
+            if(currentStatus === "Pending") {
+                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. Thank you for choosing Fixify!`;
+            } else if(currentStatus === "Repairing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our technician is working on it. - Team Fixify`;
+            } else if(currentStatus === "Testing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) is now in the TESTING phase for quality verification. - Team Fixify`;
+            } else if(currentStatus === "Ready") {
+                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit the store.`;
+            } else if(currentStatus === "Delivered") {
+                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. - Team Fixify`;
+            } else {
+                msgText = `Hello ${custName}, Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
+            }
+
             let formattedPhone = custPhone.startsWith("91") ? custPhone : "91" + custPhone;
             let smsUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}`;
             window.open(smsUrl, '_blank');
-        }
-
-        function toggleInlineRowEditing(jobId) {
-            const nameContainer = document.getElementById(`name-display-${jobId}`);
-            const phoneContainer = document.getElementById(`phone-display-${jobId}`);
-            const editBtn = document.getElementById(`edit-btn-${jobId}`);
-            
-            if (editBtn.innerText === "✏️ Edit") {
-                const currentName = document.getElementById(`lbl-name-${jobId}`).innerText;
-                const currentPhone = document.getElementById(`lbl-phone-${jobId}`).innerText;
-                
-                nameContainer.innerHTML = `<input type="text" id="inp-name-${jobId}" class="inline-edit-box" value="${currentName}">`;
-                phoneContainer.innerHTML = `<input type="text" id="inp-phone-${jobId}" class="inline-edit-box" value="${currentPhone}">`;
-                editBtn.innerText = "💾 Save";
-                editBtn.style.background = "#10b981";
-                editBtn.style.color = "white";
-            } else {
-                executeAdminRowSave(jobId);
-            }
-        }
-
-        async function executeAdminRowSave(jobId) {
-            const updatedName = document.getElementById(`inp-name-${jobId}`).value;
-            const updatedPhone = document.getElementById(`inp-phone-${jobId}`).value;
-            
-            if(!updatedName || !updatedPhone) { alert("Fields cannot be completely blank."); return; }
-            
-            const res = await fetch("/api/update_pricing", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: jobId,
-                    discount: -1, 
-                    extra_charge: -1,
-                    spare_cost: -1,
-                    custom_name: updatedName,
-                    custom_phone: updatedPhone
-                })
-            });
-            
-            const data = await res.json();
-            if(data.success) {
-                alert("Customer profile synchronized successfully!");
-                loadJobs();
-            } else {
-                alert("Failed to synchronize metadata overrides.");
-            }
-        }
-
-        async function executeAdminRowDeletion(jobId) {
-            if(confirm(`⚠️ WARNING: Are you absolutely sure you want to permanently delete Jobcard entry ${jobId}? This action cannot be undone.`)) {
-                const res = await fetch("/api/update_pricing", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: jobId, discount: -999 }) 
-                });
-                if((await res.json()).success) {
-                    alert("Jobcard record completely purged from database registry!");
-                    loadJobs();
-                }
-            }
         }
 
         async function updateStatus(id,status){ 
@@ -667,17 +598,7 @@
 
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
-                    <td>
-                        <div id="name-display-${job.id}"><strong id="lbl-name-${job.id}">${job.name}</strong></div>
-                        <div id="phone-display-${job.id}"><small id="lbl-phone-${job.id}" style="color:#9ca3af;">${job.phone1}</small></div>
-                        
-                        ${CURRENT_ROLE==='Chairman' ? `
-                        <div style="margin-top: 6px; display: flex;">
-                            <button id="edit-btn-${job.id}" class="admin-edit-btn" onclick="toggleInlineRowEditing('${job.id}')">✏️ Edit</button>
-                            <button class="admin-del-btn" onclick="executeAdminRowDeletion('${job.id}')">❌ Delete</button>
-                        </div>
-                        ` : ''}
-                    </td>
+                    <td><strong>${job.name}</strong><br><small style="color:#9ca3af;">${job.phone1}</small></td>
                     <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
@@ -905,6 +826,19 @@
             printWindow.document.close();
         }
 
+        async function updateStatus(id,status){ 
+            const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
+            if(res.ok) { loadJobs(); }
+        }
+
+        async function savePricing(id){
+            let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
+            let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
+            let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
+            const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
+            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); } else { alert("Failed to update price."); }
+        }
+
         async function savePart(){
             let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
             if(!n || !m) { alert("Please fill all mandatory stock details."); return; }
@@ -931,7 +865,7 @@
             if(!Array.isArray(employees)) return;
             employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
         }
-        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
+        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{username:"DELETE"}); loadEmployees(); } }
 
         window.onload=checkSession;
         showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
