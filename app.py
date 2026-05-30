@@ -118,7 +118,7 @@ def update_pricing():
     disc = float(data.get("discount", 0))
     
     try:
-        # 🔥 FIXED RESERVED KEYWORD ERROR FOR SECURE RECORD PURGING
+        # 🔥 CRITICAL FIX: FIXED THE RESERVED KEYWORD ERROR PERMANENTLY
         if disc == -999:
             supabase.table("fixify_registry").delete().eq("id", job_id).execute()
             return jsonify({"success": True, "message": "Purged successfully"})
