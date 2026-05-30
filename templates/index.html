@@ -6,7 +6,7 @@
     <title>FIXIFY TECH REPAIR</title>
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wgkdrkns739cn6j0/fixify_logo.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="#0b1120">
     <meta name="theme-color" content="#f97316">
@@ -512,7 +512,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Identity Token."); }
+            } else { alert(data.message || "Invalid Identity Token ID/Password."); }
         }
 
         async function checkSession(){
@@ -545,7 +545,7 @@
             let newP = document.getElementById("newChairmanPass").value;
             if(!newP) { alert("Please enter a valid password."); return; }
             const res = await fetch("/api/update_chairman_pass", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_password:newP})});
-            if((await res.json()).success){ alert("Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
+            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
         }
 
         async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
@@ -597,7 +597,9 @@
             };
             
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-            if((await res.json()).success){ 
+            const output = await res.json();
+            
+            if(output.success){ 
                 alert("Jobcard Registry Generated Successfully."); 
                 document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
                 document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
@@ -606,7 +608,7 @@
                 document.getElementById("estimate").value=""; document.getElementById("advance").value="";
                 clearPatternPad(); await loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
-            }
+            } else { alert(output.message || "Database Error."); }
         }
 
         function triggerManualWhatsAppAlert(custName, custPhone, jobId, deviceModel, currentStatus) {
@@ -627,7 +629,7 @@
             let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
             let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
             const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
-            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); }
+            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); } else { alert("Failed to update price."); }
         }
 
         function renderJobs(){
@@ -726,7 +728,6 @@
                 timeSpanText = `Range: ${fromValue || 'Start'} to ${toValue || 'End'}`;
                 
                 jobs.forEach(job => {
-                    // 🔥 STRICT METRIC GATE: CALCULATE FINANCE IF AND ONLY IF STATUS IS 'DELIVERED' (NOT REPAIR IS EXCLUDED)
                     if(job.status === "Delivered" && job.date) {
                         let parts = job.date.split(" "); let dParts = parts[0].split("-");
                         let jobDateObj = new Date(`${dParts[2]}-${dParts[1]}-${dParts[0]}T${parts[1] || '00:00'}:00`);
@@ -782,7 +783,7 @@
         async function deleteEmp(u){ if(confirm("Delete account?")){ const res = await fetch("/api/employees?username="+u,{method:"DELETE"}); if((await res.json()).success) { loadEmployees(); } } }
 
         // =======================================================
-        // 🔥 HIGHLY ACCURATE DUAL COLUMN A4 PRINT OVERRIDES (SOLUTION CORRECTION FIXED)
+        // 🔥 HIGHLY ACCURATE DUAL COLUMN A4 PRINT OVERRIDES (WHITE TEXT FIX ATTACHED)
         // =======================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
@@ -816,7 +817,7 @@
                     <div class="brand-box text-center">
                         <div class="header-title">FIXIFY</div>
                         <div class="sub-title">Smart Device Repair Network</div>
-                        <div class="header-support-line">📞 Call Support: 9137926080 / 8888083259</div>
+                        <div class="header-support-line" style="color: #ffffff !important; font-weight: bold; font-size: 11px; margin-top: 4px;">📞 Call Support: 9137926080 / 8888083259</div>
                     </div>
                     
                     <div style="font-size:11px; color:#475569; display:flex; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
@@ -879,7 +880,7 @@
                         .brand-box { background: #0f172a; color: #f97316; padding: 10px; border-radius: 6px; margin-bottom: 8px; }
                         .header-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; }
                         .sub-title { font-size: 9px; color: #cbd5e1; text-transform: uppercase; }
-                        .header-support-line { font-size: 10px; color: #fff; margin-top: 3px; font-weight: bold; word-spacing: 1px; }
+                        .header-support-line { font-size: 11px; color: #ffffff !important; margin-top: 3px; font-weight: bold; word-spacing: 1px; }
                         .text-center { text-align: center; } .text-right { text-align: right; }
                         .section-title { font-size: 11px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 3px 6px; border-left: 3px solid #f97316; margin: 10px 0 5px 0; text-transform: uppercase; }
                         table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -904,7 +905,7 @@
                             .brand-box { background: #000 !important; color: #fff !important; }
                             .section-title { background: #eee !important; border-left: 3px solid #000 !important; }
                             .copy-tag { border: 1px solid #000; background: #fff !important; color: #000 !important; }
-                            .header-support-line { color: #000 !important; }
+                            .header-support-line { color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         }
                     </style>
                 </head>
