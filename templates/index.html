@@ -583,13 +583,12 @@
                 finalSecurityLockProfile = textPass !== "None" ? `${textPass} [Pattern: ${patternCode}]` : `Pattern: ${patternCode}`;
             }
 
-            // 🔥 FORCED COMPATIBLE REST PAYLOAD RE-ASSIGNMENT
             const payload={
                 category: document.getElementById("deviceType").value, 
                 device: c_model,
                 password: finalSecurityLockProfile,
                 problem: c_prob, 
-                solution: c_sol || "Standard Fix Required", // Safely falls back to input string mapped to imei backup slot
+                solution: c_sol || "Standard Fix Required", 
                 imei: document.getElementById("deviceIMEI").value, 
                 estimate: parseFloat(document.getElementById("estimate").value || 0),
                 advance: parseFloat(document.getElementById("advance").value || 0), 
@@ -653,7 +652,6 @@
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
                 if(!match || !sMatch) return;
 
-                // Extraction logic normalizes values safely across your table structure rows
                 let displayedSolution = job.imei || "Standard Fix Required";
 
                 tbody.innerHTML += `<tr>
@@ -819,7 +817,7 @@
                     <div class="brand-box text-center">
                         <div class="header-title">FIXIFY</div>
                         <div class="sub-title">Smart Device Repair Network</div>
-                        <div class="header-support-line" style="color: #ffffff !important; font-weight: bold; font-size: 11px; margin-top: 4px;">¼ Call Support: 9137926080 / 8888023259</div>
+                        <div class="header-support-line" style="color: #ffffff !important; font-weight: bold; font-size: 11px; margin-top: 4px;">CALL SUPPORT: 9137926080 / 8888023259</div>
                     </div>
                     
                     <div style="font-size:11px; color:#475569; display:flex; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
@@ -855,14 +853,14 @@
                     </div>
 
                     <div class="legal-note">
-                        <div class="notice-header">¼ Terms & Conditions:</div>
+                        <div class="notice-header">Terms & Conditions:</div>
                         <div class="notice-point">1. At the time of handset delivery, presenting this original jobsheet slip is compulsory.</div>
                         <div class="notice-point">2. Fixify takes zero liabilities for internal hardware breakdown failures during technical tear phases.</div>
                         <div class="notice-point">3. Handsets left unclaimed exceeding a threshold of 30 days shall not be the store's responsibility.</div>
                     </div>
 
                     <div class="thanks-footer">
-                        Thank You For Choosing Fixify! ¤
+                        Thank You For Choosing Fixify! ❤️
                     </div>
                 </div>`;
             }
