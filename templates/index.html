@@ -32,7 +32,6 @@
         .sms-btn { padding:6px 12px; background:#8b5cf6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .sms-btn:hover { background:#7c3aed; }
 
-        /* ADMINISTRATIVE PRIVILEGE BUTTONS OVERRIDES */
         .admin-edit-btn { padding: 4px 8px; background: #eab308; border: none; border-radius: 4px; color: black; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
         .admin-edit-btn:hover { background: #ca8a04; }
         .admin-del-btn { padding: 4px 8px; background: #ef4444; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; }
@@ -69,7 +68,7 @@
         .st-Pending { background:#991b1b; } .st-Repairing { background:#92400e; }
         .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
         .st-Delivered { background:#166534; } .st-Not-Repair { background:#7f1d1d; }
-        .st-Not-Repaired---Delivered { background:#ef4444; border:1px solid white; } /* RETURN CLEARANCE MAPPING COLOR */
+        .st-Not-Repaired---Delivered { background:#ef4444; border:1px solid white; }
         .st-Undelivered { background:#6b21a8; }
 
         .ledger-toggle-btn {
@@ -329,15 +328,16 @@
             }
         }
 
-        function togglePatternPadVisibility() {
-            let selectedType = document.getElementById("deviceType").value;
-            let block = document.getElementById("dynamicPatternBlock");
-            if(selectedType === "Mobile") {
-                block.style.display = "flex";
-                setTimeout(resizePatternCanvas, 50);
+        function toggleLedger() {
+            const content = document.getElementById("ledgerContent");
+            const arrow = document.getElementById("ledgerArrow");
+            if (content.classList.contains("open")) {
+                content.classList.remove("open");
+                arrow.innerText = "▼";
             } else {
-                block.style.display = "none";
-                document.getElementById("drawnPatternCode").value = "";
+                content.classList.add("open");
+                arrow.innerText = "▲";
+                calculateFinancials();
             }
         }
 
@@ -502,19 +502,6 @@
             }
         }
 
-        function toggleLedger() {
-            const content = document.getElementById("ledgerContent");
-            const arrow = document.getElementById("ledgerArrow");
-            if (content.classList.contains("open")) {
-                content.classList.remove("open");
-                arrow.innerText = "▼";
-            } else {
-                content.classList.add("open");
-                arrow.innerText = "▲";
-                calculateFinancials();
-            }
-        }
-
         async function login(){
             let u=document.getElementById("username").value; let p=document.getElementById("password").value;
             const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
@@ -525,7 +512,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Token."); }
+            } else { alert(data.message || "Invalid Identity Token."); }
         }
 
         async function checkSession(){
@@ -567,13 +554,24 @@
         async function loadParts(){ const res=await fetch("/api/parts"); parts=await res.json(); renderParts(); }
         async function loadEmployees(){ const res=await fetch("/api/employees"); employees=await res.json(); renderEmployees(); }
 
+        function togglePatternPadVisibility() {
+            let selectedType = document.getElementById("deviceType").value;
+            let block = document.getElementById("dynamicPatternBlock");
+            if(selectedType === "Mobile") {
+                block.style.display = "flex";
+                setTimeout(resizePatternCanvas, 50);
+            } else {
+                block.style.display = "none";
+                document.getElementById("drawnPatternCode").value = "";
+            }
+        }
+
         async function saveJob(){
             let c_name = document.getElementById("customerName").value;
             let c_phone = document.getElementById("customerPhone").value;
             let c_model = document.getElementById("deviceModel").value;
             let c_prob = document.getElementById("problem").value;
             let c_sol = document.getElementById("solution").value;
-            let d_type = document.getElementById("deviceType").value;
             
             if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
@@ -581,12 +579,12 @@
             let patternCode = document.getElementById("drawnPatternCode").value;
             
             let finalSecurityLockProfile = textPass;
-            if(d_type === "Mobile" && patternCode) {
+            if(patternCode && document.getElementById("deviceType").value === "Mobile") {
                 finalSecurityLockProfile = textPass !== "None" ? `${textPass} [Pattern: ${patternCode}]` : `Pattern: ${patternCode}`;
             }
 
             const payload={
-                category: d_type, 
+                category: document.getElementById("deviceType").value, 
                 device: c_model,
                 imei: document.getElementById("deviceIMEI").value, 
                 password: finalSecurityLockProfile,
@@ -658,12 +656,13 @@
                         <div id="name-display-${job.id}"><strong id="lbl-name-${job.id}">${job.name}</strong></div>
                         <div id="phone-display-${job.id}"><small id="lbl-phone-${job.id}" style="color:#9ca3af;">${job.phone1}</small></div>
                         ${CURRENT_ROLE==='Chairman' ? `
-                        <div style="margin-top:6px; display:flex;">
+                        <div style="margin-top: 6px; display: flex;">
                             <button id="edit-btn-${job.id}" class="admin-edit-btn" onclick="toggleInlineRowEditing('${job.id}')">✏️ Edit</button>
                             <button class="admin-del-btn" onclick="executeAdminRowDeletion('${job.id}')">❌ Delete</button>
-                        </div>` : ''}
+                        </div>
+                        ` : ''}
                     </td>
-                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small><br><small style="color:#10b981; font-weight:bold;">Sol: ${job.solution || 'None'}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(/ /g,'-')}">
                             <option ${job.status==="Pending"?"selected":""}>Pending</option>
@@ -727,7 +726,7 @@
                 timeSpanText = `Range: ${fromValue || 'Start'} to ${toValue || 'End'}`;
                 
                 jobs.forEach(job => {
-                    // 🔥 STRICT COMPLIANCE: ONLY HARVEST REVENUE MATRIX IF STATUS IS STRICTLY 'DELIVERED'
+                    // 🔥 STRICT METRIC GATE: CALCULATE FINANCE IF AND ONLY IF STATUS IS 'DELIVERED' (NOT REPAIR IS EXCLUDED)
                     if(job.status === "Delivered" && job.date) {
                         let parts = job.date.split(" "); let dParts = parts[0].split("-");
                         let jobDateObj = new Date(`${dParts[2]}-${dParts[1]}-${dParts[0]}T${parts[1] || '00:00'}:00`);
@@ -771,9 +770,9 @@
 
         async function saveEmployee(){
             let n=document.getElementById("e-name").value; let u=document.getElementById("e-user").value; let p=document.getElementById("e-pass").value;
-            if(!n || !u || !p) { alert("Please fill all staff parameters."); return; }
+            if(!n || !u || !p) { alert("Please fill all staff fields."); return; }
             const res = await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p})});
-            if((await res.json()).success) { alert("Employee generated successfully!"); document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees(); }
+            if((await res.json()).success) { alert("Employee account token created!"); document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees(); }
         }
         function renderEmployees(){
             let t=document.getElementById("empTable"); t.innerHTML="";
@@ -783,7 +782,7 @@
         async function deleteEmp(u){ if(confirm("Delete account?")){ const res = await fetch("/api/employees?username="+u,{method:"DELETE"}); if((await res.json()).success) { loadEmployees(); } } }
 
         // =======================================================
-        // 🔥 EXCLUSIVE A4 TWO-COPY PRINT ENGINE WITH BRANDED SUPPORT PHONE NUMBERS
+        // 🔥 HIGHLY ACCURATE DUAL COLUMN A4 PRINT OVERRIDES (SOLUTION CORRECTION FIXED)
         // =======================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
@@ -834,7 +833,7 @@
                         <tr><td class="label">IMEI / Specs</td><td class="value">: ${job.imei || 'None'}</td></tr>
                         <tr><td class="label">Lock Security</td><td class="value">: <code style="font-weight:bold; color:#d97706;">${job.password || 'None'}</code></td></tr>
                         <tr><td class="label">Reported Fault</td><td class="value" style="color:#b91c1c; font-weight:bold;">: ${job.problem || 'N/A'}</td></tr>
-                        <tr><td class="label">Proposed Fix</td><td class="value" style="color:#16a34a; font-weight:bold;">: ${job.solution || 'Standard Override'}</td></tr>
+                        <tr><td class="label">Proposed Fix</td><td class="value" style="color:#16a34a; font-weight:bold;">: ${job.solution || 'Standard Fix Required'}</td></tr>
                     </table>
 
                     ${patternGridHtml}
