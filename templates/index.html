@@ -128,7 +128,7 @@
             <button class="menu-btn" onclick="showSection('jobcard', this)">🛠️ Create Jobcard</button>
             <button class="menu-btn" onclick="showSection('repairs', this)">📱 Total Repairing</button>
             <button class="menu-btn" id="parts-menu" onclick="showSection('parts', this)">📦 Spare Parts</button>
-            <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">👨‍💼 Employees</button>
+            <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">📦 Employees</button>
             <button class="menu-btn" id="settings-menu" onclick="showSection('settings', this)" style="display:none;">⚙️ Admin Settings</button>
         </div>
         <button class="menu-btn logout-btn" onclick="logout()">🚪 Logout</button>
@@ -540,6 +540,10 @@
             
             if(output.success){ 
                 alert("Jobcard Registry Generated Successfully."); 
+                
+                // 🔥 TRIGGER AUTOMATIC SMS UPON RECEIVING HANDSET
+                sendLiveStatusAlert(c_name, c_phone, output.id || "NEW", c_model, "Received");
+
                 document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
                 document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
                 document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
@@ -548,6 +552,49 @@
                 clearPatternPad(); await loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
             } else { alert(output.message || "Database Error."); }
+        }
+
+        // =======================================================
+        // 🔥 LIVE DYNAMIC CORPORATE SMS STATUS ALERT ENGINE
+        // =======================================================
+        function sendLiveStatusAlert(custName, custPhone, jobId, deviceModel, statusState) {
+            if(!custPhone || custPhone.length < 10) return;
+            
+            let msgText = "";
+            
+            if(statusState === "Received") {
+                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. You can track status live with us. Thank you for choosing Fixify!`;
+            } else if(statusState === "Repairing") {
+                msgText = `Dear ${custName}, Alert! Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our expert senior technician is working on it. - Team Fixify`;
+            } else if(statusState === "Testing") {
+                msgText = `Dear ${custName}, Good news! Your device [${deviceModel}] (Job ID: ${jobId}) has been fixed and shifted to the TESTING phase for final software/hardware quality verification. - Team Fixify`;
+            } else if(statusState === "Ready") {
+                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit Fixify store during working hours to claim delivery. Thank you!`;
+            } else if(statusState === "Delivered") {
+                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. We appreciate your trust in Fixify Tech Repair Network. Have a great day!`;
+            } else {
+                return; // Do not alert if status isn't matched
+            }
+
+            // Encode to URL Standard parameters safely
+            let formattedPhone = custPhone.startsWith("91") ? custPhone : "91" + custPhone;
+            let smsUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}`;
+            
+            // Pop up smooth background trigger without freezing dashboard rows
+            window.open(smsUrl, '_blank');
+        }
+
+        // CONTROL DROPDOWN STATUS EVENT TRIGGER ATTACHMENTS
+        async function updateStatus(id, status){ 
+            const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
+            if(res.ok) {
+                // Find matching client record from cache list to extract phone nodes
+                const targetJob = jobs.find(j => j.id === id);
+                if(targetJob) {
+                    sendLiveStatusAlert(targetJob.name, targetJob.phone1, id, targetJob.device, status);
+                }
+                loadJobs(); 
+            }
         }
 
         function renderJobs(){
@@ -654,9 +701,6 @@
             document.getElementById("ledgerMonthFilter").value = "all"; calculateFinancials();
         }
 
-        // =======================================================
-        // 🔥 REMAPPED DUAL PRINT ENGINE (POINT NOTICE + THANKS FOOTER)
-        // =======================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
             if (!job) { alert("Job not found."); return; }
@@ -772,12 +816,10 @@
                         .sign-block { text-align: center; font-size: 10px; color: #475569; font-weight: bold; }
                         .sign-line { border-top: 1px solid #94a3b8; margin-bottom: 3px; }
                         
-                        /* CLEAN POINT-BY-POINT ALIGNMENT STYLES */
                         .legal-note { font-size: 9px; color: #475569; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
                         .notice-header { font-weight: bold; color: #1e293b; margin-bottom: 4px; text-transform: uppercase; font-size: 9px; }
                         .notice-point { margin-bottom: 3px; text-align: justify; line-height: 1.3; padding-left: 2px; }
                         
-                        /* BRANDED CENTERED FOOTER STYLE */
                         .thanks-footer { text-align: center; font-size: 12px; font-weight: bold; color: #0f172a; margin-top: 15px; padding-top: 5px; letter-spacing: 0.5px; }
                         
                         @media print {
@@ -837,7 +879,7 @@
         async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
 
         window.onload=checkSession;
-        showSession("dashboard", document.querySelectorAll('.menu-btn')[0]);
+        showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
     </script>
 </body>
 </html>
