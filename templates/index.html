@@ -29,9 +29,15 @@
         .print-btn { padding:6px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .print-btn:hover { background:#2563eb; }
         
-        /* NEW DEDICATED SMS BUTTON STYLE */
         .sms-btn { padding:6px 12px; background:#8b5cf6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .sms-btn:hover { background:#7c3aed; }
+
+        /* ADMINISTRATIVE PRIVILEGE BUTTONS OVERRIDES */
+        .admin-edit-btn { padding: 4px 8px; background: #eab308; border: none; border-radius: 4px; color: black; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
+        .admin-edit-btn:hover { background: #ca8a04; }
+        .admin-del-btn { padding: 4px 8px; background: #ef4444; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .admin-del-btn:hover { background: #dc2626; }
+        .inline-edit-box { width: 100%; padding: 6px; background: #374151; border: 1px solid #f97316; border-radius: 4px; color: white; margin-bottom: 4px; font-size: 13px; }
 
         .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
         .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
@@ -63,6 +69,7 @@
         .st-Pending { background:#991b1b; } .st-Repairing { background:#92400e; }
         .st-Testing { background:#1e40af; } .st-Ready { background:#065f46; }
         .st-Delivered { background:#166534; } .st-Not-Repair { background:#7f1d1d; }
+        .st-Not-Repaired---Delivered { background:#ef4444; border:1px solid white; } /* RETURN CLEARANCE MAPPING COLOR */
         .st-Undelivered { background:#6b21a8; }
 
         .ledger-toggle-btn {
@@ -241,7 +248,7 @@
             <h2>Live Repair Tracking Ledger</h2>
             <div class="search-bar">
                 <input type="text" id="searchInput" class="input" oninput="renderJobs()" placeholder="Search by Client Name, Phone, Job ID, or Date...">
-                <select id="statusFilter" class="input" style="max-width:200px;" onchange="renderJobs()"><option value="">All Active Status</option><option>Pending</option><option>Repairing</option><option>Testing</option><option>Ready</option><option>Delivered</option><option>Not Repair</option><option>Undelivered</option></select>
+                <select id="statusFilter" class="input" style="max-width:200px;" onchange="renderJobs()"><option value="">All Active Status</option><option>Pending</option><option>Repairing</option><option>Testing</option><option>Ready</option><option>Delivered</option><option>Not Repair</option><option>Not Repaired - Delivered</option><option>Undelivered</option></select>
             </div>
             <div class="table-container">
                 <table>
@@ -322,16 +329,15 @@
             }
         }
 
-        function toggleLedger() {
-            const content = document.getElementById("ledgerContent");
-            const arrow = document.getElementById("ledgerArrow");
-            if (content.classList.contains("open")) {
-                content.classList.remove("open");
-                arrow.innerText = "▼";
+        function togglePatternPadVisibility() {
+            let selectedType = document.getElementById("deviceType").value;
+            let block = document.getElementById("dynamicPatternBlock");
+            if(selectedType === "Mobile") {
+                block.style.display = "flex";
+                setTimeout(resizePatternCanvas, 50);
             } else {
-                content.classList.add("open");
-                arrow.innerText = "▲";
-                calculateFinancials();
+                block.style.display = "none";
+                document.getElementById("drawnPatternCode").value = "";
             }
         }
 
@@ -458,6 +464,57 @@
             if (canvas) { const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height); }
         }
 
+        function toggleInlineRowEditing(jobId) {
+            const nameContainer = document.getElementById(`name-display-${jobId}`);
+            const phoneContainer = document.getElementById(`phone-display-${jobId}`);
+            const editBtn = document.getElementById(`edit-btn-${jobId}`);
+            
+            if (editBtn.innerText === "✏️ Edit") {
+                const currentName = document.getElementById(`lbl-name-${jobId}`).innerText;
+                const currentPhone = document.getElementById(`lbl-phone-${jobId}`).innerText;
+                
+                nameContainer.innerHTML = `<input type="text" id="inp-name-${jobId}" class="inline-edit-box" value="${currentName}">`;
+                phoneContainer.innerHTML = `<input type="text" id="inp-phone-${jobId}" class="inline-edit-box" value="${currentPhone}">`;
+                editBtn.innerText = "💾 Save";
+                editBtn.style.background = "#10b981";
+                editBtn.style.color = "white";
+            } else {
+                executeAdminRowSave(jobId);
+            }
+        }
+
+        async function executeAdminRowSave(jobId) {
+            const updatedName = document.getElementById(`inp-name-${jobId}`).value;
+            const updatedPhone = document.getElementById(`inp-phone-${jobId}`).value;
+            if(!updatedName || !updatedPhone) { alert("Fields cannot be completely blank."); return; }
+            const res = await fetch("/api/update_pricing", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: jobId, discount: -1, extra_charge: -1, spare_cost: -1, custom_name: updatedName, custom_phone: updatedPhone })
+            });
+            if((await res.json()).success) { alert("Customer profile synchronized successfully!"); loadJobs(); }
+        }
+
+        async function executeAdminRowDeletion(jobId) {
+            if(confirm(`⚠️ WARNING: Are you absolutely sure you want to permanently delete Jobcard entry ${jobId}?`)) {
+                const res = await fetch("/api/update_pricing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: jobId, discount: -999 }) });
+                if((await res.json()).success) { alert("Jobcard record completely purged!"); loadJobs(); }
+            }
+        }
+
+        function toggleLedger() {
+            const content = document.getElementById("ledgerContent");
+            const arrow = document.getElementById("ledgerArrow");
+            if (content.classList.contains("open")) {
+                content.classList.remove("open");
+                arrow.innerText = "▼";
+            } else {
+                content.classList.add("open");
+                arrow.innerText = "▲";
+                calculateFinancials();
+            }
+        }
+
         async function login(){
             let u=document.getElementById("username").value; let p=document.getElementById("password").value;
             const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
@@ -468,7 +525,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Security Token ID/Password."); }
+            } else { alert(data.message || "Invalid Token."); }
         }
 
         async function checkSession(){
@@ -501,7 +558,7 @@
             let newP = document.getElementById("newChairmanPass").value;
             if(!newP) { alert("Please enter a valid password."); return; }
             const res = await fetch("/api/update_chairman_pass", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_password:newP})});
-            if((await res.json()).success){ alert("Chairman Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
+            if((await res.json()).success){ alert("Admin Password Updated Successfully!"); document.getElementById("newChairmanPass").value=""; }
         }
 
         async function logout(){ await fetch("/api/logout",{method:"POST"}); location.reload(); }
@@ -516,6 +573,7 @@
             let c_model = document.getElementById("deviceModel").value;
             let c_prob = document.getElementById("problem").value;
             let c_sol = document.getElementById("solution").value;
+            let d_type = document.getElementById("deviceType").value;
             
             if(!c_name || !c_phone || !c_model || !c_prob){ alert("Please fill all mandatory (*) fields."); return; }
 
@@ -523,12 +581,12 @@
             let patternCode = document.getElementById("drawnPatternCode").value;
             
             let finalSecurityLockProfile = textPass;
-            if(patternCode && document.getElementById("deviceType").value === "Mobile") {
+            if(d_type === "Mobile" && patternCode) {
                 finalSecurityLockProfile = textPass !== "None" ? `${textPass} [Pattern: ${patternCode}]` : `Pattern: ${patternCode}`;
             }
 
             const payload={
-                category: document.getElementById("deviceType").value, 
+                category: d_type, 
                 device: c_model,
                 imei: document.getElementById("deviceIMEI").value, 
                 password: finalSecurityLockProfile,
@@ -541,36 +599,21 @@
             };
             
             const res=await fetch("/api/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-            const output = await res.json();
-            
-            if(output.success){ 
+            if((await res.json()).success){ 
                 alert("Jobcard Registry Generated Successfully."); 
-                loadJobs(); 
+                document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
+                document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
+                document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
+                document.getElementById("solution").value="";
+                document.getElementById("estimate").value=""; document.getElementById("advance").value="";
+                clearPatternPad(); await loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
-            } else { alert(output.message || "Database Error."); }
+            }
         }
 
-        // =======================================================
-        // 🔥 SAFE SMS TRIGGER INTERFACE (NO BROWSER FREEZING)
-        // =======================================================
         function triggerManualWhatsAppAlert(custName, custPhone, jobId, deviceModel, currentStatus) {
             if(!custPhone || custPhone.length < 10) { alert("Invalid phone number framework."); return; }
-            
-            let msgText = "";
-            if(currentStatus === "Pending") {
-                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. Thank you for choosing Fixify!`;
-            } else if(currentStatus === "Repairing") {
-                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our technician is working on it. - Team Fixify`;
-            } else if(currentStatus === "Testing") {
-                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) is now in the TESTING phase for quality verification. - Team Fixify`;
-            } else if(currentStatus === "Ready") {
-                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit the store.`;
-            } else if(currentStatus === "Delivered") {
-                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. - Team Fixify`;
-            } else {
-                msgText = `Hello ${custName}, Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
-            }
-
+            let msgText = `Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
             let formattedPhone = custPhone.startsWith("91") ? custPhone : "91" + custPhone;
             let smsUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}`;
             window.open(smsUrl, '_blank');
@@ -579,6 +622,14 @@
         async function updateStatus(id,status){ 
             const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
             if(res.ok) { loadJobs(); }
+        }
+
+        async function savePricing(id){
+            let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
+            let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
+            let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
+            const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
+            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); }
         }
 
         function renderJobs(){
@@ -590,7 +641,12 @@
             if(!Array.isArray(jobs)) return;
 
             jobs.forEach(job=>{
-                if(job.status==="Pending") p++; if(job.status==="Repairing") r++; if(job.status==="Testing") t++; if(job.status==="Ready") ry++; if(job.status==="Not Repair") nr++; if(job.status==="Delivered") d++;
+                if(job.status==="Pending") p++; 
+                if(job.status==="Repairing") r++; 
+                if(job.status==="Testing") t++; 
+                if(job.status==="Ready") ry++; 
+                if(job.status==="Not Repair" || job.status==="Not Repaired - Delivered") nr++; 
+                if(job.status==="Delivered") d++;
 
                 let match = !filter || job.status === filter;
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
@@ -598,13 +654,25 @@
 
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
-                    <td><strong>${job.name}</strong><br><small style="color:#9ca3af;">${job.phone1}</small></td>
+                    <td>
+                        <div id="name-display-${job.id}"><strong id="lbl-name-${job.id}">${job.name}</strong></div>
+                        <div id="phone-display-${job.id}"><small id="lbl-phone-${job.id}" style="color:#9ca3af;">${job.phone1}</small></div>
+                        ${CURRENT_ROLE==='Chairman' ? `
+                        <div style="margin-top:6px; display:flex;">
+                            <button id="edit-btn-${job.id}" class="admin-edit-btn" onclick="toggleInlineRowEditing('${job.id}')">✏️ Edit</button>
+                            <button class="admin-del-btn" onclick="executeAdminRowDeletion('${job.id}')">❌ Delete</button>
+                        </div>` : ''}
+                    </td>
                     <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small></td>
                     <td>
-                        <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(' ','-')}">
-                            <option ${job.status==="Pending"?"selected":""}>Pending</option><option ${job.status==="Repairing"?"selected":""}>Repairing</option>
-                            <option ${job.status==="Testing"?"selected":""}>Testing</option><option ${job.status==="Ready"?"selected":""}>Ready</option>
-                            <option ${job.status==="Delivered"?"selected":""}>Delivered</option><option ${job.status==="Not Repair"?"selected":""}>Not Repair</option>
+                        <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(/ /g,'-')}">
+                            <option ${job.status==="Pending"?"selected":""}>Pending</option>
+                            <option ${job.status==="Repairing"?"selected":""}>Repairing</option>
+                            <option ${job.status==="Testing"?"selected":""}>Testing</option>
+                            <option ${job.status==="Ready"?"selected":""}>Ready</option>
+                            <option ${job.status==="Delivered"?"selected":""}>Delivered</option>
+                            <option ${job.status==="Not Repair"?"selected":""}>Not Repair</option>
+                            <option ${job.status==="Not Repaired - Delivered"?"selected":""}>Not Repaired - Delivered</option>
                             <option ${job.status==="Undelivered"?"selected":""}>Undelivered</option>
                         </select>
                     </td>
@@ -632,8 +700,7 @@
 
         function handleMonthQuickSelect(){
             let monthSelect = document.getElementById("ledgerMonthFilter").value;
-            let fromInput = document.getElementById("ledgerFromDate");
-            let toInput = document.getElementById("ledgerToDate");
+            let fromInput = document.getElementById("ledgerFromDate"); let toInput = document.getElementById("ledgerToDate");
             let today = new Date();
             if(monthSelect === "current") {
                 let y = today.getFullYear(); let m = today.getMonth();
@@ -653,11 +720,14 @@
             let rev=0; let exp=0;
             let fromValue = document.getElementById("ledgerFromDate").value; let toValue = document.getElementById("ledgerToDate").value;     
             let timeSpanText = "Lifetime History";
+            
             if (fromValue || toValue) {
                 let fromDate = fromValue ? new Date(fromValue + "T00:00:00") : new Date("1970-01-01");
                 let toDate = toValue ? new Date(toValue + "T23:59:59") : new Date("2099-12-31");
                 timeSpanText = `Range: ${fromValue || 'Start'} to ${toValue || 'End'}`;
+                
                 jobs.forEach(job => {
+                    // 🔥 STRICT COMPLIANCE: ONLY HARVEST REVENUE MATRIX IF STATUS IS STRICTLY 'DELIVERED'
                     if(job.status === "Delivered" && job.date) {
                         let parts = job.date.split(" "); let dParts = parts[0].split("-");
                         let jobDateObj = new Date(`${dParts[2]}-${dParts[1]}-${dParts[0]}T${parts[1] || '00:00'}:00`);
@@ -686,6 +756,35 @@
             document.getElementById("ledgerMonthFilter").value = "all"; calculateFinancials();
         }
 
+        async function savePart(){
+            let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
+            if(!n || !m) { alert("Please fill all mandatory stock details."); return; }
+            const res = await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
+            if((await res.json()).success) { alert("Stock added successfully!"); document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts(); }
+        }
+        function renderParts(){
+            let t=document.getElementById("partsTable"); t.innerHTML="";
+            if(!Array.isArray(parts)) return;
+            parts.forEach(p=>{ t.innerHTML+=`<tr><td><strong>${p.part_name}</strong></td><td>${p.model}</td><td style="color:#10b981; font-weight:bold;">₹${p.price}</td><td>${p.date || ''}</td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deletePart('${p.id}')">❌</button></td></tr>`; });
+        }
+        async function deletePart(id){ if(confirm("Delete record?")){ await fetch("/api/parts?id="+id,{method:"DELETE"}); loadParts(); } }
+
+        async function saveEmployee(){
+            let n=document.getElementById("e-name").value; let u=document.getElementById("e-user").value; let p=document.getElementById("e-pass").value;
+            if(!n || !u || !p) { alert("Please fill all staff parameters."); return; }
+            const res = await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p})});
+            if((await res.json()).success) { alert("Employee generated successfully!"); document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees(); }
+        }
+        function renderEmployees(){
+            let t=document.getElementById("empTable"); t.innerHTML="";
+            if(!Array.isArray(employees)) return;
+            employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
+        }
+        async function deleteEmp(u){ if(confirm("Delete account?")){ const res = await fetch("/api/employees?username="+u,{method:"DELETE"}); if((await res.json()).success) { loadEmployees(); } } }
+
+        // =======================================================
+        // 🔥 EXCLUSIVE A4 TWO-COPY PRINT ENGINE WITH BRANDED SUPPORT PHONE NUMBERS
+        // =======================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
             if (!job) { alert("Job not found."); return; }
@@ -718,6 +817,7 @@
                     <div class="brand-box text-center">
                         <div class="header-title">FIXIFY</div>
                         <div class="sub-title">Smart Device Repair Network</div>
+                        <div class="header-support-line">📞 Call Support: 9137926080 / 8888083259</div>
                     </div>
                     
                     <div style="font-size:11px; color:#475569; display:flex; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
@@ -756,8 +856,8 @@
                     <div class="legal-note">
                         <div class="notice-header">⚠️ Terms & Conditions:</div>
                         <div class="notice-point">1. At the time of handset delivery, presenting this original jobsheet slip is compulsory.</div>
-                        <div class="notice-point">2. Fixify takes zero liabilities for internal motherboard processor health failures or structural chip sets degradation during technical teardown phases.</div>
-                        <div class="notice-point">3. Handsets left unclaimed exceeding a threshold of 30 days post-repair alert stamps shall not be the store's responsibility.</div>
+                        <div class="notice-point">2. Fixify takes zero liabilities for internal hardware breakdown failures during technical tear phases.</div>
+                        <div class="notice-point">3. Handsets left unclaimed exceeding a threshold of 30 days shall not be the store's responsibility.</div>
                     </div>
 
                     <div class="thanks-footer">
@@ -773,45 +873,39 @@
                     <style>
                         @page { size: A4 landscape; margin: 6mm 5mm; }
                         body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; }
-                        
                         .a4-wrapper { display: table; width: 100%; table-layout: fixed; }
                         .receipt-column { display: table-cell; width: 50%; padding: 0 15px; position: relative; vertical-align: top; }
                         .receipt-column:first-child { border-right: 1px dashed #94a3b8; }
-                        
                         .copy-tag { position: absolute; top: 0; right: 15px; font-size: 9px; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
                         .brand-box { background: #0f172a; color: #f97316; padding: 10px; border-radius: 6px; margin-bottom: 8px; }
                         .header-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; }
                         .sub-title { font-size: 9px; color: #cbd5e1; text-transform: uppercase; }
+                        .header-support-line { font-size: 10px; color: #fff; margin-top: 3px; font-weight: bold; word-spacing: 1px; }
                         .text-center { text-align: center; } .text-right { text-align: right; }
-                        
                         .section-title { font-size: 11px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 3px 6px; border-left: 3px solid #f97316; margin: 10px 0 5px 0; text-transform: uppercase; }
                         table { width: 100%; border-collapse: collapse; font-size: 11px; }
                         td { padding: 4px 2px; vertical-align: top; }
                         .label { color: #64748b; font-weight: 600; width: 35%; }
                         .value { color: #0f172a; }
-                        
                         .print-pattern-box { margin: 8px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; display: flex; align-items: center; justify-content: space-around; }
                         .pattern-mini-title { font-size: 10px; font-weight: bold; color: #f97316; text-transform: uppercase; width: 40%; }
                         .mini-grid { display: grid; grid-template-columns: repeat(3, 20px); gap: 6px; justify-content: center; }
                         .p-dot { width: 12px; height: 12px; background: #cbd5e1; border-radius: 50%; margin: auto; position: relative; display: flex; align-items: center; justify-content: center; }
                         .p-dot-active { background: #f97316; box-shadow: 0 0 4px #f97316; }
                         .step-badge { font-size: 7px; color: #fff; font-weight: bold; z-index: 10; }
-
                         .sign-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
                         .sign-block { text-align: center; font-size: 10px; color: #475569; font-weight: bold; }
                         .sign-line { border-top: 1px solid #94a3b8; margin-bottom: 3px; }
-                        
                         .legal-note { font-size: 9px; color: #475569; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
                         .notice-header { font-weight: bold; color: #1e293b; margin-bottom: 4px; text-transform: uppercase; font-size: 9px; }
                         .notice-point { margin-bottom: 3px; text-align: justify; line-height: 1.3; padding-left: 2px; }
-                        
                         .thanks-footer { text-align: center; font-size: 12px; font-weight: bold; color: #0f172a; margin-top: 15px; padding-top: 5px; letter-spacing: 0.5px; }
-                        
                         @media print {
                             body { color: #000; background: #fff; }
                             .brand-box { background: #000 !important; color: #fff !important; }
                             .section-title { background: #eee !important; border-left: 3px solid #000 !important; }
                             .copy-tag { border: 1px solid #000; background: #fff !important; color: #000 !important; }
+                            .header-support-line { color: #000 !important; }
                         }
                     </style>
                 </head>
@@ -825,47 +919,6 @@
             `);
             printWindow.document.close();
         }
-
-        async function updateStatus(id,status){ 
-            const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
-            if(res.ok) { loadJobs(); }
-        }
-
-        async function savePricing(id){
-            let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
-            let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
-            let sp = parseFloat(document.getElementById("sp-"+id).value || 0);
-            const res = await fetch("/api/update_pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,discount:disc,extra_charge:ext,spare_cost:sp})});
-            if((await res.json()).success) { alert("Pricing metrics synchronized successfully!"); loadJobs(); } else { alert("Failed to update price."); }
-        }
-
-        async function savePart(){
-            let n=document.getElementById("p-name").value; let m=document.getElementById("p-model").value; let p=parseFloat(document.getElementById("p-price").value || 0);
-            if(!n || !m) { alert("Please fill all mandatory stock details."); return; }
-            const res = await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({part_name:n,model:m,price:p})});
-            if((await res.json()).success) {
-                alert("Stock added successfully!");
-                document.getElementById("p-name").value=""; document.getElementById("p-model").value=""; document.getElementById("p-price").value=""; loadParts();
-            } else { alert("Error saving part."); }
-        }
-        function renderParts(){
-            let t=document.getElementById("partsTable"); t.innerHTML="";
-            if(!Array.isArray(parts)) return;
-            parts.forEach(p=>{ t.innerHTML+=`<tr><td><strong>${p.part_name}</strong></td><td>${p.model}</td><td style="color:#10b981; font-weight:bold;">₹${p.price}</td><td>${p.date || ''}</td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deletePart('${p.id}')">❌</button></td></tr>`; });
-        }
-        async function deletePart(id){ if(confirm("Delete record?")){ await fetch("/api/parts?id="+id,{method:"DELETE"}); loadParts(); } }
-
-        async function saveEmployee(){
-            let n=document.getElementById("e-name").value; let u=document.getElementById("e-user").value; let p=document.getElementById("e-pass").value;
-            await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p})});
-            document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees();
-        }
-        function renderEmployees(){
-            let t=document.getElementById("empTable"); t.innerHTML="";
-            if(!Array.isArray(employees)) return;
-            employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
-        }
-        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{username:"DELETE"}); loadEmployees(); } }
 
         window.onload=checkSession;
         showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
