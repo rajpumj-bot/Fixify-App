@@ -118,7 +118,7 @@ def update_pricing():
     disc = float(data.get("discount", 0))
     
     try:
-        # 🔥 CRITICAL FIX: FIXED THE RESERVED KEYWORD ERROR PERMANENTLY
+        # 🔥 FIXED DUAL OVERRIDE ROUTING LABELS
         if disc == -999:
             supabase.table("fixify_registry").delete().eq("id", job_id).execute()
             return jsonify({"success": True, "message": "Purged successfully"})
@@ -194,3 +194,4 @@ def update_chairman_pass():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    
