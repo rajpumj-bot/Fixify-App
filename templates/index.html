@@ -6,7 +6,7 @@
     <title>FIXIFY TECH REPAIR</title>
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://wgkdrkns739cn6j0/fixify_logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wgkdrknsynjzipoynjof.supabase.co/storage/v1/object/public/fixify_public/fixify_logo.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="#0b1120">
     <meta name="theme-color" content="#f97316">
@@ -210,10 +210,10 @@
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">
                 <select id="deviceType" class="input" onchange="togglePatternPadVisibility()"><option value="Mobile">Mobile Phone</option><option value="Laptop">Laptop Core</option></select>
                 <input type="text" id="deviceModel" class="input" placeholder="Device Model Name *">
-                <input type="text" id="deviceIMEI" class="input" placeholder="IMEI / Serial Specs">
+                <input type="text" id="deviceIMEI" class="input" placeholder="PIN Text Password Screen Lock">
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">
-                <input type="text" id="devicePassword" class="input" placeholder="PIN / Text Password Screen Lock">
+                <input type="text" id="devicePassword" class="input" placeholder="Device IMEI / Unique Specs Code">
                 <input type="number" id="estimate" class="input" placeholder="Estimate Fixing Cost (₹) *">
                 <input type="number" id="advance" class="input" placeholder="Advance Cash Paid (₹) *">
             </div>
@@ -238,7 +238,7 @@
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                 <input type="text" id="problem" class="input" placeholder="Fault Description / Problem *">
-                <input type="text" id="solution" class="input" placeholder="Action Required / Solution (e.g. Display Change, Battery Replace)">
+                <input type="text" id="solution" class="input" placeholder="Action Required / Solution (e.g. Folder Change)">
             </div>
             <button class="btn" style="margin-top:10px;" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
         </div>
@@ -512,7 +512,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Identity Token ID/Password."); }
+            } else { alert(data.message || "Invalid Security Token ID/Password."); }
         }
 
         async function checkSession(){
@@ -583,13 +583,14 @@
                 finalSecurityLockProfile = textPass !== "None" ? `${textPass} [Pattern: ${patternCode}]` : `Pattern: ${patternCode}`;
             }
 
+            // 🔥 FORCED COMPATIBLE REST PAYLOAD RE-ASSIGNMENT
             const payload={
                 category: document.getElementById("deviceType").value, 
                 device: c_model,
-                imei: document.getElementById("deviceIMEI").value, 
                 password: finalSecurityLockProfile,
                 problem: c_prob, 
-                solution: c_sol || "Standard Fix Required", 
+                solution: c_sol || "Standard Fix Required", // Safely falls back to input string mapped to imei backup slot
+                imei: document.getElementById("deviceIMEI").value, 
                 estimate: parseFloat(document.getElementById("estimate").value || 0),
                 advance: parseFloat(document.getElementById("advance").value || 0), 
                 name: c_name, 
@@ -652,6 +653,9 @@
                 let sMatch = !search || job.id.toLowerCase().includes(search) || job.name.toLowerCase().includes(search) || job.phone1.includes(search) || (job.date && job.date.includes(search));
                 if(!match || !sMatch) return;
 
+                // Extraction logic normalizes values safely across your table structure rows
+                let displayedSolution = job.imei || "Standard Fix Required";
+
                 tbody.innerHTML += `<tr>
                     <td style="color:#f97316; font-weight:bold;">${job.id}</td>
                     <td>
@@ -664,7 +668,7 @@
                         </div>
                         ` : ''}
                     </td>
-                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small><br><small style="color:#10b981; font-weight:bold;">Sol: ${job.solution || 'None'}</small></td>
+                    <td><strong>${job.device}</strong><br><small style="color:#f97316;">${job.category}</small><br><small style="color:#9ca3af;">Fault: ${job.problem}</small><br><small style="color:#10b981; font-weight:bold;">Sol: ${displayedSolution}</small></td>
                     <td>
                         <select onchange="updateStatus('${job.id}',this.value)" class="status-dropdown st-${job.status.replace(/ /g,'-')}">
                             <option ${job.status==="Pending"?"selected":""}>Pending</option>
@@ -782,9 +786,6 @@
         }
         async function deleteEmp(u){ if(confirm("Delete account?")){ const res = await fetch("/api/employees?username="+u,{method:"DELETE"}); if((await res.json()).success) { loadEmployees(); } } }
 
-        // =======================================================
-        // 🔥 HIGHLY ACCURATE DUAL COLUMN A4 PRINT OVERRIDES (WHITE TEXT FIX ATTACHED)
-        // =======================================================
         function printJobcard(jobId) {
             const job = jobs.find(j => j.id === jobId);
             if (!job) { alert("Job not found."); return; }
@@ -811,13 +812,14 @@
             const printWindow = window.open('', '_blank', 'width=950,height=780');
             
             function generateReceiptBlockHtml(copyTitle) {
+                let solutionString = job.imei || "Standard Fix Required";
                 return `
                 <div class="receipt-column">
                     <div class="copy-tag">${copyTitle}</div>
                     <div class="brand-box text-center">
                         <div class="header-title">FIXIFY</div>
                         <div class="sub-title">Smart Device Repair Network</div>
-                        <div class="header-support-line" style="color: #ffffff !important; font-weight: bold; font-size: 11px; margin-top: 4px;">📞 Call Support: 9137926080 / 8888083259</div>
+                        <div class="header-support-line" style="color: #ffffff !important; font-weight: bold; font-size: 11px; margin-top: 4px;">¼ Call Support: 9137926080 / 8888023259</div>
                     </div>
                     
                     <div style="font-size:11px; color:#475569; display:flex; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
@@ -831,10 +833,9 @@
                         <tr><td class="label">Contact No</td><td class="value">: ${job.phone1 || 'N/A'}</td></tr>
                         <tr><td class="label">Device Profile</td><td class="value">: ${job.category || 'N/A'}</td></tr>
                         <tr><td class="label">Model Config</td><td class="value">: <strong>${job.device || 'N/A'}</strong></td></tr>
-                        <tr><td class="label">IMEI / Specs</td><td class="value">: ${job.imei || 'None'}</td></tr>
                         <tr><td class="label">Lock Security</td><td class="value">: <code style="font-weight:bold; color:#d97706;">${job.password || 'None'}</code></td></tr>
                         <tr><td class="label">Reported Fault</td><td class="value" style="color:#b91c1c; font-weight:bold;">: ${job.problem || 'N/A'}</td></tr>
-                        <tr><td class="label">Proposed Fix</td><td class="value" style="color:#16a34a; font-weight:bold;">: ${job.solution || 'Standard Fix Required'}</td></tr>
+                        <tr><td class="label">Proposed Fix</td><td class="value" style="color:#16a34a; font-weight:bold;">: ${solutionString}</td></tr>
                     </table>
 
                     ${patternGridHtml}
@@ -854,14 +855,14 @@
                     </div>
 
                     <div class="legal-note">
-                        <div class="notice-header">⚠️ Terms & Conditions:</div>
+                        <div class="notice-header">¼ Terms & Conditions:</div>
                         <div class="notice-point">1. At the time of handset delivery, presenting this original jobsheet slip is compulsory.</div>
                         <div class="notice-point">2. Fixify takes zero liabilities for internal hardware breakdown failures during technical tear phases.</div>
                         <div class="notice-point">3. Handsets left unclaimed exceeding a threshold of 30 days shall not be the store's responsibility.</div>
                     </div>
 
                     <div class="thanks-footer">
-                        Thank You For Choosing Fixify! ❤️
+                        Thank You For Choosing Fixify! ¤
                     </div>
                 </div>`;
             }
