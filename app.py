@@ -67,7 +67,6 @@ def handle_jobs():
     if request.method == "POST":
         data = request.json or {}
         try:
-            # Automatic Sequential ID Generator Engine matrix loops logic
             res_count = supabase.table("fixify_registry").select("id", count="exact").execute()
             next_num = (res_count.count or 0) + 1
             generated_job_id = f"FIX{next_num:04d}"
@@ -120,12 +119,10 @@ def update_pricing():
     disc = float(data.get("discount", 0))
     
     try:
-        # ❌ CONDITIONAL FOR FULL ENTRY PURGE / DELETION ACTION
-        if disc == -999:
+        if list == -999 or disc == -999:
             supabase.table("fixify_registry").delete().eq("id", job_id).execute()
             return jsonify({"success": True, "message": "Purged successfully"})
 
-        # ✏️ CONDITIONAL FOR PROFILE METADATA EDITS OVERRIDES
         if disc == -1:
             custom_name = data.get("custom_name")
             custom_phone = data.get("custom_phone")
@@ -135,7 +132,6 @@ def update_pricing():
             }).eq("id", job_id).execute()
             return jsonify({"success": True, "message": "Profile synced"})
 
-        # Fall-back mapping logic for normal standard costing values synchronization
         payload = {
             "discount": disc,
             "extra_charge": float(data.get("extra_charge", 0)),
@@ -169,6 +165,7 @@ def handle_parts():
         return jsonify(res.data or [])
     except Exception: return jsonify([])
 
+# 🔥 FIXED INCORRECT PARAMETER METHOD MAPPING IN EMPLOYEE ROUTE
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
 def handle_employees():
     if "user" not in session or session.get("role") != "Chairman":
