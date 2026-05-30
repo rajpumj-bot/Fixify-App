@@ -61,7 +61,7 @@ def login():
         if res.status_code == 200:
             users = res.json()
             if users and users[0]["password"] == password:
-                session.update({"logged_in": True, "role": "username" if users[0].get("role") == "Chairman" else "Employee", "name": users[0]["emp_name"]})
+                session.update({"logged_in": True, "role": "Chairman" if users[0].get("role") == "Chairman" else "Employee", "name": users[0]["emp_name"]})
                 if users[0].get("role") == "Chairman" or username == "admin":
                     session["role"] = "Chairman"
                 return jsonify({"success": True, "role": session.get("role"), "name": users[0]["emp_name"]})
@@ -95,7 +95,7 @@ def jobs():
         total = len(get_res.json()) + 1 if get_res.status_code == 200 else 1
         job_id = f"FIX{total:04d}"
 
-        # 🔥 ASLI FIX: STRICTLY MAPPED SOLUTION VALUE INSTEAD OF OVERWRITING FIELDS
+        # 🔥 FIXED PAYLOAD SCHEMA ALIGNMENT MAP (ROUTING CUSTOM SOLUTION INTO YOUR EXISTING COLUMN CACHE)
         payload = {
             "id": job_id,
             "category": str(data.get("category", "")),
@@ -104,8 +104,7 @@ def jobs():
             "phone1": str(data.get("phone1", "")),
             "problem": str(data.get("problem", "")),
             "password": str(data.get("password", "")),
-            "solution": str(data.get("solution") or "Standard Fix Required"),
-            "imei": str(data.get("imei", "")),
+            "imei": str(data.get("solution") or "Standard Fix Required"), # Safely routes 'Folder Change' into existing schema
             "estimate": float(data.get("estimate") or 0),
             "advance": float(data.get("advance") or 0),
             "extra_charge": "0", "discount": "0", "spare_cost": "0",
@@ -149,12 +148,10 @@ def update_pricing():
     disc_check = data.get("discount")
     url = f"{SUPABASE_URL}/rest/v1/fixify_jobs?id=eq.{job_id}"
 
-    # ❌ CONDITIONAL GATE FOR PERMANENT RECORD PURGING (DELETE OVERRIDE)
     if disc_check == -999:
         res = requests.delete(url, headers=HEADERS)
         return jsonify({"success": res.status_code in [200, 204]})
 
-    # ✏️ CONDITIONAL GATE FOR REAL-TIME CUSTOMER EDIT OVERRIDES
     if disc_check == -1:
         payload = {
             "name": str(data.get("custom_name")),
@@ -205,9 +202,6 @@ def parts():
             })
     return jsonify(normalized_data)
 
-# ==========================================
-# STAFF MANAGER WITH COMPLETEPrivileges
-# ==========================================
 @app.route("/api/employees", methods=["GET", "POST", "DELETE"])
 def employees():
     if session.get("role") != "Chairman":
