@@ -28,6 +28,10 @@
         .tbl-btn:hover { background:#059669; }
         .print-btn { padding:6px 12px; background:#3b82f6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
         .print-btn:hover { background:#2563eb; }
+        
+        /* NEW DEDICATED SMS BUTTON STYLE */
+        .sms-btn { padding:6px 12px; background:#8b5cf6; border:none; border-radius:4px; color:white; font-weight:bold; cursor:pointer; margin-top:5px; width:100%; }
+        .sms-btn:hover { background:#7c3aed; }
 
         .sidebar { width:250px; background:#111827; padding:20px; border-right:2px solid #f97316; display:flex; flex-direction:column; justify-content:space-between; }
         .logo { font-size:30px; font-weight:bold; color:#f97316; text-align:center; margin-bottom:30px; }
@@ -128,7 +132,7 @@
             <button class="menu-btn" onclick="showSection('jobcard', this)">🛠️ Create Jobcard</button>
             <button class="menu-btn" onclick="showSection('repairs', this)">📱 Total Repairing</button>
             <button class="menu-btn" id="parts-menu" onclick="showSection('parts', this)">📦 Spare Parts</button>
-            <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">📦 Employees</button>
+            <button class="menu-btn" id="emp-menu" onclick="showSection('employees', this)">👨‍💼 Employees</button>
             <button class="menu-btn" id="settings-menu" onclick="showSection('settings', this)" style="display:none;">⚙️ Admin Settings</button>
         </div>
         <button class="menu-btn logout-btn" onclick="logout()">🚪 Logout</button>
@@ -318,15 +322,16 @@
             }
         }
 
-        function togglePatternPadVisibility() {
-            let selectedType = document.getElementById("deviceType").value;
-            let block = document.getElementById("dynamicPatternBlock");
-            if(selectedType === "Mobile") {
-                block.style.display = "flex";
-                setTimeout(resizePatternCanvas, 50);
+        function toggleLedger() {
+            const content = document.getElementById("ledgerContent");
+            const arrow = document.getElementById("ledgerArrow");
+            if (content.classList.contains("open")) {
+                content.classList.remove("open");
+                arrow.innerText = "▼";
             } else {
-                block.style.display = "none";
-                document.getElementById("drawnPatternCode").value = "";
+                content.classList.add("open");
+                arrow.innerText = "▲";
+                calculateFinancials();
             }
         }
 
@@ -540,61 +545,40 @@
             
             if(output.success){ 
                 alert("Jobcard Registry Generated Successfully."); 
-                
-                // 🔥 TRIGGER AUTOMATIC SMS UPON RECEIVING HANDSET
-                sendLiveStatusAlert(c_name, c_phone, output.id || "NEW", c_model, "Received");
-
-                document.getElementById("customerName").value=""; document.getElementById("customerPhone").value="";
-                document.getElementById("deviceModel").value=""; document.getElementById("deviceIMEI").value="";
-                document.getElementById("devicePassword").value=""; document.getElementById("problem").value="";
-                document.getElementById("solution").value="";
-                document.getElementById("estimate").value=""; document.getElementById("advance").value="";
-                clearPatternPad(); await loadJobs(); 
+                loadJobs(); 
                 showSection('dashboard', document.querySelectorAll('.menu-btn')[0]); 
             } else { alert(output.message || "Database Error."); }
         }
 
         // =======================================================
-        // 🔥 LIVE DYNAMIC CORPORATE SMS STATUS ALERT ENGINE
+        // 🔥 SAFE SMS TRIGGER INTERFACE (NO BROWSER FREEZING)
         // =======================================================
-        function sendLiveStatusAlert(custName, custPhone, jobId, deviceModel, statusState) {
-            if(!custPhone || custPhone.length < 10) return;
+        function triggerManualWhatsAppAlert(custName, custPhone, jobId, deviceModel, currentStatus) {
+            if(!custPhone || custPhone.length < 10) { alert("Invalid phone number framework."); return; }
             
             let msgText = "";
-            
-            if(statusState === "Received") {
-                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. You can track status live with us. Thank you for choosing Fixify!`;
-            } else if(statusState === "Repairing") {
-                msgText = `Dear ${custName}, Alert! Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our expert senior technician is working on it. - Team Fixify`;
-            } else if(statusState === "Testing") {
-                msgText = `Dear ${custName}, Good news! Your device [${deviceModel}] (Job ID: ${jobId}) has been fixed and shifted to the TESTING phase for final software/hardware quality verification. - Team Fixify`;
-            } else if(statusState === "Ready") {
-                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit Fixify store during working hours to claim delivery. Thank you!`;
-            } else if(statusState === "Delivered") {
-                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. We appreciate your trust in Fixify Tech Repair Network. Have a great day!`;
+            if(currentStatus === "Pending") {
+                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. Thank you for choosing Fixify!`;
+            } else if(currentStatus === "Repairing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our technician is working on it. - Team Fixify`;
+            } else if(currentStatus === "Testing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) is now in the TESTING phase for quality verification. - Team Fixify`;
+            } else if(currentStatus === "Ready") {
+                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit the store.`;
+            } else if(currentStatus === "Delivered") {
+                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. - Team Fixify`;
             } else {
-                return; // Do not alert if status isn't matched
+                msgText = `Hello ${custName}, Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
             }
 
-            // Encode to URL Standard parameters safely
             let formattedPhone = custPhone.startsWith("91") ? custPhone : "91" + custPhone;
             let smsUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}`;
-            
-            // Pop up smooth background trigger without freezing dashboard rows
             window.open(smsUrl, '_blank');
         }
 
-        // CONTROL DROPDOWN STATUS EVENT TRIGGER ATTACHMENTS
-        async function updateStatus(id, status){ 
+        async function updateStatus(id,status){ 
             const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
-            if(res.ok) {
-                // Find matching client record from cache list to extract phone nodes
-                const targetJob = jobs.find(j => j.id === id);
-                if(targetJob) {
-                    sendLiveStatusAlert(targetJob.name, targetJob.phone1, id, targetJob.device, status);
-                }
-                loadJobs(); 
-            }
+            if(res.ok) { loadJobs(); }
         }
 
         function renderJobs(){
@@ -635,6 +619,7 @@
                             <button class="tbl-btn" onclick="savePricing('${job.id}')">Save</button>
                             ` : '<span style="color:#6b7280; font-size:11px;">Restricted</span>'}
                             <button class="print-btn" onclick="printJobcard('${job.id}')">🖨️ Print Receipt</button>
+                            <button class="sms-btn" onclick="triggerManualWhatsAppAlert('${job.name}', '${job.phone1}', '${job.id}', '${job.device}', '${job.status}')">💬 Send Status SMS</button>
                         </div>
                     </td>
                 </tr>`;
@@ -841,7 +826,11 @@
             printWindow.document.close();
         }
 
-        async function updateStatus(id,status){ await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})}); loadJobs(); }
+        async function updateStatus(id,status){ 
+            const res = await fetch("/api/update_status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id,status:status})});
+            if(res.ok) { loadJobs(); }
+        }
+
         async function savePricing(id){
             let disc = parseFloat(document.getElementById("disc-"+id).value || 0);
             let ext = parseFloat(document.getElementById("ext-"+id).value || 0);
@@ -876,7 +865,7 @@
             if(!Array.isArray(employees)) return;
             employees.forEach(e=>{ if(e.username==='admin')return; t.innerHTML+=`<tr><td><strong>${e.emp_name}</strong></td><td style="color:#fbbf24;">${e.username}</td><td><span class="user-role" style="padding:4px 8px; font-size:11px;">Employee</span></td><td><button class="btn" style="padding:4px 8px; background:#ef4444;" onclick="deleteEmp('${e.username}')">Remove</button></td></tr>`; });
         }
-        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{method:"DELETE"}); loadEmployees(); } }
+        async function deleteEmp(u){ if(confirm("Delete account?")){ await fetch("/api/employees?username="+u,{username:"DELETE"}); loadEmployees(); } }
 
         window.onload=checkSession;
         showSection("dashboard", document.querySelectorAll('.menu-btn')[0]);
