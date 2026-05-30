@@ -512,7 +512,7 @@
                 CURRENT_ROLE = data.role;
                 setupUIRoles();
                 loadJobs(); loadParts();
-            } else { alert(data.message || "Invalid Security Token ID/Password."); }
+            } else { alert(data.message || "Invalid Identity Token ID/Password."); }
         }
 
         async function checkSession(){
@@ -611,9 +611,29 @@
             } else { alert(output.message || "Database Error."); }
         }
 
+        // =======================================================
+        // 🔥 RESTORED LIVE HIGH-CLASS MANUAL WHATSAPP ALERTS
+        // =======================================================
         function triggerManualWhatsAppAlert(custName, custPhone, jobId, deviceModel, currentStatus) {
             if(!custPhone || custPhone.length < 10) { alert("Invalid phone number framework."); return; }
-            let msgText = `Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
+            
+            let msgText = "";
+            if(currentStatus === "Pending") {
+                msgText = `Hello ${custName}, Your device [${deviceModel}] has been successfully received at FIXIFY TECH REPAIR. Job ID: ${jobId}. Thank you for choosing Fixify!`;
+            } else if(currentStatus === "Repairing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) has entered the REPAIRING stage. Our technician is working on it. - Team Fixify`;
+            } else if(currentStatus === "Testing") {
+                msgText = `Dear ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) is now in the TESTING phase for quality verification. - Team Fixify`;
+            } else if(currentStatus === "Ready") {
+                msgText = `Hello ${custName}, 🎉 Great News! Your device [${deviceModel}] (Job ID: ${jobId}) is 100% FIXED and READY for pickup. Kindly visit the store.`;
+            } else if(currentStatus === "Delivered") {
+                msgText = `Thank you ${custName}! Your device [${deviceModel}] (Job ID: ${jobId}) has been successfully DELIVERED. - Team Fixify`;
+            } else if(currentStatus === "Not Repair" || currentStatus === "Not Repaired - Delivered") {
+                msgText = `Hello ${custName}, Your device [${deviceModel}] (Job ID: ${jobId}) could not be repaired and is ready to be collected. - Team Fixify`;
+            } else {
+                msgText = `Hello ${custName}, Status update for Job ID ${jobId} [${deviceModel}]: Current Status is ${currentStatus}. - Fixify`;
+            }
+
             let formattedPhone = custPhone.startsWith("91") ? custPhone : "91" + custPhone;
             let smsUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}`;
             window.open(smsUrl, '_blank');
