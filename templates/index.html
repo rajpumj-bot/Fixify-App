@@ -88,7 +88,6 @@
             <div class="user-role" id="roleBox">Session Terminal</div>
         </div>
 
-        <!-- 1. DASHBOARD -->
         <div id="dashboardSection" class="view-panel active">
             <div class="stats">
                 <div class="stat-box">Pending<h2 id="pendingCount">0</h2></div>
@@ -117,7 +116,6 @@
             </div>
         </div>
 
-        <!-- 2. CREATE JOBCARD -->
         <div id="jobcardSection" class="view-panel card">
             <h2>Create Repair Jobcard Entry</h2>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
@@ -141,7 +139,6 @@
             <button class="btn" onclick="saveJob()">💾 Save Records & Initialize Tracking</button>
         </div>
 
-        <!-- 3. TOTAL REPAIRING -->
         <div id="repairsSection" class="view-panel card">
             <h2>Live Repair Tracking Ledger</h2>
             <div class="search-bar">
@@ -158,7 +155,6 @@
             </div>
         </div>
 
-        <!-- 4. SEARCH SPARE PART DETAILS -->
         <div id="searchPartsSection" class="view-panel card">
             <h2>🔍 Search Spare Part Details Matrix</h2>
             <br>
@@ -202,24 +198,32 @@
             </div>
         </div>
 
-        <!-- 5. UPDATE RATE SECTION (RESTRICTED TO CHAIRMAN & MANAGER) -->
         <div id="partsSection" class="view-panel card">
             <h2>⚙️ Core Stock Pricing Master (Admin & Manager Control Node)</h2>
             <br>
-            <div style="display:grid; grid-template-columns: 320px 1fr; gap:20px;">
-                <div class="card" style="background:#1f2937;">
+            <div style="display:grid; grid-template-columns: 340px 1fr; gap:20px;">
+                <div class="card" style="background:#1f2937; padding: 15px;">
                     <h3>Feed Stock Component</h3>
                     <br>
-                    <select id="p-mode" class="input">
+                    
+                    <span class="filter-label">1. Matrix Mode</span>
+                    <select id="p-mode" class="input" onchange="syncUpdateSectionBrands()">
                         <option value="Mobile">Mobile Phone</option>
                         <option value="Laptop">Laptop Core</option>
                     </select>
-                    <input type="text" id="p-brand" class="input" placeholder="Brand Name (e.g. SAMSUNG, APPLE)">
-                    <input type="text" id="p-model" class="input" placeholder="Model Name (e.g. GALAXY M31S)">
                     
-                    <span class="filter-label">Select Spare Component</span>
+                    <span class="filter-label">2. Select Brand</span>
+                    <select id="p-brand" class="input" onchange="syncUpdateSectionModels()">
+                        <option value="">-- Choose Brand --</option>
+                    </select>
+                    
+                    <span class="filter-label">3. Select Model</span>
+                    <select id="p-model" class="input">
+                        <option value="">-- Choose Model --</option>
+                    </select>
+                    
+                    <span class="filter-label">4. Select Spare Component</span>
                     <select id="p-name" class="input">
-                        <!-- 🔥 FULL COMPONENT REGISTER LIST MAPPED FROM YOUR INPUT IMAGE PATHS -->
                         <option value="FOLDER / DISPLAY">FOLDER / DISPLAY</option>
                         <option value="TOUCH / GLASS">TOUCH / GLASS</option>
                         <option value="BATTERY">BATTERY PACK</option>
@@ -264,7 +268,6 @@
             </div>
         </div>
 
-        <!-- 6. EMPLOYEES CONTROL -->
         <div id="employeesSection" class="view-panel card">
             <h2>👥 Active Workshop Operators Registry</h2>
             <br>
@@ -295,6 +298,76 @@
     </div>
 
     <script>
+        // 🔥 UNIVERSAL MASSIVE BRAND & MODELS CORES REPOSITORY (ADDED TRADITIONAL & LEGACY EVERY OLD MODEL)
+        const SOURCE_REPOS = {
+            Mobile: {
+                "SAMSUNG": [
+                    "GALAXY M31", "GALAXY M31S", "GALAXY A23", "GALAXY A54", "GALAXY S21 ULTRA", "GALAXY M53", "GALAXY F23",
+                    "GALAXY J2", "GALAXY J7 PRIME", "GALAXY J6", "GALAXY ON7", "GALAXY ON8", "GALAXY NOTE 8", "GALAXY NOTE 9", "GALAXY NOTE 10 Lite",
+                    "GALAXY A50", "GALAXY A30", "GALAXY M20", "GALAXY M11", "GALAXY M51", "GALAXY S9 PLUS", "GALAXY S10"
+                ],
+                "APPLE": [
+                    "IPHONE 6", "IPHONE 6S", "IPHONE 7", "IPHONE 7 PLUS", "IPHONE 8", "IPHONE 8 PLUS", "IPHONE X", "IPHONE XR", "IPHONE XS",
+                    "IPHONE 11", "IPHONE 11 PRO MAX", "IPHONE 12", "IPHONE 12 MINI", "IPHONE 13", "IPHONE 14", "IPHONE 15", "IPHONE 15 PRO MAX"
+                ],
+                "ONEPLUS": [
+                    "ONEPLUS 3", "ONEPLUS 5", "ONEPLUS 5T", "ONEPLUS 6", "ONEPLUS 6T", "ONEPLUS 7", "ONEPLUS 7 PRO", "ONEPLUS 7T",
+                    "ONEPLUS 8", "ONEPLUS 8T", "ONEPLUS 9R", "ONEPLUS 10R", "ONEPLUS 11R", "ONEPLUS NORD CE 2", "ONEPLUS NORD CE 3"
+                ],
+                "XIAOMI / REDMI": [
+                    "REDMI NOTE 4", "REDMI NOTE 5", "REDMI NOTE 5 PRO", "REDMI NOTE 6 PRO", "REDMI NOTE 7 PRO", "REDMI NOTE 8", "REDMI NOTE 8 PRO",
+                    "REDMI NOTE 9", "REDMI NOTE 10", "REDMI NOTE 11 PRO", "REDMI 4A", "REDMI 5A", "REDMI 6A", "REDMI 9C", "MI A2", "MI A3"
+                ],
+                "REALME": [
+                    "REALME 2", "REALME 3 PRO", "REALME 5", "REALME 5 PRO", "REALME 6", "REALME 7", "REALME 8 5G", "REALME 9 PRO+",
+                    "REALME NARZO 20", "REALME NARZO 30A", "REALME NARZO 50A", "REALME C2", "REALME C11", "REALME C35"
+                ],
+                "VIVO": [
+                    "VIVO Y91", "VIVO Y93", "VIVO Y95", "VIVO Y11 (2019)", "VIVO Y12", "VIVO Y15", "VIVO Y20", "VIVO Y21", "VIVO Y51",
+                    "VIVO V9", "VIVO V11 PRO", "VIVO V15 PRO", "VIVO V20", "VIVO V23 5G", "VIVO V27 PRO", "VIVO T1 5G"
+                ],
+                "OPPO": [
+                    "OPPO A37", "OPPO A57 (OLD)", "OPPO F1S", "OPPO F3", "OPPO F5", "OPPO F7", "OPPO F9 PRO", "OPPO F11 PRO", "OPPO F17 PRO",
+                    "OPPO A5 2020", "OPPO A9 2020", "OPPO A15", "OPPO A54", "OPPO RENO 6", "OPPO RENO 8 PRO"
+                ],
+                "INFINIX": [
+                    "INFINIX HOT 8", "INFINIX HOT 9", "INFINIX HOT 10", "INFINIX HOT 12 PLAY", "INFINIX HOT 30 5G",
+                    "INFINIX NOTE 11", "INFINIX NOTE 12 PRO", "INFINIX SMART 6"
+                ],
+                "MOTO": [
+                    "MOTO E4 PLUS", "MOTO G5 PLUS", "MOTO G32", "MOTO G62 5G", "MOTO G84 5G", "MOTO EDGE 40 NEO"
+                ],
+                "TECNO": [
+                    "SPARK 6 GO", "SPARK 7", "POUVOIR 4", "CAMON 19 NEO", "POVA 3", "POVA 5 PRO"
+                ]
+            },
+            Laptop: {
+                "HP": [
+                    "PAVILION 15", "ELITEBOOK 840 G1", "ELITEBOOK 840 G3", "PROBOOK 440 G5", "HP 15S",
+                    "COMPAQ C700", "COMPAQ PRESARIO", "HP G62", "HP OMEN 16", "VICTUS 15"
+                ],
+                "DELL": [
+                    "INSPIRON 15 3000", "INSPIRON 15 5000", "LATITUDE E6420", "LATITUDE 3420",
+                    "VOSTRO 15 3500", "VOSTRO 3510", "XPS 13", "DELL G15"
+                ],
+                "LENOVO": [
+                    "IDEAPAD 320", "IDEAPAD SLIM 3", "IDEAPAD GAMING 3", "THINKPAD T470",
+                    "THINKPAD L14", "LENOVO G50-70", "YOGA SLIM 7", "LEGION 5"
+                ],
+                "ASUS": [
+                    "VIVOBOOK 14", "VIVOBOOK 15", "ZENBOOK 14", "TUF GAMING F15",
+                    "ROG STRIX G15", "ASUS X541U"
+                ],
+                "ACER": [
+                    "ASPIRE 3", "ASPIRE 5", "NITRO 5", "SWIFT 3", "PREDATOR HELIOS"
+                ],
+                "APPLE MACBOOK": [
+                    "MACBOOK AIR (OLD CORE I5)", "MACBOOK AIR M1", "MACBOOK AIR M2",
+                    "MACBOOK PRO (OLD)", "MACBOOK PRO M1", "MACBOOK PRO M2", "MACBOOK PRO M3"
+                ]
+            }
+        };
+
         let jobs = []; let parts = []; let employees = []; let CURRENT_ROLE = "Employee";
 
         function showSection(section, btn){
@@ -304,6 +377,7 @@
             if(target) target.classList.add("active");
             if(btn) btn.classList.add("active");
             if(section === 'searchParts') { buildCascadingBrandsDropdown(); }
+            if(section === 'parts') { syncUpdateSectionBrands(); }
         }
 
         async function login(){
@@ -422,11 +496,11 @@
             document.getElementById("sel-part").innerHTML = '<option value="">-- Choose Component --</option>';
             resetPriceVisualizerCard();
 
-            let uniqueBrands = new Set();
-            parts.forEach(p => {
-                if(p.model && p.model.includes(":") && p.model.split(":")[0] === mode) { uniqueBrands.add(p.model.split(":")[1]); }
-            });
-            uniqueBrands.forEach(b => { brandSel.innerHTML += `<option value="${b}">${b}</option>`; });
+            if(SOURCE_REPOS[mode]) {
+                Object.keys(SOURCE_REPOS[mode]).forEach(brand => {
+                    brandSel.innerHTML += `<option value="${brand}">${brand}</option>`;
+                });
+            }
         }
 
         function buildCascadingModelsDropdown() {
@@ -438,14 +512,11 @@
             resetPriceVisualizerCard();
             if(!brand) return;
 
-            let uniqueModels = new Set();
-            parts.forEach(p => {
-                if(p.model && p.model.includes(":")) {
-                    let tokens = p.model.split(":");
-                    if(tokens[0] === mode && tokens[1] === brand) { uniqueModels.add(tokens[2]); }
-                }
-            });
-            uniqueModels.forEach(m => { modelSel.innerHTML += `<option value="${m}">${m}</option>`; });
+            if(SOURCE_REPOS[mode] && SOURCE_REPOS[mode][brand]) {
+                SOURCE_REPOS[mode][brand].forEach(model => {
+                    modelSel.innerHTML += `<option value="${model}">${model}</option>`;
+                });
+            }
         }
 
         function buildCascadingPartsDropdown() {
@@ -458,7 +529,9 @@
             if(!model) return;
 
             parts.forEach(p => {
-                if(p.model === `${mode}:${brand}:${model}`) { partSel.innerHTML += `<option value="${p.id}">${p.part_name}</option>`; }
+                if(p.model && p.model.toUpperCase() === `${mode}:${brand}:${model}`.toUpperCase()) {
+                    partSel.innerHTML += `<option value="${p.id}">${p.part_name}</option>`;
+                }
             });
         }
 
@@ -477,17 +550,49 @@
             document.getElementById("v-price-normal").innerText = "₹0.00";
         }
 
+        function syncUpdateSectionBrands() {
+            let mode = document.getElementById("p-mode").value;
+            let brandSel = document.getElementById("p-brand");
+            brandSel.innerHTML = '<option value="">-- Choose Brand --</option>';
+            document.getElementById("p-model").innerHTML = '<option value="">-- Choose Model --</option>';
+
+            if(SOURCE_REPOS[mode]) {
+                Object.keys(SOURCE_REPOS[mode]).forEach(brand => {
+                    brandSel.innerHTML += `<option value="${brand}">${brand}</option>`;
+                });
+            }
+        }
+
+        function syncUpdateSectionModels() {
+            let mode = document.getElementById("p-mode").value;
+            let brand = document.getElementById("p-brand").value;
+            let modelSel = document.getElementById("p-model");
+            modelSel.innerHTML = '<option value="">-- Choose Model --</option>';
+            if(!brand) return;
+
+            if(SOURCE_REPOS[mode] && SOURCE_REPOS[mode][brand]) {
+                SOURCE_REPOS[mode][brand].forEach(model => {
+                    modelSel.innerHTML += `<option value="${model}">${model}</option>`;
+                });
+            }
+        }
+
         async function savePart() {
             let m = document.getElementById("p-mode").value;
-            let b = document.getElementById("p-brand").value.toUpperCase().trim();
-            let md = document.getElementById("p-model").value.toUpperCase().trim();
+            let b = document.getElementById("p-brand").value;
+            let md = document.getElementById("p-model").value;
             let n = document.getElementById("p-name").value;
             let pa = parseFloat(document.getElementById("p-price-agrade").value || 0);
             let pn = parseFloat(document.getElementById("p-price-normal").value || 0);
-            if(!b || !md) { alert("Please complete identity labels."); return; }
+            if(!b || !md) { alert("Please choose valid identity options from dropdowns."); return; }
+            
             const payload = { part_name: n, model: `${m}:${b}:${md}`, price_agrade: pa, price_normal: pn };
             const res = await fetch("/api/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-            if((await res.json()).success) { alert("Stock pricing synchronized!"); loadParts(); }
+            if((await res.json()).success) { 
+                alert("Stock pricing indexed!"); 
+                document.getElementById("p-price-agrade").value=""; document.getElementById("p-price-normal").value="";
+                await loadParts(); 
+            }
         }
 
         function renderParts() {
@@ -505,7 +610,7 @@
             let p = document.getElementById("e-pass").value; let r = document.getElementById("e-role").value;
             if(!n || !u || !p) { alert("All fields required."); return; }
             const res = await fetch("/api/employees",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({emp_name:n,username:u,password:p,role:r})});
-            if((await res.json()).success) { alert("Staff authorization generated!"); document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees(); }
+            if((await res.json()).success) { alert("Staff account generated!"); document.getElementById("e-name").value=""; document.getElementById("e-user").value=""; document.getElementById("e-pass").value=""; loadEmployees(); }
         }
 
         function renderEmployees() {
@@ -541,7 +646,6 @@
                         <tr><td>Advance Paid Cash</td><td style="color:#2563eb;">: - ₹${parseFloat(job.advance).toFixed(2)}</td></tr>
                         <tr style="border-top:1px solid #000; font-weight:bold; color:#ea580c;"><td>BALANCE DUE NOW</td><td>: ₹${(parseFloat(job.estimate) - parseFloat(job.advance)).toFixed(2)}</td></tr>
                     </table>
-                    <div style="margin-top:20px; font-size:9px; color:#555;"><strong>T&C:</strong> presentations of original slip compulsory for handset pickup clearances.</div>
                     <div style="text-align:center; font-size:11px; margin-top:15px; font-weight:bold;">Thank You For Choosing Fixify! ❤️</div>
                 </div>`;
             pw.document.write(`<html><head><title>FIXIFY - ${job.id}</title></head><body onload="window.print()"><div style="width:100%; display:flex; justify-content:space-between;">${receiptBlock}${receiptBlock}</div></body></html>`);
